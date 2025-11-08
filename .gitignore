@@ -1,2 +1,7 @@
 output/
 .venv/
+
+# Python package metadata
+*.egg-info/
+__pycache__/
+*.pyc
