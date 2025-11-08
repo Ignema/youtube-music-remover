@@ -1,0 +1,12 @@
+[project]
+name = "youtube-music-remover"
+version = "1.0.0"
+description = "Strip background music from YouTube videos"
+requires-python = ">=3.8"
+dependencies = [
+    "yt-dlp>=2023.10.13",
+    "audio-separator[gpu]>=0.17.0",
+    "jupyter>=1.0.0",
+    "ipython>=8.12.0",
+    "notebook>=7.0.0",
+]
