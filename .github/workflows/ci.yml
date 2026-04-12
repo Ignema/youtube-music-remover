@@ -53,7 +53,7 @@ jobs:
 
       - name: Install deps
         run: |
-          pip install fastapi uvicorn python-multipart websockets httpx pytest
+          pip install fastapi uvicorn python-multipart websockets httpx pytest slowapi
 
       - name: Run tests
-        run: pytest api/ -v --tb=short || echo "No tests yet"
+        run: pytest api/test_api.py -v --tb=short

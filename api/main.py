@@ -27,6 +27,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator
 
+from api.utils import extract_video_id, run_cmd, YT_ID_RE, YT_URL_PATTERNS
+
+try:
+    from slowapi import Limiter
+    from slowapi.util import get_remote_address
+    limiter = Limiter(key_func=get_remote_address)
+    _has_limiter = True
+except ImportError:
+    _has_limiter = False
+
 # --- Logging ---
 logging.basicConfig(
     level=logging.INFO,
@@ -158,12 +168,19 @@ def update_job(job_id: str, **kwargs):
     data = {"job_id": job_id, **kwargs}
     with _ws_lock:
         clients = list(ws_clients.get(job_id, []))
+    dead = []
     for ws in clients:
         try:
             if ws_loop and ws_loop.is_running():
                 asyncio.run_coroutine_threadsafe(ws.send_json(data), ws_loop)
         except Exception:
-            pass
+            dead.append(ws)
+    # Remove dead connections
+    if dead:
+        with _ws_lock:
+            for ws in dead:
+                if job_id in ws_clients and ws in ws_clients[job_id]:
+                    ws_clients[job_id].remove(ws)
 
 
 # --- Lifespan (replaces deprecated on_event) ---
@@ -176,11 +193,40 @@ async def lifespan(app: FastAPI):
     cleanup_old_jobs()
     cleanup_orphaned_temp_dirs()
     logger.info("Murem API started")
+
+    # Periodic cleanup task
+    async def periodic_cleanup():
+        while True:
+            await asyncio.sleep(6 * 3600)  # Every 6 hours
+            cleanup_old_jobs()
+            prune_dead_ws_clients()
+
+    cleanup_task = asyncio.create_task(periodic_cleanup())
     yield
+    cleanup_task.cancel()
     logger.info("Murem API shutting down")
 
 
+def prune_dead_ws_clients():
+    """Remove closed WebSocket connections from the client list."""
+    with _ws_lock:
+        for job_id in list(ws_clients.keys()):
+            ws_clients[job_id] = [
+                ws for ws in ws_clients[job_id]
+                if not getattr(ws, "client_state", None) or ws.client_state.name != "DISCONNECTED"
+            ]
+            if not ws_clients[job_id]:
+                del ws_clients[job_id]
+    logger.debug("Pruned dead WebSocket clients")
+
+
 app = FastAPI(title="Murem API", lifespan=lifespan)
+
+if _has_limiter:
+    app.state.limiter = limiter
+    from slowapi.errors import RateLimitExceeded
+    from slowapi import _rate_limit_exceeded_handler
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -191,14 +237,6 @@ app.add_middleware(
 )
 
 # --- Input Validation ---
-
-# Strict YouTube URL/ID pattern
-_YT_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{11}$")
-_YT_URL_PATTERNS = [
-    re.compile(r"(?:https?://)?(?:www\.)?youtu\.be/([a-zA-Z0-9_-]{11})"),
-    re.compile(r"(?:https?://)?(?:www\.)?youtube\.com/watch\?v=([a-zA-Z0-9_-]{11})"),
-    re.compile(r"(?:https?://)?(?:www\.)?youtube\.com/shorts/([a-zA-Z0-9_-]{11})"),
-]
 
 
 class ProcessRequest(BaseModel):
@@ -215,7 +253,7 @@ class ProcessRequest(BaseModel):
         if not v:
             raise ValueError("URL is required")
         vid = extract_video_id(v)
-        if not _YT_ID_RE.match(vid):
+        if not YT_ID_RE.match(vid):
             raise ValueError("Invalid YouTube URL or video ID")
         return v
 
@@ -239,28 +277,6 @@ class ProcessRequest(BaseModel):
         if not 1 <= v <= 8:
             raise ValueError("Batch size must be 1-8")
         return v
-
-
-def extract_video_id(input_str: str) -> str:
-    """Extract YouTube video ID from URL or return as-is if already an ID."""
-    input_str = input_str.strip()
-    if _YT_ID_RE.match(input_str):
-        return input_str
-    for pattern in _YT_URL_PATTERNS:
-        match = pattern.search(input_str)
-        if match:
-            return match.group(1)
-    # Return as-is — validation will catch invalid IDs
-    return input_str
-
-
-def run_cmd(*cmd, cwd=None) -> tuple[bool, str, str]:
-    """Run a subprocess command and return (success, stdout, stderr)."""
-    logger.debug(f"Running: {' '.join(cmd)}")
-    result = subprocess.run(
-        cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-    )
-    return result.returncode == 0, result.stdout, result.stderr
 
 # --- Processing Pipelines ---
 
@@ -420,7 +436,7 @@ def list_models():
 def video_info(url: str):
     """Get YouTube video metadata without downloading."""
     video_id = extract_video_id(url.strip())
-    if not _YT_ID_RE.match(video_id):
+    if not YT_ID_RE.match(video_id):
         raise HTTPException(400, "Invalid YouTube URL or video ID")
     yt_url = f"https://www.youtube.com/watch?v={video_id}"
 
@@ -473,7 +489,7 @@ def batch_processing(
     job_ids = []
     for url in urls:
         vid = extract_video_id(url.strip())
-        if not _YT_ID_RE.match(vid):
+        if not YT_ID_RE.match(vid):
             raise HTTPException(400, f"Invalid URL: {url}")
         job_id = str(uuid.uuid4())
         db_create(job_id)
