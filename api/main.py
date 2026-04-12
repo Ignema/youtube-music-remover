@@ -22,7 +22,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, WebSocket
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator
@@ -35,7 +35,17 @@ try:
     limiter = Limiter(key_func=get_remote_address)
     _has_limiter = True
 except ImportError:
+    limiter = None
     _has_limiter = False
+
+
+def rate_limit(limit_string: str):
+    """Decorator that applies rate limiting if slowapi is available, no-op otherwise."""
+    def decorator(func):
+        if _has_limiter and limiter:
+            return limiter.limit(limit_string)(func)
+        return func
+    return decorator
 
 # --- Logging ---
 logging.basicConfig(
@@ -433,7 +443,8 @@ def list_models():
 
 
 @app.get("/api/info")
-def video_info(url: str):
+@rate_limit("20/minute")
+def video_info(request: Request, url: str):
     """Get YouTube video metadata without downloading."""
     video_id = extract_video_id(url.strip())
     if not YT_ID_RE.match(video_id):
@@ -460,7 +471,8 @@ def video_info(url: str):
 
 
 @app.post("/api/process")
-def start_processing(req: ProcessRequest):
+@rate_limit("10/minute")
+def start_processing(request: Request, req: ProcessRequest):
     job_id = str(uuid.uuid4())
     db_create(job_id)
     logger.info(f"New job {job_id[:8]} for URL: {req.url[:50]}")
@@ -475,6 +487,7 @@ def start_processing(req: ProcessRequest):
 
 
 @app.post("/api/batch")
+@rate_limit("5/minute")
 def batch_processing(
     urls: list[str],
     model: str = "UVR-MDX-NET-Inst_HQ_3.onnx",
@@ -506,6 +519,7 @@ def batch_processing(
 
 
 @app.post("/api/upload")
+@rate_limit("10/minute")
 async def upload_processing(
     file: UploadFile = File(...),
     model: str = Form("UVR-MDX-NET-Inst_HQ_3.onnx"),

@@ -6,6 +6,8 @@ import os
 from pathlib import Path
 import tempfile
 
+from api.utils import extract_video_id, run_cmd as run_command
+
 
 def check_ffmpeg():
     """Check if FFmpeg is installed"""
