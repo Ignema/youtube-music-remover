@@ -98,19 +98,33 @@ def process_video(job_id: str, url: str, model: str, batch_size: int):
             return
         audio_file = audio_files[0]
 
-        # Separate vocals
+        # Separate vocals — stream progress from tqdm output
         job["status"] = "separating"
-        job["progress"] = 40
-        ok, _, err = run_cmd(
-            "audio-separator", str(audio_file),
-            "--model_filename", model,
-            "--mdx_batch_size", str(batch_size),
-            "--output_dir", str(temp_dir),
-            "--output_format", "WAV",
+        job["progress"] = 30
+        sep_proc = subprocess.Popen(
+            [
+                "audio-separator", str(audio_file),
+                "--model_filename", model,
+                "--mdx_batch_size", str(batch_size),
+                "--output_dir", str(temp_dir),
+                "--output_format", "WAV",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
         )
-        if not ok:
+        # audio-separator uses tqdm which writes to stderr with patterns like "45%|"
+        pct_re = re.compile(r"(\d+)%\|")
+        for line in iter(sep_proc.stderr.readline, ""):
+            m = pct_re.search(line)
+            if m:
+                sep_pct = int(m.group(1))
+                # Map separation 0-100% to overall progress 30-70%
+                job["progress"] = 30 + int(sep_pct * 0.4)
+        sep_proc.wait()
+        if sep_proc.returncode != 0:
             job["status"] = "error"
-            job["error"] = f"Separation failed: {err}"
+            job["error"] = "Separation failed"
             return
 
         vocals = [f for f in temp_dir.iterdir() if "vocals" in f.name.lower() and f.suffix == ".wav"]
@@ -122,7 +136,7 @@ def process_video(job_id: str, url: str, model: str, batch_size: int):
 
         # Get title
         job["status"] = "merging"
-        job["progress"] = 70
+        job["progress"] = 75
         ok, title, _ = run_cmd("yt-dlp", "--print", "title", yt_url)
         if not ok or not title:
             title = video_id
