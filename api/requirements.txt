@@ -1,4 +1,5 @@
 fastapi>=0.115.0
 uvicorn>=0.32.0
+python-multipart>=0.0.7
 yt-dlp>=2023.10.13
 audio-separator[gpu]>=0.17.0

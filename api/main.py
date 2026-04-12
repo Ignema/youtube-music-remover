@@ -218,6 +218,35 @@ def list_models():
     return {"models": MODELS}
 
 
+@app.get("/api/info")
+def video_info(url: str):
+    """Get YouTube video metadata without downloading."""
+    video_id = extract_video_id(url.strip())
+    yt_url = f"https://www.youtube.com/watch?v={video_id}"
+
+    import json as _json
+    ok, stdout, err = run_cmd(
+        "yt-dlp", "--dump-json", "--no-download", yt_url,
+    )
+    if not ok:
+        raise HTTPException(400, f"Failed to fetch info: {err}")
+
+    try:
+        data = _json.loads(stdout)
+    except Exception:
+        raise HTTPException(500, "Failed to parse video info")
+
+    return {
+        "title": data.get("title", ""),
+        "channel": data.get("channel", data.get("uploader", "")),
+        "duration": data.get("duration", 0),
+        "thumbnail": data.get("thumbnail", ""),
+        "view_count": data.get("view_count", 0),
+        "upload_date": data.get("upload_date", ""),
+        "description": (data.get("description", "") or "")[:300],
+    }
+
+
 @app.post("/api/process")
 def start_processing(req: ProcessRequest):
     if req.model not in MODELS:
