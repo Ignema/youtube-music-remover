@@ -1,0 +1,5 @@
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class com.musicremover.app.data.** { *; }
+-dontwarn okhttp3.**
+-dontwarn retrofit2.**

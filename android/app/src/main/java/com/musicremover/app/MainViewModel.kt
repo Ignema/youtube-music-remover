@@ -1,0 +1,551 @@
+package com.musicremover.app
+
+import android.app.Application
+import android.content.Context
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
+import androidx.lifecycle.AndroidViewModel
+import com.musicremover.app.data.ApiClient
+import com.musicremover.app.data.HistoryItem
+import com.musicremover.app.data.HistoryStore
+import com.musicremover.app.data.NotificationHelper
+import com.musicremover.app.data.ProcessRequest
+import com.musicremover.app.data.ResultCache
+import com.musicremover.app.data.SettingsStore
+import com.musicremover.app.data.TermuxHelper
+import com.musicremover.app.data.VideoInfo
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+
+enum class UiState { Idle, Processing, Done, Error }
+
+data class MainUiState(
+    val state: UiState = UiState.Idle,
+    val url: String = "",
+    val selectedModel: String = "UVR-MDX-NET-Inst_HQ_3.onnx",
+    val models: List<String> = listOf(
+        "UVR-MDX-NET-Inst_HQ_3.onnx",
+        "Kim_Vocal_2.onnx",
+        "UVR_MDXNET_KARA_2.onnx",
+    ),
+    val progress: Int = 0,
+    val statusText: String = "",
+    val errorMessage: String = "",
+    val jobId: String? = null,
+    val showModelPicker: Boolean = false,
+    val downloading: Boolean = false,
+    val history: List<HistoryItem> = emptyList(),
+    val serverUrl: String = "",
+    val termuxInstalled: Boolean = false,
+    val selectedFileUri: android.net.Uri? = null,
+    val selectedFileName: String? = null,
+    val selectedFileSize: Long? = null,
+    val videoInfo: VideoInfo? = null,
+    val showInfoSheet: Boolean = false,
+    val loadingInfo: Boolean = false,
+    val fileInfoItem: HistoryItem? = null,
+    // New options
+    val audioOnly: Boolean = false,
+    val bitrate: String = "192k",
+    // Thumbnail preview
+    val urlPreview: VideoInfo? = null,
+    val loadingPreview: Boolean = false,
+    // Termux operation status
+    val termuxOperation: String? = null, // null = no operation, else = status message
+    val termuxServerOnline: Boolean = false,
+)
+
+class MainViewModel(application: Application) : AndroidViewModel(application) {
+    private val _ui = MutableStateFlow(MainUiState())
+    val ui: StateFlow<MainUiState> = _ui.asStateFlow()
+    private val historyStore = HistoryStore(application)
+    private val settingsStore = SettingsStore(application)
+    private val notif = NotificationHelper(application)
+    private val cache = ResultCache(application)
+    private val bgScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val prefs = application.getSharedPreferences("app", Context.MODE_PRIVATE)
+
+    private val serverUrl: String get() = _ui.value.serverUrl
+    private fun api() = ApiClient.getService(serverUrl)
+
+    init {
+        _ui.value = _ui.value.copy(
+            history = historyStore.getAll(),
+            serverUrl = settingsStore.serverUrl,
+            termuxInstalled = TermuxHelper.isTermuxInstalled(application),
+        )
+        // Resume polling if app was killed mid-processing
+        val savedJobId = prefs.getString("active_job_id", null)
+        if (savedJobId != null) {
+            _ui.value = _ui.value.copy(state = UiState.Processing, jobId = savedJobId, statusText = "Resuming…")
+            bgScope.launch { pollStatus(savedJobId) }
+        }
+    }
+
+    // --- Haptics ---
+    fun hapticTick() {
+        try {
+            val app = getApplication<Application>()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vm = app.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+                vm.defaultVibrator.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                @Suppress("DEPRECATION")
+                val v = app.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                v.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE))
+            }
+        } catch (_: Exception) {
+            // Ignore vibration failures
+        }
+    }
+
+    // --- Basic state ---
+    fun onUrlChange(url: String) {
+        _ui.value = _ui.value.copy(url = url, urlPreview = null)
+        // Auto-fetch preview for YouTube URLs
+        if (url.length > 10 && (url.contains("youtu") || url.matches(Regex("^[a-zA-Z0-9_-]{11}$")))) {
+            fetchUrlPreview(url)
+        }
+    }
+
+    fun onModelSelect(model: String) {
+        _ui.value = _ui.value.copy(selectedModel = model, showModelPicker = false)
+    }
+
+    fun toggleModelPicker() {
+        _ui.value = _ui.value.copy(showModelPicker = !_ui.value.showModelPicker)
+    }
+
+    fun setAudioOnly(value: Boolean) {
+        _ui.value = _ui.value.copy(audioOnly = value)
+    }
+
+    fun setBitrate(value: String) {
+        _ui.value = _ui.value.copy(bitrate = value)
+    }
+
+    fun reset() {
+        _ui.value = MainUiState(
+            history = _ui.value.history,
+            serverUrl = _ui.value.serverUrl,
+            termuxInstalled = _ui.value.termuxInstalled,
+        )
+    }
+
+    fun onFileSelected(uri: android.net.Uri?, name: String?, size: Long? = null) {
+        _ui.value = _ui.value.copy(selectedFileUri = uri, selectedFileName = name, selectedFileSize = size)
+    }
+
+    fun clearFile() {
+        _ui.value = _ui.value.copy(selectedFileUri = null, selectedFileName = null, selectedFileSize = null)
+    }
+
+    // --- URL preview ---
+    private var previewJob: kotlinx.coroutines.Job? = null
+
+    private fun fetchUrlPreview(url: String) {
+        previewJob?.cancel()
+        previewJob = bgScope.launch {
+            delay(800) // Debounce
+            _ui.value = _ui.value.copy(loadingPreview = true)
+            try {
+                val info = api().info(url)
+                // Only update if URL hasn't changed
+                if (_ui.value.url == url || _ui.value.url.contains(url.takeLast(11))) {
+                    _ui.value = _ui.value.copy(urlPreview = info, loadingPreview = false)
+                }
+            } catch (_: Exception) {
+                _ui.value = _ui.value.copy(loadingPreview = false)
+            }
+        }
+    }
+
+    // --- History ---
+    fun clearHistory() {
+        historyStore.clear()
+        _ui.value = _ui.value.copy(history = emptyList())
+    }
+
+    fun deleteHistoryItem(item: HistoryItem) {
+        val updated = _ui.value.history.filter { it.jobId != item.jobId }
+        historyStore.replace(updated)
+        cache.delete(item.jobId)
+        _ui.value = _ui.value.copy(history = updated)
+    }
+
+    fun tryPlayHistoryItem(item: HistoryItem, context: Context) {
+        bgScope.launch {
+            // Try local cache first
+            val cachedFile = cache.getCachedFile(item.jobId)
+            if (cachedFile != null) {
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    context, "${context.packageName}.fileprovider", cachedFile
+                )
+                val mime = if (cachedFile.name.endsWith(".mp3")) "audio/mpeg" else "video/mp4"
+                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, mime)
+                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(intent)
+                return@launch
+            }
+            // Fall back to server, cache for next time
+            try {
+                val status = api().status(item.jobId)
+                if (status.status == "done") {
+                    val file = cache.cacheResult(serverUrl, item.jobId, item.filename)
+                    if (file != null) {
+                        val uri = androidx.core.content.FileProvider.getUriForFile(
+                            context, "${context.packageName}.fileprovider", file
+                        )
+                        val mime = if (file.name.endsWith(".mp3")) "audio/mpeg" else "video/mp4"
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                            setDataAndType(uri, mime)
+                            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(intent)
+                    }
+                } else {
+                    _ui.value = _ui.value.copy(url = item.url)
+                }
+            } catch (_: Exception) {
+                _ui.value = _ui.value.copy(url = item.url)
+            }
+        }
+    }
+
+    fun fetchVideoInfo(url: String, item: HistoryItem? = null) {
+        if (url.isEmpty()) return
+        _ui.value = _ui.value.copy(
+            loadingInfo = true, showInfoSheet = true, videoInfo = null,
+            fileInfoItem = if (item?.isFileUpload == true) item else null,
+        )
+        // Store the item for delete button (YouTube items too)
+        currentInfoItem = item
+        bgScope.launch {
+            try {
+                val info = api().info(url)
+                _ui.value = _ui.value.copy(videoInfo = info, loadingInfo = false)
+            } catch (_: Exception) {
+                _ui.value = _ui.value.copy(loadingInfo = false, showInfoSheet = false)
+            }
+        }
+    }
+
+    // Track which history item is being viewed (for delete)
+    var currentInfoItem: HistoryItem? = null
+        private set
+
+    fun dismissInfoSheet() {
+        _ui.value = _ui.value.copy(showInfoSheet = false, videoInfo = null, fileInfoItem = null)
+        currentInfoItem = null
+    }
+
+    fun showFileInfo(item: HistoryItem) {
+        _ui.value = _ui.value.copy(showInfoSheet = true, fileInfoItem = item)
+    }
+
+    // --- Server/Termux ---
+    fun onServerUrlChange(url: String) {
+        _ui.value = _ui.value.copy(serverUrl = url)
+        settingsStore.serverUrl = url
+    }
+
+    fun installTermuxServer() {
+        val error = TermuxHelper.installServer(getApplication())
+        if (error != null) {
+            _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = error)
+        } else {
+            _ui.value = _ui.value.copy(termuxOperation = "Installing in Termux… Switch back when done.")
+        }
+    }
+
+    fun startTermuxServer() {
+        val error = TermuxHelper.startServer(getApplication())
+        if (error != null) {
+            _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = error)
+        } else {
+            onServerUrlChange("http://127.0.0.1:8000")
+            _ui.value = _ui.value.copy(termuxOperation = "Starting server… This may take a moment.")
+            pollServerOnline()
+        }
+    }
+
+    fun stopTermuxServer() {
+        val error = TermuxHelper.stopServer(getApplication())
+        if (error != null) {
+            _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = error)
+        } else {
+            _ui.value = _ui.value.copy(termuxOperation = "Stopping server…", termuxServerOnline = false)
+            bgScope.launch {
+                delay(2000)
+                _ui.value = _ui.value.copy(termuxOperation = null)
+            }
+        }
+    }
+
+    fun updateTermuxServer() {
+        val error = TermuxHelper.updateServer(getApplication())
+        if (error != null) {
+            _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = error)
+        } else {
+            _ui.value = _ui.value.copy(termuxOperation = "Updating in Termux… Switch back when done.")
+        }
+    }
+
+    fun dismissTermuxOperation() {
+        _ui.value = _ui.value.copy(termuxOperation = null)
+    }
+
+    fun getCacheSizeFormatted(): String {
+        val bytes = cache.totalSize()
+        return when {
+            bytes >= 1_073_741_824 -> "%.1f GB".format(bytes / 1_073_741_824.0)
+            bytes >= 1_048_576 -> "%.1f MB".format(bytes / 1_048_576.0)
+            bytes >= 1024 -> "%.1f KB".format(bytes / 1024.0)
+            else -> "$bytes B"
+        }
+    }
+
+    fun clearCache() {
+        cache.clear()
+    }
+
+    private fun pollServerOnline() {
+        bgScope.launch {
+            repeat(60) { // Try for ~2 minutes
+                delay(2000)
+                try {
+                    val response = java.net.URL("${serverUrl}/api/models").readText()
+                    if (response.contains("models")) {
+                        _ui.value = _ui.value.copy(
+                            termuxOperation = "Server is online!",
+                            termuxServerOnline = true,
+                        )
+                        hapticTick()
+                        delay(2000)
+                        _ui.value = _ui.value.copy(termuxOperation = null)
+                        return@launch
+                    }
+                } catch (_: Exception) {
+                    // Not ready yet
+                }
+            }
+            // Timed out
+            _ui.value = _ui.value.copy(
+                termuxOperation = "Server didn't come online. Check Termux for errors.",
+            )
+        }
+    }
+
+    // --- Processing ---
+    fun process() {
+        val fileUri = _ui.value.selectedFileUri
+        val url = _ui.value.url.trim()
+
+        if (fileUri != null) processFile(fileUri)
+        else if (url.isNotEmpty()) processUrl(url)
+        else {
+            _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = "Enter a YouTube URL or pick a video file")
+            return
+        }
+        hapticTick()
+    }
+
+    /** Retry the last failed operation */
+    fun retry() {
+        _ui.value = _ui.value.copy(state = UiState.Idle, errorMessage = "")
+        process()
+    }
+
+    private fun processFile(uri: android.net.Uri) {
+        bgScope.launch {
+            _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = "Uploading…")
+            ProcessingService.start(getApplication(), "Uploading…", 0)
+            try {
+                val context = getApplication<Application>()
+                val fileName = _ui.value.selectedFileName ?: "video.mp4"
+                val bytes = context.contentResolver.openInputStream(uri)?.readBytes()
+                    ?: throw Exception("Cannot read file")
+
+                val filePart = okhttp3.MultipartBody.Part.createFormData(
+                    "file", fileName,
+                    okhttp3.RequestBody.create("video/*".toMediaTypeOrNull(), bytes),
+                )
+                val model = okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), _ui.value.selectedModel)
+                val batch = okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), "4")
+                val audioOnly = okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), _ui.value.audioOnly.toString())
+                val bitrate = okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), _ui.value.bitrate)
+
+                val resp = api().upload(filePart, model, batch, audioOnly, bitrate)
+                _ui.value = _ui.value.copy(jobId = resp.job_id)
+                prefs.edit().putString("active_job_id", resp.job_id).apply()
+                pollStatus(resp.job_id)
+            } catch (e: Exception) {
+                _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = e.message ?: "Upload failed")
+                ProcessingService.stop(getApplication())
+            }
+        }
+    }
+
+    private fun processUrl(url: String) {
+        bgScope.launch {
+            _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = "Starting…")
+            ProcessingService.start(getApplication(), "Starting…", 0)
+            try {
+                val resp = api().process(
+                    ProcessRequest(
+                        url = url,
+                        model = _ui.value.selectedModel,
+                        audio_only = _ui.value.audioOnly,
+                        bitrate = _ui.value.bitrate,
+                    )
+                )
+                _ui.value = _ui.value.copy(jobId = resp.job_id)
+                prefs.edit().putString("active_job_id", resp.job_id).apply()
+                pollStatus(resp.job_id)
+            } catch (e: Exception) {
+                _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = e.message ?: "Connection failed")
+                ProcessingService.stop(getApplication())
+            }
+        }
+    }
+
+    private suspend fun pollStatus(jobId: String) {
+        notif.showProgress("Starting…", 0)
+        var retries = 0
+        while (true) {
+            delay(2500)
+            try {
+                val status = api().status(jobId)
+                retries = 0
+                val text = when (status.status) {
+                    "queued" -> "Queued…"
+                    "uploading" -> "Uploading…"
+                    "extracting" -> "Extracting audio…"
+                    "downloading" -> "Downloading video…"
+                    "separating" -> "Separating vocals…"
+                    "merging" -> "Merging audio…"
+                    "done" -> "Done"
+                    "error" -> status.error ?: "Unknown error"
+                    else -> status.status
+                }
+                _ui.value = _ui.value.copy(progress = status.progress, statusText = text)
+                ProcessingService.start(getApplication(), text, status.progress)
+
+                when (status.status) {
+                    "done" -> {
+                        val filename = status.filename ?: "Done"
+                        _ui.value = _ui.value.copy(state = UiState.Done, statusText = filename)
+                        // Cache result on-device
+                        cache.cacheResult(serverUrl, jobId, filename)
+                        historyStore.add(HistoryItem(
+                            filename = filename, url = _ui.value.url,
+                            model = _ui.value.selectedModel, jobId = jobId,
+                            isFileUpload = _ui.value.selectedFileUri != null,
+                            sourceFileName = _ui.value.selectedFileName,
+                            sourceFileSize = _ui.value.selectedFileSize,
+                        ))
+                        _ui.value = _ui.value.copy(history = historyStore.getAll())
+                        prefs.edit().remove("active_job_id").apply()
+                        ProcessingService.stop(getApplication())
+                        notif.showDone(filename)
+                        hapticTick()
+                        return
+                    }
+                    "error" -> {
+                        _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = text)
+                        prefs.edit().remove("active_job_id").apply()
+                        ProcessingService.stop(getApplication())
+                        notif.showError(text)
+                        return
+                    }
+                }
+            } catch (e: Exception) {
+                retries++
+                if (retries >= 30) {
+                    _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = "Lost connection to server")
+                    prefs.edit().remove("active_job_id").apply()
+                    ProcessingService.stop(getApplication())
+                    notif.showError("Lost connection to server")
+                    return
+                }
+                delay(retries * 1000L)
+            }
+        }
+    }
+
+    // --- Results ---
+    fun getStreamUrl(): String? {
+        val jobId = _ui.value.jobId ?: return null
+        return "${serverUrl}/api/download/$jobId"
+    }
+
+    fun getFilename(): String = _ui.value.statusText.ifEmpty { "vocals-only.mp4" }
+
+    fun shareResult(context: Context) {
+        val jobId = _ui.value.jobId ?: return
+        shareByJobId(context, jobId, getFilename())
+    }
+
+    fun shareByJobId(context: Context, jobId: String, filename: String) {
+        bgScope.launch {
+            try {
+                val cacheDir = java.io.File(context.cacheDir, "shared")
+                cacheDir.mkdirs()
+                val file = java.io.File(cacheDir, filename)
+
+                val url = java.net.URL("${serverUrl}/api/download/$jobId")
+                val conn = url.openConnection() as java.net.HttpURLConnection
+                conn.connect()
+                conn.inputStream.use { input ->
+                    file.outputStream().use { output -> input.copyTo(output) }
+                }
+                conn.disconnect()
+
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    context, "${context.packageName}.fileprovider", file
+                )
+                val mime = if (filename.endsWith(".mp3")) "audio/mpeg" else "video/mp4"
+                val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                    type = mime
+                    putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                val chooser = android.content.Intent.createChooser(intent, "Share")
+                chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(chooser)
+            } catch (e: Exception) {
+                _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = "Share failed: ${e.message}")
+            }
+        }
+    }
+
+    fun saveToUri(context: Context, uri: android.net.Uri) {
+        val jobId = _ui.value.jobId ?: return
+        _ui.value = _ui.value.copy(downloading = true)
+        bgScope.launch {
+            try {
+                val url = java.net.URL("${serverUrl}/api/download/$jobId")
+                val conn = url.openConnection() as java.net.HttpURLConnection
+                conn.connect()
+                context.contentResolver.openOutputStream(uri)?.use { out ->
+                    conn.inputStream.use { it.copyTo(out) }
+                }
+                conn.disconnect()
+                _ui.value = _ui.value.copy(downloading = false)
+            } catch (e: Exception) {
+                _ui.value = _ui.value.copy(downloading = false, state = UiState.Error, errorMessage = "Save failed: ${e.message}")
+            }
+        }
+    }
+}

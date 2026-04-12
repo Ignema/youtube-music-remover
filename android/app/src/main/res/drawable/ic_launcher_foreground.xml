@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Music note with a slash through it -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,28 L54,62 C52.5,61.4 50.8,61 49,61 C44.6,61 41,63.7 41,67 C41,70.3 44.6,73 49,73 C53.4,73 57,70.3 57,67 L57,40 L67,37 L67,34 Z" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3"
+        android:pathData="M38,75 L70,33" />
+</vector>

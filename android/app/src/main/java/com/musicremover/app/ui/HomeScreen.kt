@@ -1,0 +1,1088 @@
+package com.musicremover.app.ui
+
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.CloudDownload
+import androidx.compose.material.icons.outlined.GraphicEq
+import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.MusicOff
+import androidx.compose.material.icons.outlined.Merge
+import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.SaveAlt
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.VideoFile
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.musicremover.app.MainUiState
+import com.musicremover.app.MainViewModel
+import com.musicremover.app.UiState
+import com.musicremover.app.data.HistoryItem
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -> Unit, onPlay: (url: String, title: String) -> Unit = { _, _ -> }) {
+    val ui by vm.ui.collectAsState()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val context = LocalContext.current
+
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            LargeTopAppBar(
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Outlined.MusicOff, null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(12.dp))
+                        Text("Murem")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onHelpClick) {
+                        Icon(Icons.Outlined.HelpOutline, "Help", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(Icons.Outlined.Settings, "Settings", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.largeTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
+            )
+        },
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 24.dp)
+                .verticalScroll(rememberScrollState())
+                .imePadding(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Spacer(Modifier.height(8.dp))
+
+            AnimatedContent(
+                targetState = ui.state,
+                transitionSpec = {
+                    (fadeIn() + slideInVertically { it / 3 }) togetherWith fadeOut()
+                },
+                label = "state",
+            ) { state ->
+                when (state) {
+                    UiState.Idle, UiState.Error -> IdleContent(ui, vm)
+                    UiState.Processing -> ProcessingContent(ui)
+                    UiState.Done -> DoneContent(ui, vm, context, onPlay)
+                }
+            }
+
+            Spacer(Modifier.height(32.dp))
+
+            if (ui.state == UiState.Idle && ui.history.isNotEmpty()) {
+                HistorySection(ui.history, vm, onPlay)
+            }
+        }
+    }
+
+    // Video info bottom sheet
+    if (ui.showInfoSheet) {
+        androidx.compose.material3.ModalBottomSheet(
+            onDismissRequest = vm::dismissInfoSheet,
+        ) {
+            val fileItem = ui.fileInfoItem
+            if (fileItem != null) {
+                FileInfoSheet(fileItem)
+                SheetActions(item = fileItem, vm = vm, context = context)
+            } else {
+                VideoInfoSheet(ui)
+                val infoItem = vm.currentInfoItem
+                if (infoItem != null) {
+                    SheetActions(item = infoItem, vm = vm, context = context)
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
+    val context = LocalContext.current
+    val filePicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent(),
+    ) { uri ->
+        if (uri != null) {
+            val name = try {
+                val cursor = context.contentResolver.query(uri, null, null, null, null)
+                cursor?.use {
+                    if (it.moveToFirst()) {
+                        val idx = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                        if (idx >= 0) it.getString(idx) else null
+                    } else null
+                }
+            } catch (_: Exception) { null }
+            val size = try {
+                val cursor = context.contentResolver.query(uri, null, null, null, null)
+                cursor?.use {
+                    if (it.moveToFirst()) {
+                        val idx = it.getColumnIndex(android.provider.OpenableColumns.SIZE)
+                        if (idx >= 0) it.getLong(idx) else null
+                    } else null
+                }
+            } catch (_: Exception) { null }
+            vm.onFileSelected(uri, name, size)
+        }
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        // URL input
+        OutlinedTextField(
+            value = ui.url,
+            onValueChange = {
+                vm.onUrlChange(it)
+                if (it.isNotEmpty()) vm.clearFile()
+            },
+            label = { Text("YouTube URL or Video ID") },
+            placeholder = { Text("Paste a link or share from YouTube") },
+            singleLine = true,
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth(),
+            enabled = ui.selectedFileUri == null,
+            trailingIcon = {
+                if (ui.url.isNotEmpty()) {
+                    IconButton(onClick = { vm.onUrlChange("") }) {
+                        Icon(Icons.Outlined.Close, "Clear", Modifier.size(18.dp))
+                    }
+                }
+            },
+        )
+
+        // Thumbnail preview
+        val preview = ui.urlPreview
+        if (preview != null && preview.thumbnail.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    modifier = Modifier.padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    coil.compose.AsyncImage(
+                        model = preview.thumbnail,
+                        contentDescription = "Thumbnail",
+                        modifier = Modifier
+                            .size(width = 80.dp, height = 45.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            preview.title,
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        if (preview.channel.isNotEmpty()) {
+                            Text(
+                                preview.channel,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+            }
+        } else if (ui.loadingPreview) {
+            Spacer(Modifier.height(8.dp))
+            androidx.compose.material3.LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth().height(2.dp),
+            )
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // Divider
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            HorizontalDivider(Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
+            Text(
+                "  or  ",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.outline,
+            )
+            HorizontalDivider(Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // File picker
+        if (ui.selectedFileUri != null) {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Outlined.VideoFile, null, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        text = ui.selectedFileName ?: "Selected file",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    IconButton(onClick = vm::clearFile) {
+                        Icon(Icons.Outlined.Close, "Remove", Modifier.size(18.dp))
+                    }
+                }
+            }
+        } else {
+            OutlinedButton(
+                onClick = { filePicker.launch("video/*") },
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+            ) {
+                Icon(Icons.Outlined.VideoFile, null, Modifier.size(20.dp))
+                Spacer(Modifier.width(10.dp))
+                Text("Pick a video file", style = MaterialTheme.typography.bodyLarge)
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // Model selector — opens bottom sheet
+        FilledTonalButton(
+            onClick = vm::toggleModelPicker,
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+        ) {
+            Icon(Icons.Outlined.Tune, null, Modifier.size(18.dp))
+            Spacer(Modifier.width(10.dp))
+            Text(
+                modelDisplayName(ui.selectedModel),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                "Change",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f),
+            )
+        }
+
+        // Model picker bottom sheet
+        if (ui.showModelPicker) {
+            androidx.compose.material3.ModalBottomSheet(
+                onDismissRequest = vm::toggleModelPicker,
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp),
+                ) {
+                    Text("AI Model", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Choose the model for vocal separation",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(16.dp))
+
+                    ModelOption(
+                        name = "UVR-MDX-NET-Inst_HQ_3",
+                        description = "Balanced quality and speed. Best for most videos.",
+                        tag = "Default",
+                        selected = ui.selectedModel == "UVR-MDX-NET-Inst_HQ_3.onnx",
+                        onClick = { vm.onModelSelect("UVR-MDX-NET-Inst_HQ_3.onnx") },
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    ModelOption(
+                        name = "Kim Vocal 2",
+                        description = "Higher quality extraction. Slower but better for music-heavy content.",
+                        tag = "Quality",
+                        selected = ui.selectedModel == "Kim_Vocal_2.onnx",
+                        onClick = { vm.onModelSelect("Kim_Vocal_2.onnx") },
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    ModelOption(
+                        name = "UVR MDXNET KARA 2",
+                        description = "Karaoke-style separation. Best for isolating singing from instrumentals.",
+                        tag = "Karaoke",
+                        selected = ui.selectedModel == "UVR_MDXNET_KARA_2.onnx",
+                        onClick = { vm.onModelSelect("UVR_MDXNET_KARA_2.onnx") },
+                    )
+                }
+            }
+        }
+
+        // Options row: audio-only + bitrate
+        Spacer(Modifier.height(10.dp))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            androidx.compose.material3.FilterChip(
+                selected = ui.audioOnly,
+                onClick = { vm.setAudioOnly(!ui.audioOnly) },
+                label = { Text("Audio only") },
+                shape = RoundedCornerShape(12.dp),
+            )
+            // Bitrate selector
+            listOf("128k", "192k", "320k").forEach { br ->
+                androidx.compose.material3.FilterChip(
+                    selected = ui.bitrate == br,
+                    onClick = { vm.setBitrate(br) },
+                    label = { Text(br) },
+                    shape = RoundedCornerShape(12.dp),
+                )
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
+        AnimatedVisibility(visible = ui.state == UiState.Error) {
+            Column {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = ui.errorMessage,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        OutlinedButton(
+                            onClick = vm::retry,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                            ),
+                        ) {
+                            Icon(Icons.Outlined.Refresh, null, Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Retry")
+                        }
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+        }
+
+        // CTA
+        Button(
+            onClick = vm::process,
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+        ) {
+            Icon(Icons.Outlined.MusicOff, null, Modifier.size(20.dp))
+            Spacer(Modifier.width(10.dp))
+            Text("Remove Music", style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
+@Composable
+private fun ProcessingContent(ui: MainUiState) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = ui.progress / 100f,
+        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        label = "progress",
+    )
+
+    val infiniteTransition = rememberInfiniteTransition(label = "processing")
+
+    // Pulsing alpha for the icon
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(1000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "pulseAlpha",
+    )
+
+    // Rotating for the icon
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f, targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(3000, easing = LinearEasing), RepeatMode.Restart),
+        label = "rotation",
+    )
+
+    // Bouncing scale
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 0.9f, targetValue = 1.1f,
+        animationSpec = infiniteRepeatable(tween(800, easing = LinearEasing), RepeatMode.Reverse),
+        label = "scale",
+    )
+
+    // Pick icon based on current step
+    val stepIcon = when {
+        ui.statusText.contains("Download", ignoreCase = true) -> Icons.Outlined.CloudDownload
+        ui.statusText.contains("Separat", ignoreCase = true) -> Icons.Outlined.GraphicEq
+        ui.statusText.contains("Merg", ignoreCase = true) -> Icons.Outlined.Merge
+        ui.statusText.contains("Extract", ignoreCase = true) -> Icons.Outlined.GraphicEq
+        ui.statusText.contains("Upload", ignoreCase = true) -> Icons.Outlined.CloudDownload
+        else -> Icons.Outlined.MusicOff
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(top = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        // Animated step icon
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(100.dp),
+        ) {
+            // Background circle
+            Card(
+                shape = androidx.compose.foundation.shape.CircleShape,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f * pulseAlpha),
+                ),
+                modifier = Modifier
+                    .size(100.dp)
+                    .graphicsLayer { scaleX = scale; scaleY = scale },
+            ) {}
+
+            // Icon
+            AnimatedContent(
+                targetState = stepIcon,
+                transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) },
+                label = "stepIcon",
+            ) { icon ->
+                Icon(
+                    icon, null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(44.dp)
+                        .alpha(pulseAlpha)
+                        .graphicsLayer {
+                            if (icon == Icons.Outlined.GraphicEq) {
+                                // Waveform doesn't rotate, just pulses
+                            } else {
+                                rotationZ = rotation
+                            }
+                        },
+                )
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
+
+        // Percentage
+        Text(
+            text = "${ui.progress}%",
+            style = MaterialTheme.typography.displaySmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+
+        Spacer(Modifier.height(6.dp))
+
+        // Status text
+        AnimatedContent(
+            targetState = ui.statusText,
+            transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(200)) },
+            label = "statusText",
+        ) { text ->
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        Spacer(Modifier.height(28.dp))
+
+        LinearProgressIndicator(
+            progress = { animatedProgress },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp)
+                .clip(RoundedCornerShape(3.dp)),
+            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+        )
+
+        Spacer(Modifier.height(24.dp))
+
+        Text(
+            text = "You can leave the app — we'll notify you when it's done.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.outline,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun DoneContent(ui: MainUiState, vm: MainViewModel, context: android.content.Context, onPlay: (String, String) -> Unit) {
+    val saveLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.CreateDocument("video/mp4"),
+    ) { uri ->
+        if (uri != null) vm.saveToUri(context, uri)
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(top = 48.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        // Animated check icon
+        AnimatedVisibility(
+            visible = true,
+            enter = scaleIn(spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessLow)) + fadeIn(),
+        ) {
+            Icon(
+                Icons.Outlined.CheckCircle,
+                contentDescription = "Done",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(80.dp),
+            )
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+        Text("Vocals extracted", style = MaterialTheme.typography.headlineSmall)
+
+        Spacer(Modifier.height(6.dp))
+
+        Text(
+            text = ui.statusText,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
+
+        Spacer(Modifier.height(32.dp))
+
+        // Play — primary action
+        Button(
+            onClick = {
+                val url = vm.getStreamUrl() ?: return@Button
+                onPlay(url, ui.statusText)
+            },
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+        ) {
+            Icon(Icons.Outlined.PlayArrow, null, Modifier.size(22.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Play", style = MaterialTheme.typography.titleMedium)
+        }
+
+        Spacer(Modifier.height(10.dp))
+
+        // Save and Share — side by side
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            OutlinedButton(
+                onClick = { saveLauncher.launch(vm.getFilename()) },
+                enabled = !ui.downloading,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.weight(1f).height(52.dp),
+            ) {
+                Icon(Icons.Outlined.SaveAlt, null, Modifier.size(20.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(if (ui.downloading) "Saving…" else "Save", style = MaterialTheme.typography.titleSmall)
+            }
+            OutlinedButton(
+                onClick = { vm.shareResult(context) },
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.weight(1f).height(52.dp),
+            ) {
+                Icon(Icons.Outlined.Share, null, Modifier.size(20.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Share", style = MaterialTheme.typography.titleSmall)
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // Process another — tertiary
+        FilledTonalButton(onClick = vm::reset, shape = RoundedCornerShape(12.dp)) {
+            Icon(Icons.Outlined.Refresh, null, Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Process Another")
+        }
+    }
+}
+
+@Composable
+private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay: (String, String) -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Outlined.History, null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(Modifier.width(8.dp))
+                Text("Recent", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Text(
+                "hold for info",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.outline,
+            )
+        }
+
+        Spacer(Modifier.height(10.dp))
+
+        history.forEach { item ->
+            HistoryCard(item, vm, onPlay)
+            Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, String) -> Unit) {
+    val dateFormat = SimpleDateFormat("MMM d, h:mm a", Locale.getDefault())
+    val dateStr = dateFormat.format(Date(item.timestamp))
+    val serverUrl = vm.ui.collectAsState().value.serverUrl
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .combinedClickable(
+                onClick = {
+                    val url = "$serverUrl/api/download/${item.jobId}"
+                    onPlay(url, item.filename.removeSuffix(".mp4"))
+                },
+                onLongClick = {
+                    vm.hapticTick()
+                    if (item.isFileUpload) {
+                        vm.showFileInfo(item)
+                    } else if (item.url.isNotEmpty()) {
+                        vm.fetchVideoInfo(item.url, item)
+                    }
+                },
+            ),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Outlined.PlayArrow, null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(22.dp),
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = item.filename.removeSuffix(".mp4"),
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = "$dateStr · ${item.model.removeSuffix(".onnx")}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (!item.isFileUpload && item.url.isNotEmpty()) {
+                IconButton(onClick = { vm.onUrlChange(item.url) }) {
+                    Icon(Icons.Outlined.Refresh, "Reprocess", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.outline)
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun VideoInfoSheet(ui: MainUiState) {
+    Column(
+        modifier = androidx.compose.ui.Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 32.dp),
+    ) {
+        if (ui.loadingInfo) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                androidx.compose.material3.CircularProgressIndicator(
+                    modifier = Modifier.size(32.dp),
+                    strokeWidth = 3.dp,
+                )
+            }
+        } else if (ui.videoInfo != null) {
+            val info = ui.videoInfo
+
+            // Thumbnail
+            if (info.thumbnail.isNotEmpty()) {
+                coil.compose.AsyncImage(
+                    model = info.thumbnail,
+                    contentDescription = "Thumbnail",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(16.dp)),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                )
+                Spacer(Modifier.height(16.dp))
+            }
+
+            // Title
+            Text(
+                text = info.title,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            Spacer(Modifier.height(6.dp))
+
+            // Channel
+            if (info.channel.isNotEmpty()) {
+                Text(
+                    text = info.channel,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(12.dp))
+            }
+
+            // Stats row
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                if (info.duration > 0) {
+                    val mins = info.duration / 60
+                    val secs = info.duration % 60
+                    InfoChip("${mins}:${"%02d".format(secs)}")
+                }
+                if (info.view_count > 0) {
+                    val views = when {
+                        info.view_count >= 1_000_000 -> "${info.view_count / 1_000_000}M views"
+                        info.view_count >= 1_000 -> "${info.view_count / 1_000}K views"
+                        else -> "${info.view_count} views"
+                    }
+                    InfoChip(views)
+                }
+                if (info.upload_date.length == 8) {
+                    val formatted = "${info.upload_date.substring(0, 4)}-${info.upload_date.substring(4, 6)}-${info.upload_date.substring(6, 8)}"
+                    InfoChip(formatted)
+                }
+            }
+
+            // Description
+            if (info.description.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = info.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun InfoChip(text: String) {
+    Card(
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+        )
+    }
+}
+
+
+@Composable
+private fun FileInfoSheet(item: HistoryItem) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 32.dp),
+    ) {
+        // Icon + title
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                Icons.Outlined.VideoFile, null,
+                Modifier.size(28.dp),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+            Spacer(Modifier.width(12.dp))
+            Text("File Details", style = MaterialTheme.typography.titleMedium)
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+        // Source file name
+        InfoRow("Source", item.sourceFileName ?: "Unknown")
+
+        // File size
+        if (item.sourceFileSize != null && item.sourceFileSize > 0) {
+            Spacer(Modifier.height(8.dp))
+            val sizeStr = when {
+                item.sourceFileSize >= 1_073_741_824 -> "%.1f GB".format(item.sourceFileSize / 1_073_741_824.0)
+                item.sourceFileSize >= 1_048_576 -> "%.1f MB".format(item.sourceFileSize / 1_048_576.0)
+                item.sourceFileSize >= 1024 -> "%.1f KB".format(item.sourceFileSize / 1024.0)
+                else -> "${item.sourceFileSize} B"
+            }
+            InfoRow("Size", sizeStr)
+        }
+
+        // Output file
+        Spacer(Modifier.height(8.dp))
+        InfoRow("Output", item.filename)
+
+        // Model used
+        Spacer(Modifier.height(8.dp))
+        InfoRow("Model", item.model.removeSuffix(".onnx"))
+
+        // Processed date
+        Spacer(Modifier.height(8.dp))
+        val dateFormat = SimpleDateFormat("MMM d, yyyy · h:mm a", Locale.getDefault())
+        InfoRow("Processed", dateFormat.format(Date(item.timestamp)))
+    }
+}
+
+@Composable
+private fun InfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(start = 16.dp),
+        )
+    }
+}
+
+
+private fun modelDisplayName(model: String): String = when (model) {
+    "UVR-MDX-NET-Inst_HQ_3.onnx" -> "UVR-MDX-NET HQ3 · Balanced"
+    "Kim_Vocal_2.onnx" -> "Kim Vocal 2 · Quality"
+    "UVR_MDXNET_KARA_2.onnx" -> "UVR KARA 2 · Karaoke"
+    else -> model.removeSuffix(".onnx")
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ModelOption(
+    name: String,
+    description: String,
+    tag: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Card(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected)
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+            else
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+        ),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Selection indicator
+            Icon(
+                if (selected) Icons.Outlined.CheckCircle else Icons.Outlined.Tune,
+                contentDescription = null,
+                tint = if (selected) MaterialTheme.colorScheme.primary
+                       else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(24.dp),
+            )
+            Spacer(Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(name, style = MaterialTheme.typography.titleSmall)
+                    Spacer(Modifier.width(8.dp))
+                    Card(
+                        shape = RoundedCornerShape(6.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (selected)
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant,
+                        ),
+                    ) {
+                        Text(
+                            tag,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (selected) MaterialTheme.colorScheme.primary
+                                   else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                        )
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun SheetActions(item: HistoryItem, vm: MainViewModel, context: android.content.Context) {
+    Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+        Spacer(Modifier.height(16.dp))
+
+        // Share
+        FilledTonalButton(
+            onClick = {
+                vm.shareByJobId(context, item.jobId, item.filename)
+                vm.dismissInfoSheet()
+            },
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Icon(Icons.Outlined.Share, null, Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Share")
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // Delete
+        OutlinedButton(
+            onClick = {
+                vm.deleteHistoryItem(item)
+                vm.dismissInfoSheet()
+                vm.hapticTick()
+            },
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.error,
+            ),
+        ) {
+            Icon(Icons.Outlined.Close, null, Modifier.size(16.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Remove from History")
+        }
+
+        Spacer(Modifier.height(24.dp))
+    }
+}
