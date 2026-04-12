@@ -7,7 +7,7 @@ import tempfile
 import uuid
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -58,15 +58,79 @@ def run_cmd(*cmd, cwd=None):
     return result.returncode == 0, result.stdout, result.stderr
 
 
+def separate_and_merge(job: dict, video_file: Path, audio_file: Path,
+                       model: str, batch_size: int, title: str,
+                       temp_dir: Path, output_dir: Path):
+    """Shared logic: separate vocals → merge → output."""
+    # Separate vocals — stream progress from tqdm output
+    job["status"] = "separating"
+    job["progress"] = 30
+    sep_proc = subprocess.Popen(
+        [
+            "audio-separator", str(audio_file),
+            "--model_filename", model,
+            "--mdx_batch_size", str(batch_size),
+            "--output_dir", str(temp_dir),
+            "--output_format", "WAV",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    pct_re = re.compile(r"(\d+)%\|")
+    max_sep_pct = 0
+    for line in iter(sep_proc.stderr.readline, ""):
+        m = pct_re.search(line)
+        if m:
+            sep_pct = int(m.group(1))
+            max_sep_pct = max(max_sep_pct, sep_pct)
+            job["progress"] = 30 + int(max_sep_pct * 0.4)
+    sep_proc.wait()
+    if sep_proc.returncode != 0:
+        job["status"] = "error"
+        job["error"] = "Separation failed"
+        return False
+
+    vocals = [f for f in temp_dir.iterdir() if "vocals" in f.name.lower() and f.suffix == ".wav"]
+    if not vocals:
+        job["status"] = "error"
+        job["error"] = "Vocals file not found"
+        return False
+    vocals_file = vocals[0]
+
+    # Merge
+    job["status"] = "merging"
+    job["progress"] = 75
+    safe_title = re.sub(r'[\\/:*?"<>|]', "_", title)
+    final_output = output_dir / f"{safe_title}-vocals-only.mp4"
+
+    ok, _, err = run_cmd(
+        "ffmpeg", "-i", str(video_file), "-i", str(vocals_file),
+        "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+        "-map", "0:v:0", "-map", "1:a:0", "-shortest", "-y",
+        str(final_output),
+    )
+    if not ok:
+        job["status"] = "error"
+        job["error"] = f"Merge failed: {err}"
+        return False
+
+    shutil.rmtree(temp_dir)
+    job["status"] = "done"
+    job["progress"] = 100
+    job["output_path"] = str(final_output)
+    job["filename"] = final_output.name
+    return True
+
+
 def process_video(job_id: str, url: str, model: str, batch_size: int):
-    """Run the full pipeline: download → separate → merge."""
+    """Pipeline for YouTube URLs: download → separate → merge."""
     job = jobs[job_id]
     temp_dir = Path(tempfile.mkdtemp())
     output_dir = Path("output")
     output_dir.mkdir(exist_ok=True)
 
     try:
-        # Download
         job["status"] = "downloading"
         job["progress"] = 10
         video_id = extract_video_id(url)
@@ -98,70 +162,47 @@ def process_video(job_id: str, url: str, model: str, batch_size: int):
             return
         audio_file = audio_files[0]
 
-        # Separate vocals — stream progress from tqdm output
-        job["status"] = "separating"
-        job["progress"] = 30
-        sep_proc = subprocess.Popen(
-            [
-                "audio-separator", str(audio_file),
-                "--model_filename", model,
-                "--mdx_batch_size", str(batch_size),
-                "--output_dir", str(temp_dir),
-                "--output_format", "WAV",
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        # audio-separator uses tqdm which writes to stderr with patterns like "45%|"
-        pct_re = re.compile(r"(\d+)%\|")
-        for line in iter(sep_proc.stderr.readline, ""):
-            m = pct_re.search(line)
-            if m:
-                sep_pct = int(m.group(1))
-                # Map separation 0-100% to overall progress 30-70%
-                job["progress"] = 30 + int(sep_pct * 0.4)
-        sep_proc.wait()
-        if sep_proc.returncode != 0:
-            job["status"] = "error"
-            job["error"] = "Separation failed"
-            return
-
-        vocals = [f for f in temp_dir.iterdir() if "vocals" in f.name.lower() and f.suffix == ".wav"]
-        if not vocals:
-            job["status"] = "error"
-            job["error"] = "Vocals file not found"
-            return
-        vocals_file = vocals[0]
-
         # Get title
-        job["status"] = "merging"
-        job["progress"] = 75
         ok, title, _ = run_cmd("yt-dlp", "--print", "title", yt_url)
-        if not ok or not title:
-            title = video_id
-        else:
-            title = re.sub(r'[\\/:*?"<>|]', "_", title.strip())
+        title = title.strip() if ok and title else video_id
 
-        final_output = output_dir / f"{title}-vocals-only.mp4"
+        separate_and_merge(job, video_file, audio_file, model, batch_size,
+                           title, temp_dir, output_dir)
 
-        # Merge
+    except Exception as e:
+        job["status"] = "error"
+        job["error"] = str(e)
+        if temp_dir.exists():
+            shutil.rmtree(temp_dir)
+
+
+def process_upload(job_id: str, file_path: Path, original_name: str,
+                   model: str, batch_size: int):
+    """Pipeline for uploaded files: extract audio → separate → merge."""
+    job = jobs[job_id]
+    temp_dir = file_path.parent
+    output_dir = Path("output")
+    output_dir.mkdir(exist_ok=True)
+
+    try:
+        # Extract audio from uploaded video
+        job["status"] = "extracting"
+        job["progress"] = 15
+        audio_file = temp_dir / "extracted_audio.wav"
         ok, _, err = run_cmd(
-            "ffmpeg", "-i", str(video_file), "-i", str(vocals_file),
-            "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
-            "-map", "0:v:0", "-map", "1:a:0", "-shortest", "-y",
-            str(final_output),
+            "ffmpeg", "-i", str(file_path),
+            "-vn", "-acodec", "pcm_s16le", "-ar", "44100", "-ac", "2",
+            "-y", str(audio_file),
         )
         if not ok:
             job["status"] = "error"
-            job["error"] = f"Merge failed: {err}"
+            job["error"] = f"Audio extraction failed: {err}"
             return
 
-        shutil.rmtree(temp_dir)
-        job["status"] = "done"
-        job["progress"] = 100
-        job["output_path"] = str(final_output)
-        job["filename"] = final_output.name
+        title = Path(original_name).stem
+
+        separate_and_merge(job, file_path, audio_file, model, batch_size,
+                           title, temp_dir, output_dir)
 
     except Exception as e:
         job["status"] = "error"
@@ -191,6 +232,39 @@ def start_processing(req: ProcessRequest):
     t = threading.Thread(
         target=process_video,
         args=(job_id, req.url, req.model, req.batch_size),
+        daemon=True,
+    )
+    t.start()
+
+    return {"job_id": job_id}
+
+
+@app.post("/api/upload")
+async def upload_processing(
+    file: UploadFile = File(...),
+    model: str = Form("UVR-MDX-NET-Inst_HQ_3.onnx"),
+    batch_size: int = Form(4),
+):
+    if model not in MODELS:
+        raise HTTPException(400, "Invalid model")
+    if not 1 <= batch_size <= 8:
+        raise HTTPException(400, "Batch size must be 1-8")
+
+    job_id = str(uuid.uuid4())
+    jobs[job_id] = {"status": "uploading", "progress": 5}
+
+    # Save uploaded file to temp dir
+    temp_dir = Path(tempfile.mkdtemp())
+    suffix = Path(file.filename or "video.mp4").suffix or ".mp4"
+    file_path = temp_dir / f"upload{suffix}"
+    with open(file_path, "wb") as f:
+        content = await file.read()
+        f.write(content)
+
+    import threading
+    t = threading.Thread(
+        target=process_upload,
+        args=(job_id, file_path, file.filename or "video.mp4", model, batch_size),
         daemon=True,
     )
     t.start()
