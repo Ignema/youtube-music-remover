@@ -489,6 +489,7 @@ def start_processing(request: Request, req: ProcessRequest):
 @app.post("/api/batch")
 @rate_limit("5/minute")
 def batch_processing(
+    request: Request,
     urls: list[str],
     model: str = "UVR-MDX-NET-Inst_HQ_3.onnx",
     batch_size: int = 4,
