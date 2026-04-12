@@ -529,6 +529,7 @@ def batch_processing(
 @app.post("/api/upload")
 @rate_limit("10/minute")
 async def upload_processing(
+    request: Request,
     file: UploadFile = File(...),
     model: str = Form("UVR-MDX-NET-Inst_HQ_3.onnx"),
     batch_size: int = Form(4),
