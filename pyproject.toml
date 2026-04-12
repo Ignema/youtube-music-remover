@@ -1,13 +1,30 @@
 [project]
-name = "youtube-music-remover"
-version = "1.0.0"
-description = "Strip background music from YouTube videos"
-requires-python = ">=3.8"
+name = "murem"
+version = "2.0.0"
+description = "Strip background music from YouTube videos using AI"
+requires-python = ">=3.10"
 dependencies = [
     "yt-dlp>=2023.10.13",
     "audio-separator[gpu]>=0.17.0",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.0",
+    "python-multipart>=0.0.7",
+    "websockets>=12.0",
     "jupyter>=1.0.0",
     "ipython>=8.12.0",
     "notebook>=7.0.0",
     "gradio>=4.0.0",
+]
+
+[project.optional-dependencies]
+cpu = [
+    "audio-separator[cpu]>=0.17.0",
+]
+api = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.0",
+    "python-multipart>=0.0.7",
+    "websockets>=12.0",
+    "yt-dlp>=2023.10.13",
+    "audio-separator[gpu]>=0.17.0",
 ]

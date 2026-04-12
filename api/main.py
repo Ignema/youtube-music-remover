@@ -1,122 +1,205 @@
-"""FastAPI backend for YouTube Music Remover."""
+"""FastAPI backend for Murem — YouTube Music Remover.
 
+Security notes:
+- CORS is set to allow all origins for local/personal use.
+  If exposing to the internet, restrict `allow_origins` to your domain.
+- db_set() builds column names from **kwargs keys, but these are only ever
+  called with hardcoded keys from within this module — never from user input.
+"""
+
+import asyncio
 import json
+import logging
 import re
 import shutil
 import sqlite3
 import subprocess
 import tempfile
 import threading
+import time
 import uuid
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
-app = FastAPI(title="YouTube Music Remover API")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+# --- Logging ---
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
 )
+logger = logging.getLogger("murem")
 
+# --- Constants ---
 MODELS = [
     "UVR-MDX-NET-Inst_HQ_3.onnx",
     "Kim_Vocal_2.onnx",
     "UVR_MDXNET_KARA_2.onnx",
 ]
 BITRATES = ["128k", "192k", "320k"]
+JOB_TTL_HOURS = 24  # Auto-cleanup jobs older than this
 
 # --- SQLite Job Store ---
 
 DB_PATH = Path("jobs.db")
+_db_lock = threading.Lock()
+
+
+def _get_conn() -> sqlite3.Connection:
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
 def init_db():
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS jobs (
-            id TEXT PRIMARY KEY,
-            status TEXT DEFAULT 'queued',
-            progress INTEGER DEFAULT 0,
-            error TEXT,
-            output_path TEXT,
-            filename TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    conn.commit()
-    conn.close()
+    with _db_lock:
+        conn = _get_conn()
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS jobs (
+                id TEXT PRIMARY KEY,
+                status TEXT DEFAULT 'queued',
+                progress INTEGER DEFAULT 0,
+                error TEXT,
+                output_path TEXT,
+                filename TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.commit()
+        conn.close()
 
 
 def db_set(job_id: str, **kwargs):
-    conn = sqlite3.connect(str(DB_PATH))
-    sets = ", ".join(f"{k} = ?" for k in kwargs)
-    vals = list(kwargs.values()) + [job_id]
-    conn.execute(f"UPDATE jobs SET {sets} WHERE id = ?", vals)
-    conn.commit()
-    conn.close()
+    """Update job fields. Keys are hardcoded by callers — never from user input."""
+    allowed_keys = {"status", "progress", "error", "output_path", "filename"}
+    for k in kwargs:
+        if k not in allowed_keys:
+            raise ValueError(f"Invalid job field: {k}")
+    with _db_lock:
+        conn = _get_conn()
+        sets = ", ".join(f"{k} = ?" for k in kwargs)
+        vals = list(kwargs.values()) + [job_id]
+        conn.execute(f"UPDATE jobs SET {sets} WHERE id = ?", vals)
+        conn.commit()
+        conn.close()
 
 
 def db_get(job_id: str) -> Optional[dict]:
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
-    row = conn.execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
-    conn.close()
-    return dict(row) if row else None
+    with _db_lock:
+        conn = _get_conn()
+        row = conn.execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
+        conn.close()
+        return dict(row) if row else None
 
 
 def db_create(job_id: str):
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.execute("INSERT INTO jobs (id) VALUES (?)", (job_id,))
-    conn.commit()
-    conn.close()
+    with _db_lock:
+        conn = _get_conn()
+        conn.execute("INSERT INTO jobs (id) VALUES (?)", (job_id,))
+        conn.commit()
+        conn.close()
 
 
-init_db()
+def cleanup_old_jobs():
+    """Remove jobs and output files older than JOB_TTL_HOURS."""
+    logger.info("Cleaning up old jobs...")
+    with _db_lock:
+        conn = _get_conn()
+        old = conn.execute(
+            "SELECT id, output_path FROM jobs WHERE created_at < datetime('now', ?)",
+            (f"-{JOB_TTL_HOURS} hours",),
+        ).fetchall()
+        for row in old:
+            path = row["output_path"]
+            if path and Path(path).exists():
+                Path(path).unlink(missing_ok=True)
+                logger.info(f"Deleted output: {path}")
+        conn.execute(
+            "DELETE FROM jobs WHERE created_at < datetime('now', ?)",
+            (f"-{JOB_TTL_HOURS} hours",),
+        )
+        conn.commit()
+        conn.close()
+    logger.info(f"Cleaned up {len(old)} old job(s)")
 
 
-# --- WebSocket connections ---
+def cleanup_orphaned_temp_dirs():
+    """Remove stale temp directories from crashed processes."""
+    temp_root = Path(tempfile.gettempdir())
+    count = 0
+    for d in temp_root.iterdir():
+        if d.is_dir() and d.name.startswith("tmp"):
+            # Only clean dirs older than 1 hour
+            try:
+                age = time.time() - d.stat().st_mtime
+                if age > 3600:
+                    shutil.rmtree(d, ignore_errors=True)
+                    count += 1
+            except OSError:
+                pass
+    if count:
+        logger.info(f"Cleaned up {count} orphaned temp dir(s)")
+
+# --- WebSocket connections (thread-safe) ---
+
+_ws_lock = threading.Lock()
 ws_clients: dict[str, list[WebSocket]] = {}
-
-
-async def notify_ws(job_id: str, data: dict):
-    for ws in ws_clients.get(job_id, []):
-        try:
-            await ws.send_json(data)
-        except Exception:
-            pass
+ws_loop: Optional[asyncio.AbstractEventLoop] = None
 
 
 def update_job(job_id: str, **kwargs):
     """Update job in DB and notify WebSocket clients."""
     db_set(job_id, **kwargs)
-    # Fire-and-forget WS notification
-    import asyncio
+    logger.info(f"Job {job_id[:8]}: {kwargs}")
     data = {"job_id": job_id, **kwargs}
-    for ws in ws_clients.get(job_id, []):
+    with _ws_lock:
+        clients = list(ws_clients.get(job_id, []))
+    for ws in clients:
         try:
-            asyncio.run_coroutine_threadsafe(ws.send_json(data), ws_loop)
+            if ws_loop and ws_loop.is_running():
+                asyncio.run_coroutine_threadsafe(ws.send_json(data), ws_loop)
         except Exception:
             pass
 
 
-ws_loop = None
+# --- Lifespan (replaces deprecated on_event) ---
 
-
-@app.on_event("startup")
-async def startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     global ws_loop
-    import asyncio
     ws_loop = asyncio.get_event_loop()
+    init_db()
+    cleanup_old_jobs()
+    cleanup_orphaned_temp_dirs()
+    logger.info("Murem API started")
+    yield
+    logger.info("Murem API shutting down")
 
 
-# --- Helpers ---
+app = FastAPI(title="Murem API", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    # NOTE: For local/personal use. Restrict origins if exposing to the internet.
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- Input Validation ---
+
+# Strict YouTube URL/ID pattern
+_YT_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{11}$")
+_YT_URL_PATTERNS = [
+    re.compile(r"(?:https?://)?(?:www\.)?youtu\.be/([a-zA-Z0-9_-]{11})"),
+    re.compile(r"(?:https?://)?(?:www\.)?youtube\.com/watch\?v=([a-zA-Z0-9_-]{11})"),
+    re.compile(r"(?:https?://)?(?:www\.)?youtube\.com/shorts/([a-zA-Z0-9_-]{11})"),
+]
+
 
 class ProcessRequest(BaseModel):
     url: str
@@ -125,32 +208,66 @@ class ProcessRequest(BaseModel):
     audio_only: bool = False
     bitrate: str = "192k"
 
+    @field_validator("url")
+    @classmethod
+    def validate_url(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("URL is required")
+        vid = extract_video_id(v)
+        if not _YT_ID_RE.match(vid):
+            raise ValueError("Invalid YouTube URL or video ID")
+        return v
+
+    @field_validator("model")
+    @classmethod
+    def validate_model(cls, v: str) -> str:
+        if v not in MODELS:
+            raise ValueError(f"Invalid model. Choose from: {MODELS}")
+        return v
+
+    @field_validator("bitrate")
+    @classmethod
+    def validate_bitrate(cls, v: str) -> str:
+        if v not in BITRATES:
+            raise ValueError(f"Invalid bitrate. Choose from: {BITRATES}")
+        return v
+
+    @field_validator("batch_size")
+    @classmethod
+    def validate_batch_size(cls, v: int) -> int:
+        if not 1 <= v <= 8:
+            raise ValueError("Batch size must be 1-8")
+        return v
+
 
 def extract_video_id(input_str: str) -> str:
-    if re.match(r"^[a-zA-Z0-9_-]{11}$", input_str):
+    """Extract YouTube video ID from URL or return as-is if already an ID."""
+    input_str = input_str.strip()
+    if _YT_ID_RE.match(input_str):
         return input_str
-    for pattern in [
-        r"youtu\.be/([a-zA-Z0-9_-]{11})",
-        r"watch\?v=([a-zA-Z0-9_-]{11})",
-        r"/shorts/([a-zA-Z0-9_-]{11})",
-    ]:
-        match = re.search(pattern, input_str)
+    for pattern in _YT_URL_PATTERNS:
+        match = pattern.search(input_str)
         if match:
             return match.group(1)
+    # Return as-is — validation will catch invalid IDs
     return input_str
 
 
-def run_cmd(*cmd, cwd=None):
+def run_cmd(*cmd, cwd=None) -> tuple[bool, str, str]:
+    """Run a subprocess command and return (success, stdout, stderr)."""
+    logger.debug(f"Running: {' '.join(cmd)}")
     result = subprocess.run(
         cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     )
     return result.returncode == 0, result.stdout, result.stderr
 
+# --- Processing Pipelines ---
 
 def separate_and_merge(job_id: str, video_file: Path, audio_file: Path,
                        model: str, batch_size: int, title: str,
                        temp_dir: Path, output_dir: Path,
-                       audio_only: bool = False, bitrate: str = "192k"):
+                       audio_only: bool = False, bitrate: str = "192k") -> bool:
     """Shared logic: separate vocals → merge/export → output."""
     update_job(job_id, status="separating", progress=30)
 
@@ -187,38 +304,33 @@ def separate_and_merge(job_id: str, video_file: Path, audio_file: Path,
     update_job(job_id, status="merging", progress=75)
 
     if audio_only:
-        # Export vocals as audio file
         final_output = output_dir / f"{safe_title}-vocals-only.mp3"
         ok, _, err = run_cmd(
             "ffmpeg", "-i", str(vocals_file),
-            "-c:a", "libmp3lame", "-b:a", bitrate, "-y",
-            str(final_output),
+            "-c:a", "libmp3lame", "-b:a", bitrate, "-y", str(final_output),
         )
-        media_type = "audio/mpeg"
     else:
-        # Merge video + vocals
         final_output = output_dir / f"{safe_title}-vocals-only.mp4"
         ok, _, err = run_cmd(
             "ffmpeg", "-i", str(video_file), "-i", str(vocals_file),
             "-c:v", "copy", "-c:a", "aac", "-b:a", bitrate,
-            "-map", "0:v:0", "-map", "1:a:0", "-shortest", "-y",
-            str(final_output),
+            "-map", "0:v:0", "-map", "1:a:0", "-shortest", "-y", str(final_output),
         )
-        media_type = "video/mp4"
 
     if not ok:
         update_job(job_id, status="error", error=f"Merge failed: {err}")
         return False
 
-    shutil.rmtree(temp_dir)
+    shutil.rmtree(temp_dir, ignore_errors=True)
     update_job(job_id, status="done", progress=100,
                output_path=str(final_output), filename=final_output.name)
+    logger.info(f"Job {job_id[:8]} complete: {final_output.name}")
     return True
 
 
 def process_video(job_id: str, url: str, model: str, batch_size: int,
                   audio_only: bool = False, bitrate: str = "192k"):
-    """Pipeline for YouTube URLs."""
+    """Pipeline for YouTube URLs: download → separate → merge."""
     temp_dir = Path(tempfile.mkdtemp())
     output_dir = Path("output")
     output_dir.mkdir(exist_ok=True)
@@ -256,15 +368,16 @@ def process_video(job_id: str, url: str, model: str, batch_size: int,
         separate_and_merge(job_id, video_file, audio_files[0], model, batch_size,
                            title, temp_dir, output_dir, audio_only, bitrate)
     except Exception as e:
+        logger.exception(f"Job {job_id[:8]} failed")
         update_job(job_id, status="error", error=str(e))
         if temp_dir.exists():
-            shutil.rmtree(temp_dir)
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 def process_upload(job_id: str, file_path: Path, original_name: str,
                    model: str, batch_size: int,
                    audio_only: bool = False, bitrate: str = "192k"):
-    """Pipeline for uploaded files."""
+    """Pipeline for uploaded files: extract audio → separate → merge."""
     temp_dir = file_path.parent
     output_dir = Path("output")
     output_dir.mkdir(exist_ok=True)
@@ -285,12 +398,18 @@ def process_upload(job_id: str, file_path: Path, original_name: str,
                            Path(original_name).stem, temp_dir, output_dir,
                            audio_only, bitrate)
     except Exception as e:
+        logger.exception(f"Job {job_id[:8]} failed")
         update_job(job_id, status="error", error=str(e))
         if temp_dir.exists():
-            shutil.rmtree(temp_dir)
-
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
 # --- Routes ---
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint for monitoring."""
+    return {"status": "ok", "version": "2.0.0"}
+
 
 @app.get("/api/models")
 def list_models():
@@ -301,6 +420,8 @@ def list_models():
 def video_info(url: str):
     """Get YouTube video metadata without downloading."""
     video_id = extract_video_id(url.strip())
+    if not _YT_ID_RE.match(video_id):
+        raise HTTPException(400, "Invalid YouTube URL or video ID")
     yt_url = f"https://www.youtube.com/watch?v={video_id}"
 
     ok, stdout, err = run_cmd("yt-dlp", "--dump-json", "--no-download", yt_url)
@@ -324,13 +445,9 @@ def video_info(url: str):
 
 @app.post("/api/process")
 def start_processing(req: ProcessRequest):
-    if req.model not in MODELS:
-        raise HTTPException(400, "Invalid model")
-    if req.bitrate not in BITRATES:
-        raise HTTPException(400, "Invalid bitrate")
-
     job_id = str(uuid.uuid4())
     db_create(job_id)
+    logger.info(f"New job {job_id[:8]} for URL: {req.url[:50]}")
 
     threading.Thread(
         target=process_video,
@@ -342,18 +459,27 @@ def start_processing(req: ProcessRequest):
 
 
 @app.post("/api/batch")
-def batch_processing(urls: list[str], model: str = "UVR-MDX-NET-Inst_HQ_3.onnx",
-                     batch_size: int = 4, audio_only: bool = False,
-                     bitrate: str = "192k"):
+def batch_processing(
+    urls: list[str],
+    model: str = "UVR-MDX-NET-Inst_HQ_3.onnx",
+    batch_size: int = 4,
+    audio_only: bool = False,
+    bitrate: str = "192k",
+):
     """Queue multiple URLs for sequential processing."""
     if model not in MODELS:
         raise HTTPException(400, "Invalid model")
 
     job_ids = []
     for url in urls:
+        vid = extract_video_id(url.strip())
+        if not _YT_ID_RE.match(vid):
+            raise HTTPException(400, f"Invalid URL: {url}")
         job_id = str(uuid.uuid4())
         db_create(job_id)
         job_ids.append(job_id)
+
+    logger.info(f"Batch: {len(job_ids)} jobs queued")
 
     def run_batch():
         for jid, url in zip(job_ids, urls):
@@ -373,10 +499,13 @@ async def upload_processing(
 ):
     if model not in MODELS:
         raise HTTPException(400, "Invalid model")
+    if bitrate not in BITRATES:
+        raise HTTPException(400, "Invalid bitrate")
 
     job_id = str(uuid.uuid4())
     db_create(job_id)
     update_job(job_id, status="uploading", progress=5)
+    logger.info(f"Upload job {job_id[:8]}: {file.filename}")
 
     temp_dir = Path(tempfile.mkdtemp())
     suffix = Path(file.filename or "video.mp4").suffix or ".mp4"
@@ -410,7 +539,7 @@ def download_result(job_id: str):
     if job["status"] != "done":
         raise HTTPException(400, "Job not ready")
     path = job["output_path"]
-    if not Path(path).exists():
+    if not path or not Path(path).exists():
         raise HTTPException(404, "Output file not found")
     media = "audio/mpeg" if path.endswith(".mp3") else "video/mp4"
     return FileResponse(path, media_type=media, filename=job["filename"])
@@ -419,18 +548,19 @@ def download_result(job_id: str):
 @app.websocket("/ws/{job_id}")
 async def websocket_progress(websocket: WebSocket, job_id: str):
     await websocket.accept()
-    if job_id not in ws_clients:
-        ws_clients[job_id] = []
-    ws_clients[job_id].append(websocket)
+    with _ws_lock:
+        if job_id not in ws_clients:
+            ws_clients[job_id] = []
+        ws_clients[job_id].append(websocket)
     try:
-        # Send current status immediately
         job = db_get(job_id)
         if job:
             await websocket.send_json(job)
-        # Keep alive until client disconnects
         while True:
             await websocket.receive_text()
     except Exception:
         pass
     finally:
-        ws_clients.get(job_id, []).remove(websocket) if websocket in ws_clients.get(job_id, []) else None
+        with _ws_lock:
+            if job_id in ws_clients and websocket in ws_clients[job_id]:
+                ws_clients[job_id].remove(websocket)
