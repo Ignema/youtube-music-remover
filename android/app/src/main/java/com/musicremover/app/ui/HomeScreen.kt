@@ -36,6 +36,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.HelpOutline
@@ -224,6 +225,16 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                 if (ui.url.isNotEmpty()) {
                     IconButton(onClick = { vm.onUrlChange("") }) {
                         Icon(Icons.Outlined.Close, "Clear", Modifier.size(18.dp))
+                    }
+                } else {
+                    val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+                    IconButton(onClick = {
+                        val clip = clipboardManager.getText()?.text ?: ""
+                        if (clip.isNotEmpty()) {
+                            vm.onUrlChange(clip)
+                        }
+                    }) {
+                        Icon(Icons.Outlined.ContentPaste, "Paste", Modifier.size(18.dp))
                     }
                 }
             },

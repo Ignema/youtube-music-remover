@@ -9,13 +9,15 @@ class TestExtractVideoId:
         assert extract_video_id("dQw4w9WgXcQ") == "dQw4w9WgXcQ"
 
     def test_full_url(self):
-        assert extract_video_id("https://www.youtube.com/watch?v=dQw4w9WgXcQ") == "dQw4w9WgXcQ"
+        url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        assert extract_video_id(url) == "dQw4w9WgXcQ"
 
     def test_short_url(self):
         assert extract_video_id("https://youtu.be/dQw4w9WgXcQ") == "dQw4w9WgXcQ"
 
     def test_shorts_url(self):
-        assert extract_video_id("https://www.youtube.com/shorts/dQw4w9WgXcQ") == "dQw4w9WgXcQ"
+        url = "https://www.youtube.com/shorts/dQw4w9WgXcQ"
+        assert extract_video_id(url) == "dQw4w9WgXcQ"
 
     def test_with_whitespace(self):
         assert extract_video_id("  dQw4w9WgXcQ  ") == "dQw4w9WgXcQ"
@@ -37,7 +39,6 @@ class TestDbOperations:
     def setup_method(self):
         """Use a fresh in-memory approach by resetting the DB."""
         import api.main as m
-        import os
         # Use a temp DB for tests
         self._orig_path = m.DB_PATH
         m.DB_PATH = type(m.DB_PATH)("test_jobs.db")
@@ -45,9 +46,8 @@ class TestDbOperations:
 
     def teardown_method(self):
         import api.main as m
-        import os
         if m.DB_PATH.exists():
-            os.unlink(m.DB_PATH)
+            m.DB_PATH.unlink()
         m.DB_PATH = self._orig_path
 
     def test_create_and_get(self):

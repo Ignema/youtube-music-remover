@@ -27,7 +27,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator
 
-from api.utils import extract_video_id, run_cmd, YT_ID_RE, YT_URL_PATTERNS
+from api.utils import extract_video_id, run_cmd, YT_ID_RE
 
 try:
     from slowapi import Limiter
@@ -223,7 +223,8 @@ def prune_dead_ws_clients():
         for job_id in list(ws_clients.keys()):
             ws_clients[job_id] = [
                 ws for ws in ws_clients[job_id]
-                if not getattr(ws, "client_state", None) or ws.client_state.name != "DISCONNECTED"
+                if not getattr(ws, "client_state", None)
+                or ws.client_state.name != "DISCONNECTED"
             ]
             if not ws_clients[job_id]:
                 del ws_clients[job_id]
@@ -320,7 +321,10 @@ def separate_and_merge(job_id: str, video_file: Path, audio_file: Path,
         update_job(job_id, status="error", error="Separation failed")
         return False
 
-    vocals = [f for f in temp_dir.iterdir() if "vocals" in f.name.lower() and f.suffix == ".wav"]
+    vocals = [
+        f for f in temp_dir.iterdir()
+        if "vocals" in f.name.lower() and f.suffix == ".wav"
+    ]
     if not vocals:
         update_job(job_id, status="error", error="Vocals file not found")
         return False
@@ -374,7 +378,10 @@ def process_video(job_id: str, url: str, model: str, batch_size: int,
             update_job(job_id, status="error", error=f"Download failed: {err}")
             return
 
-        video_files = [f for f in temp_dir.iterdir() if f.suffix in (".mp4", ".webm", ".mkv")]
+        video_files = [
+            f for f in temp_dir.iterdir()
+            if f.suffix in (".mp4", ".webm", ".mkv")
+        ]
         if not video_files:
             update_job(job_id, status="error", error="No video file found")
             return
