@@ -104,7 +104,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         bgScope.launch {
             while (true) {
                 val connected = try {
-                    java.net.URL("${_ui.value.serverUrl}/health").readText().contains("ok")
+                    val conn = java.net.URL("${_ui.value.serverUrl}/health").openConnection()
+                    conn.connectTimeout = 5000
+                    conn.readTimeout = 5000
+                    conn.getInputStream().bufferedReader().readText().contains("ok")
                 } catch (_: Exception) { false }
                 _ui.value = _ui.value.copy(serverConnected = connected)
                 kotlinx.coroutines.delay(10000) // Check every 10s
