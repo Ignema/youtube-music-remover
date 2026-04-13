@@ -1,0 +1,13 @@
+v2.1.0:
+• 15 languages with in-app language switcher
+• Light, Dark, Black (OLED), and System themes
+• Material You dynamic colors
+• New M-equalizer app icon with themed icon support
+• Server status indicator in top bar
+• Audio-only mode and bitrate selector
+• Thumbnail preview for YouTube URLs
+• On-device result caching
+• Foreground service for reliable background processing
+• Rate limiting and input validation on API
+• SQLite job persistence
+• Docker support for server deployment

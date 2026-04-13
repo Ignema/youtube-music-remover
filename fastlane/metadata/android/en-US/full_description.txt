@@ -1,0 +1,31 @@
+Murem removes background music from YouTube videos while keeping vocals and dialogue intact, using AI-powered audio separation.
+
+Features:
+• Paste a YouTube URL or pick a local video file
+• Share directly from the YouTube app
+• Choose between 3 AI models for vocal separation
+• Audio-only mode: export just the vocals as MP3
+• Adjustable audio bitrate (128k / 192k / 320k)
+• In-app video player for results
+• Processing history with metadata preview
+• Progress notifications with percentage
+• Thumbnail preview when pasting YouTube URLs
+• On-device result caching for offline playback
+• Share processed files to any app
+
+On-Device Processing:
+• Run the entire AI pipeline locally on your phone via Termux
+• One-tap Install / Start / Stop from the app
+• No external server required — fully offline capable
+
+Remote Server:
+• Connect to a self-hosted server on your PC for GPU-accelerated processing
+• Docker support for easy setup
+• Custom server URL configuration
+
+Appearance:
+• Light, Dark, Black (OLED), and System themes
+• Material You dynamic colors (Android 12+)
+• 15 languages: English, Arabic, French, Spanish, German, Turkish, Indonesian, Malay, Portuguese, Italian, Russian, Japanese, Korean, Chinese, Hindi, Urdu
+
+Murem is fully open source and self-hosted. No data is sent to third parties. All processing happens on your own server or device.

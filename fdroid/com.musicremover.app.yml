@@ -1,0 +1,26 @@
+Categories:
+  - Multimedia
+License: MIT
+AuthorName: Ignema
+AuthorWebSite: https://github.com/Ignema
+SourceCode: https://github.com/Ignema/youtube-music-remover
+IssueTracker: https://github.com/Ignema/youtube-music-remover/issues
+Changelog: https://github.com/Ignema/youtube-music-remover/releases
+
+AutoName: Murem
+
+RepoType: git
+Repo: https://github.com/Ignema/youtube-music-remover.git
+
+Builds:
+  - versionName: 2.1.0
+    versionCode: 3
+    commit: v2.1.0  # fdroiddata repo uses the full hash, this is just reference
+    subdir: android/app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: 2.1.0
+CurrentVersionCode: 3
