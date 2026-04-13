@@ -53,7 +53,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.musicremover.app.R
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -90,7 +92,7 @@ fun PermissionsScreen(onBack: () -> Unit) {
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text("Permissions") },
+                title = { Text(stringResource(R.string.permissions)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
@@ -112,7 +114,7 @@ fun PermissionsScreen(onBack: () -> Unit) {
                 .verticalScroll(rememberScrollState()),
         ) {
             Text(
-                "Grant these permissions for the best experience.",
+                stringResource(R.string.grant_permissions_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -122,8 +124,8 @@ fun PermissionsScreen(onBack: () -> Unit) {
             // Notifications
             PermissionCard(
                 icon = Icons.Outlined.Notifications,
-                title = "Notifications",
-                description = "See processing progress even when the app is in the background.",
+                title = stringResource(R.string.notifications),
+                description = stringResource(R.string.notifications_desc),
                 granted = notifGranted,
                 onGrant = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -143,8 +145,8 @@ fun PermissionsScreen(onBack: () -> Unit) {
             // Battery optimization
             PermissionCard(
                 icon = Icons.Outlined.BatteryAlert,
-                title = "Unrestricted Battery",
-                description = "Prevents Android from killing background processing. Highly recommended.",
+                title = stringResource(R.string.unrestricted_battery),
+                description = stringResource(R.string.battery_desc),
                 granted = batteryExempt,
                 onGrant = {
                     val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
@@ -160,8 +162,8 @@ fun PermissionsScreen(onBack: () -> Unit) {
             if (termuxInstalled) {
                 PermissionCard(
                     icon = Icons.Outlined.Terminal,
-                    title = "Termux Commands",
-                    description = "Allow the app to start and control the local server in Termux.",
+                    title = stringResource(R.string.termux_commands),
+                    description = stringResource(R.string.termux_commands_desc),
                     granted = termuxGranted,
                     onGrant = {
                         // Open app info where "Additional permissions" lives
@@ -170,7 +172,7 @@ fun PermissionsScreen(onBack: () -> Unit) {
                         }
                         context.startActivity(intent)
                     },
-                    grantLabel = "Open App Info",
+                    grantLabel = stringResource(R.string.open_app_info),
                 )
             }
 
@@ -197,7 +199,7 @@ fun PermissionsScreen(onBack: () -> Unit) {
                         )
                         Spacer(Modifier.width(12.dp))
                         Text(
-                            "All set! You're good to go.",
+                            stringResource(R.string.all_set),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary,
                         )

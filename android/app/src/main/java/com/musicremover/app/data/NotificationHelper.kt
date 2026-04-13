@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import com.musicremover.app.R
 
 class NotificationHelper(private val context: Context) {
     companion object {
@@ -51,7 +52,7 @@ class NotificationHelper(private val context: Context) {
     fun buildProgress(status: String, progress: Int): Notification {
         return NotificationCompat.Builder(context, CHANNEL_PROGRESS)
             .setSmallIcon(android.R.drawable.ic_media_play)
-            .setContentTitle("Murem · ${progress}%")
+            .setContentTitle(context.getString(R.string.app_name) + " · ${progress}%")
             .setContentText(status)
             .setProgress(100, progress, false)
             .setOngoing(true)
@@ -70,8 +71,8 @@ class NotificationHelper(private val context: Context) {
         // Show a new one on the audible channel
         manager.notify(DONE_NOTIFICATION_ID, NotificationCompat.Builder(context, CHANNEL_DONE)
             .setSmallIcon(android.R.drawable.ic_media_play)
-            .setContentTitle("Murem")
-            .setContentText("Done — $filename")
+            .setContentTitle(context.getString(R.string.app_name))
+            .setContentText(context.getString(R.string.notif_done, filename))
             .setOngoing(false)
             .setAutoCancel(true)
             .setContentIntent(tapIntent)
@@ -82,8 +83,8 @@ class NotificationHelper(private val context: Context) {
         manager.cancel(NOTIFICATION_ID)
         manager.notify(DONE_NOTIFICATION_ID, NotificationCompat.Builder(context, CHANNEL_DONE)
             .setSmallIcon(android.R.drawable.ic_media_play)
-            .setContentTitle("Murem")
-            .setContentText("Error — $message")
+            .setContentTitle(context.getString(R.string.app_name))
+            .setContentText(context.getString(R.string.notif_error, message))
             .setOngoing(false)
             .setAutoCancel(true)
             .setContentIntent(tapIntent)

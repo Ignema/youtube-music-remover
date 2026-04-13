@@ -8,6 +8,7 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.lifecycle.AndroidViewModel
 import com.musicremover.app.data.ApiClient
+import com.musicremover.app.R
 import com.musicremover.app.data.HistoryItem
 import com.musicremover.app.data.HistoryStore
 import com.musicremover.app.data.NotificationHelper
@@ -93,7 +94,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // Resume polling if app was killed mid-processing
         val savedJobId = prefs.getString("active_job_id", null)
         if (savedJobId != null) {
-            _ui.value = _ui.value.copy(state = UiState.Processing, jobId = savedJobId, statusText = "Resuming…")
+            _ui.value = _ui.value.copy(state = UiState.Processing, jobId = savedJobId, statusText = application.getString(R.string.resuming))
             bgScope.launch { pollStatus(savedJobId) }
         }
     }
@@ -294,7 +295,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (error != null) {
             _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = error)
         } else {
-            _ui.value = _ui.value.copy(termuxOperation = "Installing in Termux… Switch back when done.")
+            _ui.value = _ui.value.copy(termuxOperation = str(R.string.installing_termux))
         }
     }
 
@@ -304,7 +305,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = error)
         } else {
             onServerUrlChange("http://127.0.0.1:8000")
-            _ui.value = _ui.value.copy(termuxOperation = "Starting server… This may take a moment.")
+            _ui.value = _ui.value.copy(termuxOperation = str(R.string.starting_server))
             pollServerOnline()
         }
     }
@@ -314,7 +315,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (error != null) {
             _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = error)
         } else {
-            _ui.value = _ui.value.copy(termuxOperation = "Stopping server…", termuxServerOnline = false)
+            _ui.value = _ui.value.copy(termuxOperation = str(R.string.stopping_server), termuxServerOnline = false)
             bgScope.launch {
                 delay(2000)
                 _ui.value = _ui.value.copy(termuxOperation = null)
@@ -327,7 +328,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (error != null) {
             _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = error)
         } else {
-            _ui.value = _ui.value.copy(termuxOperation = "Updating in Termux… Switch back when done.")
+            _ui.value = _ui.value.copy(termuxOperation = str(R.string.updating_termux))
         }
     }
 
@@ -357,7 +358,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     val response = java.net.URL("${serverUrl}/api/models").readText()
                     if (response.contains("models")) {
                         _ui.value = _ui.value.copy(
-                            termuxOperation = "Server is online!",
+                            termuxOperation = str(R.string.server_online),
                             termuxServerOnline = true,
                         )
                         hapticTick()
@@ -371,7 +372,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
             // Timed out
             _ui.value = _ui.value.copy(
-                termuxOperation = "Server didn't come online. Check Termux for errors.",
+                termuxOperation = str(R.string.server_timeout),
             )
         }
     }
@@ -384,7 +385,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (fileUri != null) processFile(fileUri)
         else if (url.isNotEmpty()) processUrl(url)
         else {
-            _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = "Enter a YouTube URL or pick a video file")
+            _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = str(R.string.enter_url_or_file))
             return
         }
         hapticTick()
@@ -396,10 +397,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         process()
     }
 
+    private fun str(id: Int): String = getApplication<Application>().getString(id)
+
     private fun processFile(uri: android.net.Uri) {
         bgScope.launch {
-            _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = "Uploading…")
-            ProcessingService.start(getApplication(), "Uploading…", 0)
+            _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.uploading))
+            ProcessingService.start(getApplication(), str(R.string.uploading), 0)
             try {
                 val context = getApplication<Application>()
                 val fileName = _ui.value.selectedFileName ?: "video.mp4"
@@ -428,8 +431,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun processUrl(url: String) {
         bgScope.launch {
-            _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = "Starting…")
-            ProcessingService.start(getApplication(), "Starting…", 0)
+            _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.starting))
+            ProcessingService.start(getApplication(), str(R.string.starting), 0)
             try {
                 val resp = api().process(
                     ProcessRequest(
@@ -450,7 +453,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private suspend fun pollStatus(jobId: String) {
-        notif.showProgress("Starting…", 0)
+        notif.showProgress(str(R.string.starting), 0)
         var retries = 0
         while (true) {
             delay(2500)
@@ -458,12 +461,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val status = api().status(jobId)
                 retries = 0
                 val text = when (status.status) {
-                    "queued" -> "Queued…"
-                    "uploading" -> "Uploading…"
-                    "extracting" -> "Extracting audio…"
-                    "downloading" -> "Downloading video…"
-                    "separating" -> "Separating vocals…"
-                    "merging" -> "Merging audio…"
+                    "queued" -> str(R.string.queued)
+                    "uploading" -> str(R.string.uploading)
+                    "extracting" -> str(R.string.extracting)
+                    "downloading" -> str(R.string.downloading)
+                    "separating" -> str(R.string.separating)
+                    "merging" -> str(R.string.merging)
                     "done" -> "Done"
                     "error" -> status.error ?: "Unknown error"
                     else -> status.status
@@ -502,10 +505,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 retries++
                 if (retries >= 30) {
-                    _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = "Lost connection to server")
+                    _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = str(R.string.lost_connection))
                     prefs.edit().remove("active_job_id").apply()
                     ProcessingService.stop(getApplication())
-                    notif.showError("Lost connection to server")
+                    notif.showError(str(R.string.lost_connection))
                     return
                 }
                 delay(retries * 1000L)

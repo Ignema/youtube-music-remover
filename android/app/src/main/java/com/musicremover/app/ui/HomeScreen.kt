@@ -79,8 +79,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import com.musicremover.app.MainUiState
 import com.musicremover.app.MainViewModel
+import com.musicremover.app.R
 import com.musicremover.app.UiState
 import com.musicremover.app.data.HistoryItem
 import java.text.SimpleDateFormat
@@ -102,7 +104,7 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Outlined.MusicOff, null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(12.dp))
-                        Text("Murem")
+                        Text(stringResource(R.string.app_name))
                     }
                 },
                 actions = {
@@ -215,8 +217,8 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                 vm.onUrlChange(it)
                 if (it.isNotEmpty()) vm.clearFile()
             },
-            label = { Text("YouTube URL or Video ID") },
-            placeholder = { Text("Paste a link or share from YouTube") },
+            label = { Text(stringResource(R.string.url_label)) },
+            placeholder = { Text(stringResource(R.string.url_placeholder)) },
             singleLine = true,
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth(),
@@ -297,7 +299,7 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
         ) {
             HorizontalDivider(Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
             Text(
-                "  or  ",
+                stringResource(R.string.or_divider),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.outline,
             )
@@ -341,7 +343,7 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
             ) {
                 Icon(Icons.Outlined.VideoFile, null, Modifier.size(20.dp))
                 Spacer(Modifier.width(10.dp))
-                Text("Pick a video file", style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.pick_video), style = MaterialTheme.typography.bodyLarge)
             }
         }
 
@@ -375,10 +377,10 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                 Column(
                     modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp),
                 ) {
-                    Text("AI Model", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.ai_model), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "Choose the model for vocal separation",
+                        stringResource(R.string.choose_model),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -420,7 +422,7 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
             androidx.compose.material3.FilterChip(
                 selected = ui.audioOnly,
                 onClick = { vm.setAudioOnly(!ui.audioOnly) },
-                label = { Text("Audio only") },
+                label = { Text(stringResource(R.string.audio_only)) },
                 shape = RoundedCornerShape(12.dp),
             )
             // Bitrate selector
@@ -458,7 +460,7 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                         ) {
                             Icon(Icons.Outlined.Refresh, null, Modifier.size(16.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Retry")
+                            Text(stringResource(R.string.retry))
                         }
                     }
                 }
@@ -474,7 +476,7 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
         ) {
             Icon(Icons.Outlined.MusicOff, null, Modifier.size(20.dp))
             Spacer(Modifier.width(10.dp))
-            Text("Remove Music", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.remove_music), style = MaterialTheme.typography.titleMedium)
         }
     }
 }
@@ -601,7 +603,7 @@ private fun ProcessingContent(ui: MainUiState) {
         Spacer(Modifier.height(24.dp))
 
         Text(
-            text = "You can leave the app — we'll notify you when it's done.",
+            text = stringResource(R.string.leave_app_hint),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.outline,
             textAlign = TextAlign.Center,
@@ -636,7 +638,7 @@ private fun DoneContent(ui: MainUiState, vm: MainViewModel, context: android.con
 
         Spacer(Modifier.height(20.dp))
 
-        Text("Vocals extracted", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.vocals_extracted), style = MaterialTheme.typography.headlineSmall)
 
         Spacer(Modifier.height(6.dp))
 
@@ -661,7 +663,7 @@ private fun DoneContent(ui: MainUiState, vm: MainViewModel, context: android.con
         ) {
             Icon(Icons.Outlined.PlayArrow, null, Modifier.size(22.dp))
             Spacer(Modifier.width(8.dp))
-            Text("Play", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.play), style = MaterialTheme.typography.titleMedium)
         }
 
         Spacer(Modifier.height(10.dp))
@@ -688,7 +690,7 @@ private fun DoneContent(ui: MainUiState, vm: MainViewModel, context: android.con
             ) {
                 Icon(Icons.Outlined.Share, null, Modifier.size(20.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Share", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.share), style = MaterialTheme.typography.titleSmall)
             }
         }
 
@@ -698,7 +700,7 @@ private fun DoneContent(ui: MainUiState, vm: MainViewModel, context: android.con
         FilledTonalButton(onClick = vm::reset, shape = RoundedCornerShape(12.dp)) {
             Icon(Icons.Outlined.Refresh, null, Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
-            Text("Process Another")
+            Text(stringResource(R.string.process_another))
         }
     }
 }
@@ -718,10 +720,10 @@ private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay
                     modifier = Modifier.size(20.dp),
                 )
                 Spacer(Modifier.width(8.dp))
-                Text("Recent", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.recent), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Text(
-                "hold for info",
+                stringResource(R.string.hold_for_info),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.outline,
             )
@@ -1071,7 +1073,7 @@ private fun SheetActions(item: HistoryItem, vm: MainViewModel, context: android.
         ) {
             Icon(Icons.Outlined.Share, null, Modifier.size(18.dp))
             Spacer(Modifier.width(8.dp))
-            Text("Share")
+            Text(stringResource(R.string.share))
         }
 
         Spacer(Modifier.height(8.dp))
@@ -1091,7 +1093,7 @@ private fun SheetActions(item: HistoryItem, vm: MainViewModel, context: android.
         ) {
             Icon(Icons.Outlined.Close, null, Modifier.size(16.dp))
             Spacer(Modifier.width(8.dp))
-            Text("Remove from History")
+            Text(stringResource(R.string.remove_from_history))
         }
 
         Spacer(Modifier.height(24.dp))

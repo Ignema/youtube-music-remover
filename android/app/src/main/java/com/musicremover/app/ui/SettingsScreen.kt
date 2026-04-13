@@ -53,8 +53,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.musicremover.app.MainViewModel
+import com.musicremover.app.R
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -66,7 +68,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(R.string.settings)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
@@ -225,7 +227,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
                 FilterChip(
                     selected = isLocal,
                     onClick = { vm.onServerUrlChange("http://127.0.0.1:8000") },
-                    label = { Text("Local (Termux)") },
+                    label = { Text(stringResource(R.string.local_termux)) },
                     leadingIcon = {
                         Icon(Icons.Outlined.PhoneAndroid, null, Modifier.size(18.dp))
                     },
@@ -236,7 +238,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
                 FilterChip(
                     selected = isCustom,
                     onClick = { vm.onServerUrlChange("http://") },
-                    label = { Text("Custom") },
+                    label = { Text(stringResource(R.string.custom)) },
                     leadingIcon = {
                         Icon(Icons.Outlined.Cloud, null, Modifier.size(18.dp))
                     },
@@ -251,7 +253,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
             OutlinedTextField(
                 value = ui.serverUrl,
                 onValueChange = vm::onServerUrlChange,
-                label = { Text("Server URL") },
+                label = { Text(stringResource(R.string.server_url)) },
                 placeholder = { Text("http://192.168.1.100:8000") },
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp),
@@ -301,13 +303,13 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
                     ) {
                         Icon(Icons.Outlined.DeleteOutline, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("Clear History")
+                        Text(stringResource(R.string.clear_history))
                     }
                     OutlinedButton(
                         onClick = vm::clearCache,
                         shape = RoundedCornerShape(12.dp),
                     ) {
-                        Text("Clear Cache")
+                        Text(stringResource(R.string.clear_cache))
                     }
                 }
             } else {
@@ -335,7 +337,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
                 onClick = onPermissionsClick,
                 shape = RoundedCornerShape(12.dp),
             ) {
-                Text("Manage Permissions")
+                Text(stringResource(R.string.manage_permissions))
             }
 
             Spacer(Modifier.height(24.dp))
@@ -466,7 +468,7 @@ private fun TermuxControls(vm: MainViewModel) {
                 ) {
                     Icon(Icons.Outlined.DownloadDone, null, Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Install")
+                    Text(stringResource(R.string.install))
                 }
                 FilledTonalButton(
                     onClick = vm::startTermuxServer,
@@ -475,7 +477,7 @@ private fun TermuxControls(vm: MainViewModel) {
                 ) {
                     Icon(Icons.Outlined.PlayArrow, null, Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Start")
+                    Text(stringResource(R.string.start))
                 }
                 OutlinedButton(
                     onClick = vm::stopTermuxServer,
@@ -484,7 +486,7 @@ private fun TermuxControls(vm: MainViewModel) {
                 ) {
                     Icon(Icons.Outlined.Stop, null, Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Stop")
+                    Text(stringResource(R.string.stop))
                 }
             }
 
@@ -497,7 +499,7 @@ private fun TermuxControls(vm: MainViewModel) {
             ) {
                 Icon(Icons.Outlined.SystemUpdate, null, Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Update Server")
+                Text(stringResource(R.string.update_server))
             }
 
             Spacer(Modifier.height(12.dp))
