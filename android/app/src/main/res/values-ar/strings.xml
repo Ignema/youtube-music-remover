@@ -129,7 +129,9 @@
     <string name="help_remote_server">سيرفر عن بعد</string>
     <string name="help_remote_server_desc">شغّل السيرفر على كمبيوتر فيه GPU عشان معالجة أسرع بكثير. حط الرابط في الإعدادات ← مخصص.</string>
     <string name="help_start_pc">شغّل السيرفر على الكمبيوتر</string>
+    <string name="help_start_pc_desc">انسخ المشروع أولاً:\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\nثم شغّل السيرفر:\nuvx --with fastapi --with yt-dlp --with \"audio-separator[gpu]\" uvicorn api.main:app --host 0.0.0.0 --port 8000</string>
     <string name="help_docker">Docker (الأسهل للكمبيوتر)</string>
+    <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\nهذا كل شي — ما تحتاج Python أو ffmpeg.</string>
 
     <!-- Notifications -->
     <string name="notif_done">خلص — %s</string>

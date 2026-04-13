@@ -91,10 +91,10 @@ fun HelpScreen(onBack: () -> Unit) {
                 stringResource(R.string.help_remote_server_desc))
             Spacer(Modifier.height(8.dp))
             TipCard(Icons.Outlined.Terminal, stringResource(R.string.help_start_pc),
-                "Clone the repo first:\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\nThen start the server:\nuvx --with fastapi --with yt-dlp --with \"audio-separator[gpu]\" uvicorn api.main:app --host 0.0.0.0 --port 8000")
+                stringResource(R.string.help_start_pc_desc))
             Spacer(Modifier.height(8.dp))
             TipCard(Icons.Outlined.Cloud, stringResource(R.string.help_docker),
-                "docker build -t music-remover api/\ndocker run -p 8000:8000 music-remover\n\nThat's it — no Python or ffmpeg setup needed.")
+                stringResource(R.string.help_docker_desc))
 
             Spacer(Modifier.height(24.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)

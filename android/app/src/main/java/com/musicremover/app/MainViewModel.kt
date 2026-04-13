@@ -467,8 +467,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     "downloading" -> str(R.string.downloading)
                     "separating" -> str(R.string.separating)
                     "merging" -> str(R.string.merging)
-                    "done" -> "Done"
-                    "error" -> status.error ?: "Unknown error"
+                    "done" -> str(R.string.vocals_extracted)
+                    "error" -> status.error ?: "Error"
                     else -> status.status
                 }
                 _ui.value = _ui.value.copy(progress = status.progress, statusText = text)
