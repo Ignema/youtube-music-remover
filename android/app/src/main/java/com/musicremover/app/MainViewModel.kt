@@ -63,6 +63,8 @@ data class MainUiState(
     // Termux operation status
     val termuxOperation: String? = null, // null = no operation, else = status message
     val termuxServerOnline: Boolean = false,
+    // Server connectivity
+    val serverConnected: Boolean = false,
     // Appearance
     val themeMode: String = "system",
     val dynamicColor: Boolean = true,
@@ -96,6 +98,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (savedJobId != null) {
             _ui.value = _ui.value.copy(state = UiState.Processing, jobId = savedJobId, statusText = application.getString(R.string.resuming))
             bgScope.launch { pollStatus(savedJobId) }
+        }
+
+        // Periodic server connectivity check
+        bgScope.launch {
+            while (true) {
+                val connected = try {
+                    java.net.URL("${_ui.value.serverUrl}/health").readText().contains("ok")
+                } catch (_: Exception) { false }
+                _ui.value = _ui.value.copy(serverConnected = connected)
+                kotlinx.coroutines.delay(10000) // Check every 10s
+            }
         }
     }
 

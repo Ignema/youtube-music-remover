@@ -17,6 +17,8 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -102,9 +104,26 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
             LargeTopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Outlined.MusicOff, null, tint = MaterialTheme.colorScheme.primary)
+                        MuremLogo(size = 28.dp)
                         Spacer(Modifier.width(12.dp))
                         Text(stringResource(R.string.app_name))
+                        Spacer(Modifier.width(8.dp))
+                        // Server status dot
+                        val statusText = if (ui.serverConnected)
+                            stringResource(R.string.server_online)
+                        else stringResource(R.string.lost_connection)
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                .background(
+                                    if (ui.serverConnected) androidx.compose.ui.graphics.Color(0xFF4CAF50)
+                                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                                )
+                                .clickable {
+                                    android.widget.Toast.makeText(context, statusText, android.widget.Toast.LENGTH_SHORT).show()
+                                },
+                        )
                     }
                 },
                 actions = {
@@ -150,7 +169,7 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
 
             Spacer(Modifier.height(32.dp))
 
-            if (ui.state == UiState.Idle && ui.history.isNotEmpty()) {
+            if ((ui.state == UiState.Idle || ui.state == UiState.Error) && ui.history.isNotEmpty()) {
                 HistorySection(ui.history, vm, onPlay)
             }
         }
