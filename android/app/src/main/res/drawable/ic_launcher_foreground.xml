@@ -4,12 +4,35 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Music note with a slash through it -->
+    <!-- Bar 1: medium (left leg of M) -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,28 L54,62 C52.5,61.4 50.8,61 49,61 C44.6,61 41,63.7 41,67 C41,70.3 44.6,73 49,73 C53.4,73 57,70.3 57,67 L57,40 L67,37 L67,34 Z" />
-    <path
+        android:pathData="M33,43 L33,65"
+        android:strokeWidth="7"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="3"
-        android:pathData="M38,75 L70,33" />
+        android:strokeLineCap="round" />
+    <!-- Bar 2: tall (left peak of M) -->
+    <path
+        android:pathData="M44,35 L44,73"
+        android:strokeWidth="7"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round" />
+    <!-- Bar 3: short / ghost (valley of M — the "removed" frequency) -->
+    <path
+        android:pathData="M54,47 L54,61"
+        android:strokeWidth="7"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.3" />
+    <!-- Bar 4: tall (right peak of M) -->
+    <path
+        android:pathData="M64,35 L64,73"
+        android:strokeWidth="7"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round" />
+    <!-- Bar 5: medium (right leg of M) -->
+    <path
+        android:pathData="M75,43 L75,65"
+        android:strokeWidth="7"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round" />
 </vector>
