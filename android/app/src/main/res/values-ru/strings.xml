@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="url_label">YouTube URL или ID видео</string>
+    <string name="app_name">Murem</string>
+
+    <!-- Home Screen -->
+    <string name="url_label">Ссылка YouTube или ID видео</string>
     <string name="url_placeholder">Вставьте ссылку или поделитесь из YouTube</string>
     <string name="or_divider">или</string>
     <string name="pick_video">Выбрать видеофайл</string>
@@ -8,34 +11,135 @@
     <string name="change">Изменить</string>
     <string name="recent">Недавние</string>
     <string name="hold_for_info">удерживайте для подробностей</string>
-    <string name="leave_app_hint">Можете свернуть приложение — уведомим, когда будет готово.</string>
+
+    <!-- Processing -->
+    <string name="leave_app_hint">Можете свернуть приложение — мы уведомим вас, когда будет готово.</string>
     <string name="downloading">Загрузка видео…</string>
     <string name="separating">Разделение вокала…</string>
     <string name="merging">Объединение аудио…</string>
     <string name="extracting">Извлечение аудио…</string>
-    <string name="uploading">Загрузка…</string>
+    <string name="uploading">Загрузка на сервер…</string>
+    <string name="queued">В очереди…</string>
+    <string name="starting">Запуск…</string>
+    <string name="resuming">Возобновление…</string>
+
+    <!-- Done -->
     <string name="vocals_extracted">Вокал извлечён</string>
     <string name="play">Воспроизвести</string>
     <string name="save">Сохранить</string>
     <string name="saving">Сохранение…</string>
+    <string name="save_as">Сохранить как…</string>
     <string name="share">Поделиться</string>
-    <string name="process_another">Обработать другое</string>
+    <string name="process_another">Обработать другое видео</string>
+
+    <!-- Options -->
     <string name="audio_only">Только аудио</string>
-    <string name="ai_model">ИИ-модель</string>
+    <string name="ai_model">Модель ИИ</string>
+    <string name="choose_model">Выберите модель для разделения вокала</string>
+    <string name="model_default_name">UVR-MDX-NET HQ3</string>
+    <string name="model_default_desc">Баланс качества и скорости. Лучший выбор для большинства видео.</string>
+    <string name="model_quality_name">Kim Vocal 2</string>
+    <string name="model_quality_desc">Более высокое качество извлечения. Медленнее, но лучше для контента с большим количеством музыки.</string>
+    <string name="model_karaoke_name">UVR KARA 2</string>
+    <string name="model_karaoke_desc">Разделение в стиле караоке. Лучше всего для отделения пения от инструментов.</string>
+    <string name="tag_default">По умолчанию</string>
+    <string name="tag_quality">Качество</string>
+    <string name="tag_karaoke">Караоке</string>
+
+    <!-- Settings -->
     <string name="settings">Настройки</string>
+    <string name="server_mode">Режим сервера</string>
+    <string name="local_termux">Локальный (Termux)</string>
+    <string name="custom">Свой</string>
+    <string name="server_url">URL сервера</string>
+    <string name="on_device_processing">Обработка на устройстве</string>
+    <string name="on_device_desc">Запустите сервер локально на телефоне с помощью Termux + Ubuntu (proot).</string>
+    <string name="termux_detected">Termux обнаружен</string>
+    <string name="termux_not_found">Termux не найден</string>
+    <string name="termux_not_found_desc">Для обработки видео на устройстве установите Termux из F-Droid, затем снова откройте это приложение.</string>
     <string name="install">Установить</string>
     <string name="start">Запустить</string>
     <string name="stop">Остановить</string>
-    <string name="history_and_cache">История и кэш</string>
+    <string name="update_server">Обновить сервер</string>
+    <string name="first_time_hint">Первый раз? Нажмите Установить, дождитесь завершения, затем нажмите Запустить.</string>
+    <string name="history_and_cache">История &amp; Кэш</string>
+    <string name="processed_videos">%d обработанных видео · %s в кэше</string>
     <string name="no_history">Истории пока нет</string>
     <string name="clear_history">Очистить историю</string>
     <string name="clear_cache">Очистить кэш</string>
+    <string name="permissions">Разрешения</string>
+    <string name="manage_permissions">Управление разрешениями</string>
+    <string name="permissions_desc">Управляйте уведомлениями, оптимизацией батареи и доступом к Termux.</string>
     <string name="about">О приложении</string>
-    <string name="about_desc">Удаление фоновой музыки из видео YouTube с помощью ИИ.</string>
+    <string name="appearance">Внешний вид</string>
+    <string name="theme">Тема</string>
+    <string name="language">Язык</string>
+    <string name="material_you">Material You</string>
+    <string name="material_you_desc">Использовать цвета из обоев</string>
+    <string name="system_default">Системная</string>
+    <string name="light">Светлая</string>
+    <string name="dark">Тёмная</string>
+    <string name="black_oled">Чёрная (OLED)</string>
+    <string name="system">Система</string>
+    <string name="file_details">Сведения о файле</string>
+    <string name="about_desc">Удаляйте фоновую музыку из видео YouTube с помощью ИИ-разделения вокала.</string>
+
+    <!-- Permissions -->
+    <string name="grant_permissions_hint">Предоставьте эти разрешения для лучшего опыта.</string>
+    <string name="notifications">Уведомления</string>
+    <string name="notifications_desc">Следите за ходом обработки, даже когда приложение в фоне.</string>
+    <string name="unrestricted_battery">Без ограничений батареи</string>
+    <string name="battery_desc">Не даёт Android останавливать фоновую обработку. Настоятельно рекомендуется.</string>
+    <string name="termux_commands">Команды Termux</string>
+    <string name="termux_commands_desc">Разрешить приложению запускать и управлять локальным сервером в Termux.</string>
     <string name="grant">Разрешить</string>
-    <string name="all_set">Всё готово!</string>
+    <string name="open_app_info">Открыть сведения о приложении</string>
+    <string name="all_set">Всё готово! Можно начинать.</string>
+
+    <!-- Errors -->
     <string name="retry">Повторить</string>
+    <string name="enter_url_or_file">Введите ссылку YouTube или выберите видеофайл</string>
     <string name="lost_connection">Потеряно соединение с сервером</string>
+    <string name="remove_from_history">Удалить из истории</string>
+
+    <!-- Help -->
     <string name="how_to_use">Как пользоваться</string>
+    <string name="help_server_setup">Настройка сервера</string>
+    <string name="help_server_required">Для обработки нужен работающий сервер.</string>
+    <string name="help_quick_start">Быстрый старт</string>
+    <string name="help_local_files">Использование локальных файлов</string>
+    <string name="help_share_yt">Поделиться из YouTube</string>
+    <string name="help_ai_models">Модели ИИ</string>
+    <string name="help_paste_link">Вставьте ссылку YouTube</string>
+    <string name="help_paste_desc">Скопируйте URL из YouTube и вставьте в поле ввода. Также можно поделиться напрямую из приложения YouTube.</string>
+    <string name="help_tap_remove">Нажмите Убрать музыку</string>
+    <string name="help_tap_remove_desc">Приложение скачает видео, отделит вокал с помощью ИИ и соберёт всё обратно.</string>
+    <string name="help_play_save">Воспроизвести или сохранить</string>
+    <string name="help_play_save_desc">После завершения воспроизведите результат или сохраните его в любое место на устройстве.</string>
+    <string name="help_pick_file">Выбрать видеофайл</string>
+    <string name="help_pick_file_desc">Вместо ссылки YouTube нажмите «Выбрать видеофайл», чтобы выбрать видео с устройства.</string>
+    <string name="help_process_usual">Обработать как обычно</string>
+    <string name="help_process_usual_desc">Приложение загружает файл на сервер, извлекает аудио, разделяет вокал и возвращает результат.</string>
+    <string name="help_tap_share">Нажмите Поделиться в YouTube</string>
+    <string name="help_tap_share_desc">Откройте любое видео в приложении YouTube и нажмите кнопку Поделиться.</string>
+    <string name="help_pick_murem">Выберите Murem</string>
+    <string name="help_pick_murem_desc">Выберите Murem в меню «Поделиться». URL заполнится автоматически.</string>
+    <string name="help_local_termux">Локальный (Termux)</string>
+    <string name="help_local_termux_desc">Обработка на телефоне. Установите Termux из F-Droid, затем перейдите в Настройки → Установить → Запустить. Медленнее, но полностью офлайн.</string>
+    <string name="help_remote_server">Удалённый сервер</string>
+    <string name="help_remote_server_desc">Запустите сервер на ПК с GPU для гораздо более быстрой обработки. Укажите URL в Настройки → Свой.</string>
+    <string name="help_start_pc">Запустить сервер на ПК</string>
+    <string name="help_docker">Docker (проще всего для ПК)</string>
+
+    <!-- Notifications -->
+    <string name="notif_done">Готово — %s</string>
+    <string name="notif_error">Ошибка — %s</string>
+
+    <!-- Termux status -->
+    <string name="installing_termux">Установка в Termux… Вернитесь, когда завершится.</string>
+    <string name="starting_server">Запуск сервера… Это может занять некоторое время.</string>
+    <string name="stopping_server">Остановка сервера…</string>
+    <string name="updating_termux">Обновление в Termux… Вернитесь, когда завершится.</string>
     <string name="server_online">Сервер онлайн!</string>
+    <string name="server_timeout">Сервер не запустился. Проверьте Termux на наличие ошибок.</string>
 </resources>

@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Murem</string>
+
+    <!-- Home Screen -->
     <string name="url_label">YouTube URL یا ویڈیو ID</string>
     <string name="url_placeholder">لنک پیسٹ کریں یا YouTube سے شیئر کریں</string>
     <string name="or_divider">یا</string>
@@ -7,31 +10,136 @@
     <string name="remove_music">موسیقی ہٹائیں</string>
     <string name="change">تبدیل کریں</string>
     <string name="recent">حالیہ</string>
-    <string name="hold_for_info">تفصیلات کے لیے دبائے رکھیں</string>
-    <string name="leave_app_hint">آپ ایپ چھوڑ سکتے ہیں — مکمل ہونے پر مطلع کریں گے۔</string>
+    <string name="hold_for_info">معلومات کے لیے دبائے رکھیں</string>
+
+    <!-- Processing -->
+    <string name="leave_app_hint">آپ ایپ چھوڑ سکتے ہیں — مکمل ہونے پر ہم آپ کو مطلع کریں گے۔</string>
     <string name="downloading">ویڈیو ڈاؤنلوڈ ہو رہی ہے…</string>
     <string name="separating">آوازیں الگ ہو رہی ہیں…</string>
     <string name="merging">آڈیو ملایا جا رہا ہے…</string>
+    <string name="extracting">آڈیو نکالا جا رہا ہے…</string>
+    <string name="uploading">اپلوڈ ہو رہا ہے…</string>
+    <string name="queued">قطار میں…</string>
+    <string name="starting">شروع ہو رہا ہے…</string>
+    <string name="resuming">دوبارہ شروع ہو رہا ہے…</string>
+
+    <!-- Done -->
     <string name="vocals_extracted">آوازیں نکال لی گئیں</string>
     <string name="play">چلائیں</string>
     <string name="save">محفوظ کریں</string>
     <string name="saving">محفوظ ہو رہا ہے…</string>
+    <string name="save_as">بطور محفوظ کریں…</string>
     <string name="share">شیئر کریں</string>
-    <string name="process_another">اور پروسیس کریں</string>
+    <string name="process_another">دوسری ویڈیو پروسیس کریں</string>
+
+    <!-- Options -->
     <string name="audio_only">صرف آڈیو</string>
+    <string name="ai_model">AI ماڈل</string>
+    <string name="choose_model">آواز کی علیحدگی کے لیے ماڈل منتخب کریں</string>
+    <string name="model_default_name">UVR-MDX-NET HQ3</string>
+    <string name="model_default_desc">معیار اور رفتار میں توازن۔ زیادہ تر ویڈیوز کے لیے بہترین۔</string>
+    <string name="model_quality_name">Kim Vocal 2</string>
+    <string name="model_quality_desc">اعلیٰ معیار کا ایکسٹریکشن۔ سست لیکن موسیقی والے مواد کے لیے بہتر۔</string>
+    <string name="model_karaoke_name">UVR KARA 2</string>
+    <string name="model_karaoke_desc">کیریوکی طرز کی علیحدگی۔ گانے کو آلات سے الگ کرنے کے لیے بہترین۔</string>
+    <string name="tag_default">ڈیفالٹ</string>
+    <string name="tag_quality">معیار</string>
+    <string name="tag_karaoke">کیریوکی</string>
+
+    <!-- Settings -->
     <string name="settings">ترتیبات</string>
-    <string name="install">انسٹال</string>
-    <string name="start">شروع</string>
-    <string name="stop">روکیں</string>
-    <string name="history_and_cache">تاریخ اور کیش</string>
+    <string name="server_mode">سرور موڈ</string>
+    <string name="local_termux">مقامی (Termux)</string>
+    <string name="custom">حسب ضرورت</string>
+    <string name="server_url">سرور URL</string>
+    <string name="on_device_processing">ڈیوائس پر پروسیسنگ</string>
+    <string name="on_device_desc">Termux + Ubuntu (proot) استعمال کرتے ہوئے اپنے فون پر سرور مقامی طور پر چلائیں۔</string>
+    <string name="termux_detected">Termux مل گیا</string>
+    <string name="termux_not_found">Termux نہیں ملا</string>
+    <string name="termux_not_found_desc">ڈیوائس پر ویڈیوز پروسیس کرنے کے لیے، F-Droid سے Termux انسٹال کریں، پھر یہ ایپ دوبارہ کھولیں۔</string>
+    <string name="install">انسٹال کریں</string>
+    <string name="start">شروع کریں</string>
+    <string name="stop">بند کریں</string>
+    <string name="update_server">سرور اپڈیٹ کریں</string>
+    <string name="first_time_hint">پہلی بار؟ انسٹال پر ٹیپ کریں، مکمل ہونے کا انتظار کریں، پھر شروع پر ٹیپ کریں۔</string>
+    <string name="history_and_cache">تاریخ &amp; کیش</string>
+    <string name="processed_videos">%d پروسیس شدہ ویڈیوز · %s کیش</string>
     <string name="no_history">ابھی تک کوئی تاریخ نہیں</string>
     <string name="clear_history">تاریخ صاف کریں</string>
-    <string name="about">کے بارے میں</string>
-    <string name="about_desc">AI سے YouTube ویڈیوز سے پس منظر کی موسیقی ہٹائیں۔</string>
+    <string name="clear_cache">کیش صاف کریں</string>
+    <string name="permissions">اجازتیں</string>
+    <string name="manage_permissions">اجازتیں منظم کریں</string>
+    <string name="permissions_desc">اطلاعات، بیٹری آپٹیمائزیشن اور Termux رسائی منظم کریں۔</string>
+    <string name="about">ایپ کے بارے میں</string>
+    <string name="appearance">ظاہری شکل</string>
+    <string name="theme">تھیم</string>
+    <string name="language">زبان</string>
+    <string name="material_you">Material You</string>
+    <string name="material_you_desc">اپنے وال پیپر کے رنگ استعمال کریں</string>
+    <string name="system_default">سسٹم ڈیفالٹ</string>
+    <string name="light">ہلکا</string>
+    <string name="dark">گہرا</string>
+    <string name="black_oled">سیاہ (OLED)</string>
+    <string name="system">سسٹم</string>
+    <string name="file_details">فائل کی تفصیلات</string>
+    <string name="about_desc">AI سے چلنے والی آواز کی علیحدگی کا استعمال کرتے ہوئے YouTube ویڈیوز سے پس منظر کی موسیقی ہٹائیں۔</string>
+
+    <!-- Permissions -->
+    <string name="grant_permissions_hint">بہترین تجربے کے لیے یہ اجازتیں دیں۔</string>
+    <string name="notifications">اطلاعات</string>
+    <string name="notifications_desc">ایپ پس منظر میں ہونے پر بھی پروسیسنگ کی پیشرفت دیکھیں۔</string>
+    <string name="unrestricted_battery">غیر محدود بیٹری</string>
+    <string name="battery_desc">Android کو پس منظر کی پروسیسنگ بند کرنے سے روکتا ہے۔ انتہائی تجویز کردہ۔</string>
+    <string name="termux_commands">Termux کمانڈز</string>
+    <string name="termux_commands_desc">ایپ کو Termux میں مقامی سرور شروع اور کنٹرول کرنے کی اجازت دیں۔</string>
     <string name="grant">اجازت دیں</string>
-    <string name="all_set">سب تیار!</string>
-    <string name="retry">دوبارہ کوشش</string>
-    <string name="lost_connection">سرور سے رابطہ منقطع ہو گیا</string>
+    <string name="open_app_info">ایپ کی معلومات کھولیں</string>
+    <string name="all_set">سب تیار! آپ شروع کر سکتے ہیں۔</string>
+
+    <!-- Errors -->
+    <string name="retry">دوبارہ کوشش کریں</string>
+    <string name="enter_url_or_file">YouTube URL درج کریں یا ویڈیو فائل منتخب کریں</string>
+    <string name="lost_connection">سرور سے کنکشن ٹوٹ گیا</string>
+    <string name="remove_from_history">تاریخ سے ہٹائیں</string>
+
+    <!-- Help -->
     <string name="how_to_use">استعمال کا طریقہ</string>
+    <string name="help_server_setup">سرور سیٹ اپ</string>
+    <string name="help_server_required">ایپ کچھ بھی پروسیس کرنے سے پہلے آپ کو ایک چلتا ہوا سرور چاہیے۔</string>
+    <string name="help_quick_start">فوری آغاز</string>
+    <string name="help_local_files">مقامی فائلیں استعمال کرنا</string>
+    <string name="help_share_yt">YouTube سے شیئر کریں</string>
+    <string name="help_ai_models">AI ماڈلز</string>
+    <string name="help_paste_link">YouTube لنک پیسٹ کریں</string>
+    <string name="help_paste_desc">YouTube سے URL کاپی کریں اور ان پٹ فیلڈ میں پیسٹ کریں۔ آپ YouTube ایپ سے براہ راست بھی شیئر کر سکتے ہیں۔</string>
+    <string name="help_tap_remove">موسیقی ہٹائیں پر ٹیپ کریں</string>
+    <string name="help_tap_remove_desc">ایپ ویڈیو ڈاؤنلوڈ کرے گی، AI سے آوازیں الگ کرے گی، اور سب کچھ واپس ملا دے گی۔</string>
+    <string name="help_play_save">چلائیں یا محفوظ کریں</string>
+    <string name="help_play_save_desc">مکمل ہونے پر، نتیجہ براہ راست چلائیں یا اپنے ڈیوائس پر کہیں بھی محفوظ کریں۔</string>
+    <string name="help_pick_file">ویڈیو فائل منتخب کریں</string>
+    <string name="help_pick_file_desc">YouTube لنک کی بجائے، اپنے ڈیوائس سے ویڈیو منتخب کرنے کے لیے "ویڈیو فائل منتخب کریں" پر ٹیپ کریں۔</string>
+    <string name="help_process_usual">معمول کے مطابق پروسیس کریں</string>
+    <string name="help_process_usual_desc">ایپ فائل سرور پر اپلوڈ کرتی ہے، آڈیو نکالتی ہے، آوازیں الگ کرتی ہے، اور نتیجہ واپس کرتی ہے۔</string>
+    <string name="help_tap_share">YouTube میں شیئر پر ٹیپ کریں</string>
+    <string name="help_tap_share_desc">YouTube ایپ میں کوئی بھی ویڈیو کھولیں اور شیئر بٹن پر ٹیپ کریں۔</string>
+    <string name="help_pick_murem">Murem منتخب کریں</string>
+    <string name="help_pick_murem_desc">شیئر شیٹ سے Murem منتخب کریں۔ URL خود بخود بھر جائے گا۔</string>
+    <string name="help_local_termux">مقامی (Termux)</string>
+    <string name="help_local_termux_desc">اپنے فون پر پروسیس کریں۔ F-Droid سے Termux انسٹال کریں، پھر ترتیبات ← انسٹال ← شروع پر ٹیپ کریں۔ سست لیکن مکمل طور پر آف لائن۔</string>
+    <string name="help_remote_server">ریموٹ سرور</string>
+    <string name="help_remote_server_desc">بہت تیز پروسیسنگ کے لیے GPU والے PC پر سرور چلائیں۔ ترتیبات ← حسب ضرورت میں URL سیٹ کریں۔</string>
+    <string name="help_start_pc">PC پر سرور شروع کریں</string>
+    <string name="help_docker">Docker (PC کے لیے سب سے آسان)</string>
+
+    <!-- Notifications -->
+    <string name="notif_done">مکمل — %s</string>
+    <string name="notif_error">خرابی — %s</string>
+
+    <!-- Termux status -->
+    <string name="installing_termux">Termux میں انسٹال ہو رہا ہے… مکمل ہونے پر واپس آئیں۔</string>
+    <string name="starting_server">سرور شروع ہو رہا ہے… اس میں تھوڑا وقت لگ سکتا ہے۔</string>
+    <string name="stopping_server">سرور بند ہو رہا ہے…</string>
+    <string name="updating_termux">Termux میں اپڈیٹ ہو رہا ہے… مکمل ہونے پر واپس آئیں۔</string>
     <string name="server_online">سرور آن لائن ہے!</string>
+    <string name="server_timeout">سرور آن لائن نہیں ہوا۔ خرابیوں کے لیے Termux چیک کریں۔</string>
 </resources>

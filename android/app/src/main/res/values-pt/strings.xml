@@ -1,42 +1,145 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Murem</string>
+
+    <!-- Home Screen -->
     <string name="url_label">URL do YouTube ou ID do vídeo</string>
     <string name="url_placeholder">Cole um link ou compartilhe do YouTube</string>
     <string name="or_divider">ou</string>
-    <string name="pick_video">Escolher arquivo de vídeo</string>
+    <string name="pick_video">Escolher um arquivo de vídeo</string>
     <string name="remove_music">Remover Música</string>
     <string name="change">Alterar</string>
     <string name="recent">Recentes</string>
-    <string name="hold_for_info">segure para detalhes</string>
-    <string name="leave_app_hint">Você pode sair do app — avisaremos quando terminar.</string>
+    <string name="hold_for_info">segure para mais info</string>
+
+    <!-- Processing -->
+    <string name="leave_app_hint">Você pode sair do app — vamos te avisar quando terminar.</string>
     <string name="downloading">Baixando vídeo…</string>
     <string name="separating">Separando vocais…</string>
     <string name="merging">Mesclando áudio…</string>
     <string name="extracting">Extraindo áudio…</string>
     <string name="uploading">Enviando…</string>
+    <string name="queued">Na fila…</string>
+    <string name="starting">Iniciando…</string>
+    <string name="resuming">Retomando…</string>
+
+    <!-- Done -->
     <string name="vocals_extracted">Vocais extraídos</string>
     <string name="play">Reproduzir</string>
     <string name="save">Salvar</string>
     <string name="saving">Salvando…</string>
     <string name="save_as">Salvar como…</string>
     <string name="share">Compartilhar</string>
-    <string name="process_another">Processar outro</string>
+    <string name="process_another">Processar Outro</string>
+
+    <!-- Options -->
     <string name="audio_only">Apenas áudio</string>
-    <string name="ai_model">Modelo IA</string>
+    <string name="ai_model">Modelo de IA</string>
+    <string name="choose_model">Escolha o modelo para separação vocal</string>
+    <string name="model_default_name">UVR-MDX-NET HQ3</string>
+    <string name="model_default_desc">Qualidade e velocidade equilibradas. Melhor para a maioria dos vídeos.</string>
+    <string name="model_quality_name">Kim Vocal 2</string>
+    <string name="model_quality_desc">Extração de maior qualidade. Mais lento, mas melhor para conteúdo com muita música.</string>
+    <string name="model_karaoke_name">UVR KARA 2</string>
+    <string name="model_karaoke_desc">Separação estilo karaokê. Melhor para isolar o canto dos instrumentos.</string>
+    <string name="tag_default">Padrão</string>
+    <string name="tag_quality">Qualidade</string>
+    <string name="tag_karaoke">Karaokê</string>
+
+    <!-- Settings -->
     <string name="settings">Configurações</string>
+    <string name="server_mode">Modo do Servidor</string>
+    <string name="local_termux">Local (Termux)</string>
+    <string name="custom">Personalizado</string>
+    <string name="server_url">URL do Servidor</string>
+    <string name="on_device_processing">Processamento no Dispositivo</string>
+    <string name="on_device_desc">Execute o servidor localmente no seu celular usando Termux + Ubuntu (proot).</string>
+    <string name="termux_detected">Termux detectado</string>
+    <string name="termux_not_found">Termux não encontrado</string>
+    <string name="termux_not_found_desc">Para processar vídeos no dispositivo, instale o Termux pelo F-Droid e reabra este app.</string>
     <string name="install">Instalar</string>
     <string name="start">Iniciar</string>
     <string name="stop">Parar</string>
-    <string name="history_and_cache">Histórico e cache</string>
-    <string name="no_history">Sem histórico</string>
-    <string name="clear_history">Limpar histórico</string>
-    <string name="clear_cache">Limpar cache</string>
+    <string name="update_server">Atualizar Servidor</string>
+    <string name="first_time_hint">Primeira vez? Toque em Instalar, espere terminar e depois toque em Iniciar.</string>
+    <string name="history_and_cache">Histórico &amp; Cache</string>
+    <string name="processed_videos">%d vídeo(s) processado(s) · %s em cache</string>
+    <string name="no_history">Sem histórico ainda</string>
+    <string name="clear_history">Limpar Histórico</string>
+    <string name="clear_cache">Limpar Cache</string>
+    <string name="permissions">Permissões</string>
+    <string name="manage_permissions">Gerenciar Permissões</string>
+    <string name="permissions_desc">Gerencie notificações, otimização de bateria e acesso ao Termux.</string>
     <string name="about">Sobre</string>
-    <string name="about_desc">Remova música de fundo de vídeos do YouTube com IA.</string>
-    <string name="grant">Permitir</string>
-    <string name="all_set">Tudo pronto!</string>
-    <string name="retry">Tentar novamente</string>
+    <string name="appearance">Aparência</string>
+    <string name="theme">Tema</string>
+    <string name="language">Idioma</string>
+    <string name="material_you">Material You</string>
+    <string name="material_you_desc">Usar cores do seu papel de parede</string>
+    <string name="system_default">Padrão do sistema</string>
+    <string name="light">Claro</string>
+    <string name="dark">Escuro</string>
+    <string name="black_oled">Preto (OLED)</string>
+    <string name="system">Sistema</string>
+    <string name="file_details">Detalhes do Arquivo</string>
+    <string name="about_desc">Remova a música de fundo de vídeos do YouTube usando separação vocal com IA.</string>
+
+    <!-- Permissions -->
+    <string name="grant_permissions_hint">Conceda essas permissões para a melhor experiência.</string>
+    <string name="notifications">Notificações</string>
+    <string name="notifications_desc">Veja o progresso do processamento mesmo com o app em segundo plano.</string>
+    <string name="unrestricted_battery">Bateria Sem Restrições</string>
+    <string name="battery_desc">Impede o Android de encerrar o processamento em segundo plano. Altamente recomendado.</string>
+    <string name="termux_commands">Comandos do Termux</string>
+    <string name="termux_commands_desc">Permitir que o app inicie e controle o servidor local no Termux.</string>
+    <string name="grant">Conceder</string>
+    <string name="open_app_info">Abrir Info do App</string>
+    <string name="all_set">Tudo pronto! Você já pode começar.</string>
+
+    <!-- Errors -->
+    <string name="retry">Tentar Novamente</string>
+    <string name="enter_url_or_file">Insira uma URL do YouTube ou escolha um arquivo de vídeo</string>
     <string name="lost_connection">Conexão com o servidor perdida</string>
-    <string name="how_to_use">Como usar</string>
-    <string name="server_online">Servidor online!</string>
+    <string name="remove_from_history">Remover do Histórico</string>
+
+    <!-- Help -->
+    <string name="how_to_use">Como Usar</string>
+    <string name="help_server_setup">Configuração do Servidor</string>
+    <string name="help_server_required">Você precisa de um servidor rodando antes que o app possa processar qualquer coisa.</string>
+    <string name="help_quick_start">Início Rápido</string>
+    <string name="help_local_files">Usando Arquivos Locais</string>
+    <string name="help_share_yt">Compartilhar do YouTube</string>
+    <string name="help_ai_models">Modelos de IA</string>
+    <string name="help_paste_link">Cole um link do YouTube</string>
+    <string name="help_paste_desc">Copie uma URL do YouTube e cole no campo de entrada. Você também pode compartilhar diretamente do app do YouTube.</string>
+    <string name="help_tap_remove">Toque em Remover Música</string>
+    <string name="help_tap_remove_desc">O app vai baixar o vídeo, separar os vocais usando IA e juntar tudo de volta.</string>
+    <string name="help_play_save">Reproduzir ou salvar</string>
+    <string name="help_play_save_desc">Quando terminar, reproduza o resultado diretamente ou salve em qualquer lugar no seu dispositivo.</string>
+    <string name="help_pick_file">Escolher um arquivo de vídeo</string>
+    <string name="help_pick_file_desc">Em vez de um link do YouTube, toque em "Escolher um arquivo de vídeo" para selecionar um vídeo do seu dispositivo.</string>
+    <string name="help_process_usual">Processar normalmente</string>
+    <string name="help_process_usual_desc">O app envia o arquivo para o servidor, extrai o áudio, separa os vocais e retorna o resultado.</string>
+    <string name="help_tap_share">Toque em Compartilhar no YouTube</string>
+    <string name="help_tap_share_desc">Abra qualquer vídeo no app do YouTube e toque no botão Compartilhar.</string>
+    <string name="help_pick_murem">Escolha Murem</string>
+    <string name="help_pick_murem_desc">Selecione Murem no menu de compartilhamento. A URL será preenchida automaticamente.</string>
+    <string name="help_local_termux">Local (Termux)</string>
+    <string name="help_local_termux_desc">Processe no seu celular. Instale o Termux pelo F-Droid, depois vá em Configurações → toque em Instalar → Iniciar. Mais lento, mas totalmente offline.</string>
+    <string name="help_remote_server">Servidor remoto</string>
+    <string name="help_remote_server_desc">Execute o servidor em um PC com GPU para processamento muito mais rápido. Defina a URL em Configurações → Personalizado.</string>
+    <string name="help_start_pc">Iniciar o servidor no PC</string>
+    <string name="help_docker">Docker (mais fácil para PC)</string>
+
+    <!-- Notifications -->
+    <string name="notif_done">Concluído — %s</string>
+    <string name="notif_error">Erro — %s</string>
+
+    <!-- Termux status -->
+    <string name="installing_termux">Instalando no Termux… Volte quando terminar.</string>
+    <string name="starting_server">Iniciando servidor… Isso pode levar um momento.</string>
+    <string name="stopping_server">Parando servidor…</string>
+    <string name="updating_termux">Atualizando no Termux… Volte quando terminar.</string>
+    <string name="server_online">Servidor está online!</string>
+    <string name="server_timeout">O servidor não ficou online. Verifique o Termux por erros.</string>
 </resources>

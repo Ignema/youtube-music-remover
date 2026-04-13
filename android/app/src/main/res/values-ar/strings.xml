@@ -1,61 +1,145 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="url_label">رابط يوتيوب أو معرّف الفيديو</string>
-    <string name="url_placeholder">الصق رابطاً أو شارك من يوتيوب</string>
+    <string name="app_name">Murem</string>
+
+    <!-- Home Screen -->
+    <string name="url_label">رابط YouTube أو معرّف الفيديو</string>
+    <string name="url_placeholder">الصق رابط أو شاركه من YouTube</string>
     <string name="or_divider">أو</string>
     <string name="pick_video">اختر ملف فيديو</string>
-    <string name="remove_music">إزالة الموسيقى</string>
+    <string name="remove_music">شيل الموسيقى</string>
     <string name="change">تغيير</string>
     <string name="recent">الأخيرة</string>
-    <string name="hold_for_info">اضغط مطولاً للتفاصيل</string>
-    <string name="leave_app_hint">يمكنك مغادرة التطبيق — سنُعلمك عند الانتهاء.</string>
-    <string name="downloading">جارٍ تحميل الفيديو…</string>
-    <string name="separating">جارٍ فصل الأصوات…</string>
-    <string name="merging">جارٍ الدمج…</string>
-    <string name="extracting">جارٍ استخراج الصوت…</string>
-    <string name="uploading">جارٍ الرفع…</string>
+    <string name="hold_for_info">اضغط مطوّلاً للتفاصيل</string>
+
+    <!-- Processing -->
+    <string name="leave_app_hint">تقدر تطلع من التطبيق — بنرسلك إشعار لما يخلص.</string>
+    <string name="downloading">جاري تحميل الفيديو…</string>
+    <string name="separating">جاري فصل الأصوات…</string>
+    <string name="merging">جاري دمج الصوت…</string>
+    <string name="extracting">جاري استخراج الصوت…</string>
+    <string name="uploading">جاري الرفع…</string>
     <string name="queued">في الانتظار…</string>
-    <string name="starting">جارٍ البدء…</string>
-    <string name="resuming">جارٍ الاستئناف…</string>
+    <string name="starting">جاري البدء…</string>
+    <string name="resuming">جاري الاستئناف…</string>
+
+    <!-- Done -->
     <string name="vocals_extracted">تم استخراج الأصوات</string>
     <string name="play">تشغيل</string>
     <string name="save">حفظ</string>
-    <string name="saving">جارٍ الحفظ…</string>
+    <string name="saving">جاري الحفظ…</string>
     <string name="save_as">حفظ باسم…</string>
     <string name="share">مشاركة</string>
-    <string name="process_another">معالجة فيديو آخر</string>
+    <string name="process_another">معالجة فيديو ثاني</string>
+
+    <!-- Options -->
     <string name="audio_only">صوت فقط</string>
     <string name="ai_model">نموذج الذكاء الاصطناعي</string>
     <string name="choose_model">اختر النموذج لفصل الأصوات</string>
+    <string name="model_default_name">UVR-MDX-NET HQ3</string>
+    <string name="model_default_desc">توازن بين الجودة والسرعة. الأفضل لأغلب الفيديوهات.</string>
+    <string name="model_quality_name">Kim Vocal 2</string>
+    <string name="model_quality_desc">جودة استخراج أعلى. أبطأ بس أفضل للمحتوى اللي فيه موسيقى كثير.</string>
+    <string name="model_karaoke_name">UVR KARA 2</string>
+    <string name="model_karaoke_desc">فصل بأسلوب كاريوكي. الأفضل لعزل الغناء عن الموسيقى.</string>
+    <string name="tag_default">افتراضي</string>
+    <string name="tag_quality">جودة</string>
+    <string name="tag_karaoke">كاريوكي</string>
+
+    <!-- Settings -->
     <string name="settings">الإعدادات</string>
-    <string name="server_mode">وضع الخادم</string>
+    <string name="server_mode">وضع السيرفر</string>
     <string name="local_termux">محلي (Termux)</string>
     <string name="custom">مخصص</string>
-    <string name="server_url">عنوان الخادم</string>
+    <string name="server_url">رابط السيرفر</string>
     <string name="on_device_processing">المعالجة على الجهاز</string>
-    <string name="on_device_desc">شغّل الخادم محلياً على هاتفك باستخدام Termux + Ubuntu.</string>
+    <string name="on_device_desc">شغّل السيرفر محلياً على تلفونك باستخدام Termux + Ubuntu (proot).</string>
     <string name="termux_detected">تم اكتشاف Termux</string>
+    <string name="termux_not_found">Termux مو موجود</string>
+    <string name="termux_not_found_desc">عشان تعالج الفيديوهات على جهازك، نزّل Termux من F-Droid وبعدين ارجع افتح التطبيق.</string>
     <string name="install">تثبيت</string>
     <string name="start">تشغيل</string>
     <string name="stop">إيقاف</string>
-    <string name="update_server">تحديث الخادم</string>
-    <string name="first_time_hint">أول مرة؟ اضغط تثبيت، انتظر حتى ينتهي، ثم اضغط تشغيل.</string>
-    <string name="history_and_cache">السجل والذاكرة المؤقتة</string>
-    <string name="no_history">لا يوجد سجل بعد</string>
+    <string name="update_server">تحديث السيرفر</string>
+    <string name="first_time_hint">أول مرة؟ اضغط تثبيت، انتظر يخلص، وبعدين اضغط تشغيل.</string>
+    <string name="history_and_cache">السجل &amp; التخزين المؤقت</string>
+    <string name="processed_videos">%d فيديو معالج · %s مخزّن</string>
+    <string name="no_history">ما في سجل لحد الآن</string>
     <string name="clear_history">مسح السجل</string>
-    <string name="clear_cache">مسح الذاكرة المؤقتة</string>
-    <string name="permissions">الأذونات</string>
-    <string name="manage_permissions">إدارة الأذونات</string>
-    <string name="about">حول</string>
-    <string name="about_desc">إزالة الموسيقى الخلفية من فيديوهات يوتيوب باستخدام الذكاء الاصطناعي.</string>
-    <string name="grant">منح</string>
-    <string name="all_set">كل شيء جاهز!</string>
-    <string name="retry">إعادة المحاولة</string>
-    <string name="enter_url_or_file">أدخل رابط يوتيوب أو اختر ملف فيديو</string>
-    <string name="lost_connection">فُقد الاتصال بالخادم</string>
-    <string name="remove_from_history">إزالة من السجل</string>
-    <string name="how_to_use">كيفية الاستخدام</string>
+    <string name="clear_cache">مسح التخزين المؤقت</string>
+    <string name="permissions">الصلاحيات</string>
+    <string name="manage_permissions">إدارة الصلاحيات</string>
+    <string name="permissions_desc">إدارة الإشعارات وتحسين البطارية وصلاحيات Termux.</string>
+    <string name="about">عن التطبيق</string>
+    <string name="appearance">المظهر</string>
+    <string name="theme">الثيم</string>
+    <string name="language">اللغة</string>
+    <string name="material_you">Material You</string>
+    <string name="material_you_desc">استخدم ألوان من خلفية جهازك</string>
+    <string name="system_default">الافتراضي</string>
+    <string name="light">فاتح</string>
+    <string name="dark">داكن</string>
+    <string name="black_oled">أسود (OLED)</string>
+    <string name="system">النظام</string>
+    <string name="file_details">تفاصيل الملف</string>
+    <string name="about_desc">شيل الموسيقى الخلفية من فيديوهات YouTube باستخدام فصل الأصوات بالذكاء الاصطناعي.</string>
+
+    <!-- Permissions -->
+    <string name="grant_permissions_hint">فعّل هالصلاحيات عشان تحصل على أفضل تجربة.</string>
     <string name="notifications">الإشعارات</string>
-    <string name="unrestricted_battery">بطارية غير مقيدة</string>
-    <string name="server_online">الخادم متصل!</string>
+    <string name="notifications_desc">شوف تقدم المعالجة حتى لو التطبيق في الخلفية.</string>
+    <string name="unrestricted_battery">بطارية بدون قيود</string>
+    <string name="battery_desc">يمنع أندرويد من إيقاف المعالجة في الخلفية. ننصح فيه بقوة.</string>
+    <string name="termux_commands">أوامر Termux</string>
+    <string name="termux_commands_desc">اسمح للتطبيق يشغّل ويتحكم بالسيرفر المحلي في Termux.</string>
+    <string name="grant">منح</string>
+    <string name="open_app_info">فتح معلومات التطبيق</string>
+    <string name="all_set">تمام! كل شي جاهز.</string>
+
+    <!-- Errors -->
+    <string name="retry">إعادة المحاولة</string>
+    <string name="enter_url_or_file">أدخل رابط YouTube أو اختر ملف فيديو</string>
+    <string name="lost_connection">انقطع الاتصال بالسيرفر</string>
+    <string name="remove_from_history">حذف من السجل</string>
+
+    <!-- Help -->
+    <string name="how_to_use">طريقة الاستخدام</string>
+    <string name="help_server_setup">إعداد السيرفر</string>
+    <string name="help_server_required">لازم يكون عندك سيرفر شغّال قبل ما التطبيق يقدر يعالج أي شي.</string>
+    <string name="help_quick_start">بداية سريعة</string>
+    <string name="help_local_files">استخدام ملفات محلية</string>
+    <string name="help_share_yt">مشاركة من YouTube</string>
+    <string name="help_ai_models">نماذج الذكاء الاصطناعي</string>
+    <string name="help_paste_link">الصق رابط YouTube</string>
+    <string name="help_paste_desc">انسخ رابط من YouTube والصقه في حقل الإدخال. تقدر أيضاً تشارك مباشرة من تطبيق YouTube.</string>
+    <string name="help_tap_remove">اضغط شيل الموسيقى</string>
+    <string name="help_tap_remove_desc">التطبيق بيحمّل الفيديو، يفصل الأصوات باستخدام الذكاء الاصطناعي، ويدمج كل شي مع بعض.</string>
+    <string name="help_play_save">شغّل أو احفظ</string>
+    <string name="help_play_save_desc">لما يخلص، شغّل النتيجة مباشرة أو احفظها في أي مكان على جهازك.</string>
+    <string name="help_pick_file">اختر ملف فيديو</string>
+    <string name="help_pick_file_desc">بدل رابط YouTube، اضغط "اختر ملف فيديو" عشان تختار فيديو من جهازك.</string>
+    <string name="help_process_usual">عالج كالعادة</string>
+    <string name="help_process_usual_desc">التطبيق يرفع الملف للسيرفر، يستخرج الصوت، يفصل الأصوات، ويرجع لك النتيجة.</string>
+    <string name="help_tap_share">اضغط مشاركة في YouTube</string>
+    <string name="help_tap_share_desc">افتح أي فيديو في تطبيق YouTube واضغط زر المشاركة.</string>
+    <string name="help_pick_murem">اختر Murem</string>
+    <string name="help_pick_murem_desc">اختر Murem من قائمة المشاركة. الرابط بيتعبّى تلقائياً.</string>
+    <string name="help_local_termux">محلي (Termux)</string>
+    <string name="help_local_termux_desc">عالج على تلفونك. نزّل Termux من F-Droid، وبعدين روح للإعدادات ← اضغط تثبيت ← تشغيل. أبطأ بس يشتغل بدون نت.</string>
+    <string name="help_remote_server">سيرفر عن بعد</string>
+    <string name="help_remote_server_desc">شغّل السيرفر على كمبيوتر فيه GPU عشان معالجة أسرع بكثير. حط الرابط في الإعدادات ← مخصص.</string>
+    <string name="help_start_pc">شغّل السيرفر على الكمبيوتر</string>
+    <string name="help_docker">Docker (الأسهل للكمبيوتر)</string>
+
+    <!-- Notifications -->
+    <string name="notif_done">خلص — %s</string>
+    <string name="notif_error">خطأ — %s</string>
+
+    <!-- Termux status -->
+    <string name="installing_termux">جاري التثبيت في Termux… ارجع لما يخلص.</string>
+    <string name="starting_server">جاري تشغيل السيرفر… ممكن ياخذ شوية وقت.</string>
+    <string name="stopping_server">جاري إيقاف السيرفر…</string>
+    <string name="updating_termux">جاري التحديث في Termux… ارجع لما يخلص.</string>
+    <string name="server_online">السيرفر شغّال!</string>
+    <string name="server_timeout">السيرفر ما اشتغل. تحقق من Termux لو في أخطاء.</string>
 </resources>

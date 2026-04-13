@@ -1,46 +1,145 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="url_label">YouTube URL veya Video ID</string>
-    <string name="url_placeholder">Bir bağlantı yapıştırın veya YouTube\'dan paylaşın</string>
+    <string name="app_name">Murem</string>
+
+    <!-- Home Screen -->
+    <string name="url_label">YouTube URL\'si veya Video ID</string>
+    <string name="url_placeholder">Bir bağlantı yapıştır veya YouTube\'dan paylaş</string>
     <string name="or_divider">veya</string>
-    <string name="pick_video">Video dosyası seçin</string>
+    <string name="pick_video">Video dosyası seç</string>
     <string name="remove_music">Müziği Kaldır</string>
     <string name="change">Değiştir</string>
     <string name="recent">Son</string>
-    <string name="hold_for_info">detaylar için basılı tutun</string>
-    <string name="leave_app_hint">Uygulamadan çıkabilirsiniz — bittiğinde sizi bilgilendireceğiz.</string>
+    <string name="hold_for_info">bilgi için basılı tut</string>
+
+    <!-- Processing -->
+    <string name="leave_app_hint">Uygulamadan çıkabilirsin — bitince sana bildirim göndereceğiz.</string>
     <string name="downloading">Video indiriliyor…</string>
-    <string name="separating">Sesler ayrılıyor…</string>
+    <string name="separating">Vokaller ayrıştırılıyor…</string>
     <string name="merging">Ses birleştiriliyor…</string>
     <string name="extracting">Ses çıkarılıyor…</string>
     <string name="uploading">Yükleniyor…</string>
     <string name="queued">Sırada…</string>
     <string name="starting">Başlatılıyor…</string>
-    <string name="vocals_extracted">Sesler çıkarıldı</string>
+    <string name="resuming">Devam ediliyor…</string>
+
+    <!-- Done -->
+    <string name="vocals_extracted">Vokaller çıkarıldı</string>
     <string name="play">Oynat</string>
     <string name="save">Kaydet</string>
     <string name="saving">Kaydediliyor…</string>
     <string name="save_as">Farklı Kaydet…</string>
     <string name="share">Paylaş</string>
-    <string name="process_another">Başka Bir Video</string>
+    <string name="process_another">Başka Bir Video İşle</string>
+
+    <!-- Options -->
     <string name="audio_only">Yalnızca ses</string>
-    <string name="ai_model">AI Modeli</string>
+    <string name="ai_model">Yapay Zeka Modeli</string>
+    <string name="choose_model">Vokal ayrıştırma için modeli seçin</string>
+    <string name="model_default_name">UVR-MDX-NET HQ3</string>
+    <string name="model_default_desc">Dengeli kalite ve hız. Çoğu video için en iyisi.</string>
+    <string name="model_quality_name">Kim Vocal 2</string>
+    <string name="model_quality_desc">Daha yüksek kaliteli çıkarma. Daha yavaş ama müzik ağırlıklı içerik için daha iyi.</string>
+    <string name="model_karaoke_name">UVR KARA 2</string>
+    <string name="model_karaoke_desc">Karaoke tarzı ayrıştırma. Şarkıyı enstrümanlardan ayırmak için en iyisi.</string>
+    <string name="tag_default">Varsayılan</string>
+    <string name="tag_quality">Kalite</string>
+    <string name="tag_karaoke">Karaoke</string>
+
+    <!-- Settings -->
     <string name="settings">Ayarlar</string>
-    <string name="install">Kur</string>
+    <string name="server_mode">Sunucu Modu</string>
+    <string name="local_termux">Yerel (Termux)</string>
+    <string name="custom">Özel</string>
+    <string name="server_url">Sunucu URL\'si</string>
+    <string name="on_device_processing">Cihazda İşleme</string>
+    <string name="on_device_desc">Sunucuyu Termux + Ubuntu (proot) kullanarak telefonunuzda yerel olarak çalıştırın.</string>
+    <string name="termux_detected">Termux algılandı</string>
+    <string name="termux_not_found">Termux bulunamadı</string>
+    <string name="termux_not_found_desc">Videoları cihazda işlemek için F-Droid\'den Termux\'u yükleyin, sonra bu uygulamayı tekrar açın.</string>
+    <string name="install">Yükle</string>
     <string name="start">Başlat</string>
     <string name="stop">Durdur</string>
-    <string name="update_server">Güncelle</string>
-    <string name="history_and_cache">Geçmiş ve Önbellek</string>
+    <string name="update_server">Sunucuyu Güncelle</string>
+    <string name="first_time_hint">İlk kez mi? Yükle\'ye dokunun, bitmesini bekleyin, sonra Başlat\'a dokunun.</string>
+    <string name="history_and_cache">Geçmiş &amp; Önbellek</string>
+    <string name="processed_videos">%d işlenmiş video · %s önbellekte</string>
     <string name="no_history">Henüz geçmiş yok</string>
     <string name="clear_history">Geçmişi Temizle</string>
     <string name="clear_cache">Önbelleği Temizle</string>
     <string name="permissions">İzinler</string>
+    <string name="manage_permissions">İzinleri Yönet</string>
+    <string name="permissions_desc">Bildirimleri, pil optimizasyonunu ve Termux erişimini yönetin.</string>
     <string name="about">Hakkında</string>
-    <string name="about_desc">YouTube videolarından arka plan müziğini AI ile kaldırın.</string>
+    <string name="appearance">Görünüm</string>
+    <string name="theme">Tema</string>
+    <string name="language">Dil</string>
+    <string name="material_you">Material You</string>
+    <string name="material_you_desc">Duvar kağıdınızdaki renkleri kullanın</string>
+    <string name="system_default">Sistem varsayılanı</string>
+    <string name="light">Açık</string>
+    <string name="dark">Koyu</string>
+    <string name="black_oled">Siyah (OLED)</string>
+    <string name="system">Sistem</string>
+    <string name="file_details">Dosya Detayları</string>
+    <string name="about_desc">Yapay zeka destekli vokal ayrıştırma ile YouTube videolarından arka plan müziğini kaldırın.</string>
+
+    <!-- Permissions -->
+    <string name="grant_permissions_hint">En iyi deneyim için bu izinleri verin.</string>
+    <string name="notifications">Bildirimler</string>
+    <string name="notifications_desc">Uygulama arka plandayken bile işleme durumunu görün.</string>
+    <string name="unrestricted_battery">Sınırsız Pil</string>
+    <string name="battery_desc">Android\'in arka plan işlemeyi durdurmasını engeller. Şiddetle tavsiye edilir.</string>
+    <string name="termux_commands">Termux Komutları</string>
+    <string name="termux_commands_desc">Uygulamanın Termux\'taki yerel sunucuyu başlatmasına ve kontrol etmesine izin verin.</string>
     <string name="grant">İzin Ver</string>
-    <string name="all_set">Her şey hazır!</string>
+    <string name="open_app_info">Uygulama Bilgisini Aç</string>
+    <string name="all_set">Hazırsın! Her şey tamam.</string>
+
+    <!-- Errors -->
     <string name="retry">Tekrar Dene</string>
+    <string name="enter_url_or_file">Bir YouTube URL\'si girin veya video dosyası seçin</string>
     <string name="lost_connection">Sunucu bağlantısı kesildi</string>
+    <string name="remove_from_history">Geçmişten Kaldır</string>
+
+    <!-- Help -->
     <string name="how_to_use">Nasıl Kullanılır</string>
+    <string name="help_server_setup">Sunucu Kurulumu</string>
+    <string name="help_server_required">Uygulama bir şey işleyebilmeden önce çalışan bir sunucuya ihtiyacınız var.</string>
+    <string name="help_quick_start">Hızlı Başlangıç</string>
+    <string name="help_local_files">Yerel Dosya Kullanımı</string>
+    <string name="help_share_yt">YouTube\'dan Paylaş</string>
+    <string name="help_ai_models">Yapay Zeka Modelleri</string>
+    <string name="help_paste_link">YouTube bağlantısı yapıştır</string>
+    <string name="help_paste_desc">YouTube\'dan bir URL kopyalayıp giriş alanına yapıştırın. YouTube uygulamasından doğrudan da paylaşabilirsiniz.</string>
+    <string name="help_tap_remove">Müziği Kaldır\'a dokunun</string>
+    <string name="help_tap_remove_desc">Uygulama videoyu indirecek, yapay zeka ile vokalleri ayıracak ve her şeyi tekrar birleştirecek.</string>
+    <string name="help_play_save">Oynat veya kaydet</string>
+    <string name="help_play_save_desc">Tamamlandığında, sonucu doğrudan oynatın veya cihazınızda istediğiniz yere kaydedin.</string>
+    <string name="help_pick_file">Video dosyası seç</string>
+    <string name="help_pick_file_desc">YouTube bağlantısı yerine, cihazınızdan video seçmek için "Video dosyası seç"e dokunun.</string>
+    <string name="help_process_usual">Her zamanki gibi işle</string>
+    <string name="help_process_usual_desc">Uygulama dosyayı sunucuya yükler, sesi çıkarır, vokalleri ayırır ve sonucu döndürür.</string>
+    <string name="help_tap_share">YouTube\'da Paylaş\'a dokunun</string>
+    <string name="help_tap_share_desc">YouTube uygulamasında herhangi bir videoyu açın ve Paylaş düğmesine dokunun.</string>
+    <string name="help_pick_murem">Murem\'i seçin</string>
+    <string name="help_pick_murem_desc">Paylaşım menüsünden Murem\'i seçin. URL otomatik olarak doldurulacak.</string>
+    <string name="help_local_termux">Yerel (Termux)</string>
+    <string name="help_local_termux_desc">Telefonunuzda işleyin. F-Droid\'den Termux\'u yükleyin, sonra Ayarlar → Yükle → Başlat\'a gidin. Daha yavaş ama tamamen çevrimdışı.</string>
+    <string name="help_remote_server">Uzak sunucu</string>
+    <string name="help_remote_server_desc">Çok daha hızlı işleme için sunucuyu GPU\'lu bir PC\'de çalıştırın. URL\'yi Ayarlar → Özel\'den ayarlayın.</string>
+    <string name="help_start_pc">Sunucuyu PC\'de başlat</string>
+    <string name="help_docker">Docker (PC için en kolay)</string>
+
+    <!-- Notifications -->
+    <string name="notif_done">Tamamlandı — %s</string>
+    <string name="notif_error">Hata — %s</string>
+
+    <!-- Termux status -->
+    <string name="installing_termux">Termux\'a yükleniyor… Bitince geri dönün.</string>
+    <string name="starting_server">Sunucu başlatılıyor… Bu biraz zaman alabilir.</string>
+    <string name="stopping_server">Sunucu durduruluyor…</string>
+    <string name="updating_termux">Termux\'ta güncelleniyor… Bitince geri dönün.</string>
     <string name="server_online">Sunucu çevrimiçi!</string>
+    <string name="server_timeout">Sunucu çevrimiçi olmadı. Hatalar için Termux\'u kontrol edin.</string>
 </resources>

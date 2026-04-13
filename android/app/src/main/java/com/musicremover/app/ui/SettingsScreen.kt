@@ -90,19 +90,19 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
                 .verticalScroll(rememberScrollState()),
         ) {
             // --- Appearance ---
-            SectionLabel("Appearance")
+            SectionLabel(stringResource(R.string.appearance))
             Spacer(Modifier.height(12.dp))
 
             // Theme selector
             var showThemePicker by remember { mutableStateOf(false) }
             val themeLabel = when (ui.themeMode) {
-                "light" -> "Light"
-                "dark" -> "Dark"
-                "black" -> "Black (OLED)"
-                else -> "System"
+                "light" -> stringResource(R.string.light)
+                "dark" -> stringResource(R.string.dark)
+                "black" -> stringResource(R.string.black_oled)
+                else -> stringResource(R.string.system)
             }
             SettingsRow(
-                label = "Theme",
+                label = stringResource(R.string.theme),
                 value = themeLabel,
                 onClick = { showThemePicker = true },
             )
@@ -112,13 +112,13 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
                     onDismissRequest = { showThemePicker = false },
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp)) {
-                        Text("Theme", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(R.string.theme), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.height(16.dp))
                         listOf(
-                            "system" to "System default",
-                            "light" to "Light",
-                            "dark" to "Dark",
-                            "black" to "Black (OLED)",
+                            "system" to stringResource(R.string.system_default),
+                            "light" to stringResource(R.string.light),
+                            "dark" to stringResource(R.string.dark),
+                            "black" to stringResource(R.string.black_oled),
                         ).forEach { (value, label) ->
                             PickerOption(
                                 label = label,
@@ -141,9 +141,9 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Material You", style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.material_you), style = MaterialTheme.typography.bodyMedium)
                         Text(
-                            "Use colors from your wallpaper",
+                            stringResource(R.string.material_you_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -159,8 +159,9 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
 
             // Language selector
             var showLangPicker by remember { mutableStateOf(false) }
+            val sysDefault = stringResource(R.string.system_default)
             val languages = listOf(
-                "" to "System default",
+                "" to sysDefault,
                 "en" to "English",
                 "ar" to "العربية",
                 "fr" to "Français",
@@ -178,9 +179,9 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
                 "hi" to "हिन्दी",
                 "ur" to "اردو",
             )
-            val currentLangName = languages.firstOrNull { it.first == ui.language }?.second ?: "System default"
+            val currentLangName = languages.firstOrNull { it.first == ui.language }?.second ?: stringResource(R.string.system_default)
             SettingsRow(
-                label = "Language",
+                label = stringResource(R.string.language),
                 value = currentLangName,
                 onClick = { showLangPicker = true },
             )
@@ -195,7 +196,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
                             .padding(bottom = 32.dp)
                             .verticalScroll(rememberScrollState()),
                     ) {
-                        Text("Language", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(R.string.language), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.height(16.dp))
                         languages.forEach { (code, name) ->
                             PickerOption(
@@ -214,7 +215,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
             Spacer(Modifier.height(24.dp))
 
             // --- Server Mode ---
-            SectionLabel("Server Mode")
+            SectionLabel(stringResource(R.string.server_mode))
             Spacer(Modifier.height(8.dp))
 
             val isLocal = ui.serverUrl == "http://127.0.0.1:8000"
@@ -265,10 +266,10 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
             Spacer(Modifier.height(24.dp))
 
             // --- Termux Section ---
-            SectionLabel("On-Device Processing")
+            SectionLabel(stringResource(R.string.on_device_processing))
             Spacer(Modifier.height(4.dp))
             Text(
-                "Run the server locally on your phone using Termux + Ubuntu (proot).",
+                stringResource(R.string.on_device_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -286,12 +287,12 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
             Spacer(Modifier.height(24.dp))
 
             // --- History & Cache ---
-            SectionLabel("History & Cache")
+            SectionLabel(stringResource(R.string.history_and_cache))
             Spacer(Modifier.height(8.dp))
 
             if (ui.history.isNotEmpty()) {
                 Text(
-                    "${ui.history.size} processed video(s) · ${vm.getCacheSizeFormatted()} cached",
+                    stringResource(R.string.processed_videos, ui.history.size, vm.getCacheSizeFormatted()),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -314,7 +315,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
                 }
             } else {
                 Text(
-                    "No history yet",
+                    stringResource(R.string.no_history),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -325,10 +326,10 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
             Spacer(Modifier.height(24.dp))
 
             // --- Permissions ---
-            SectionLabel("Permissions")
+            SectionLabel(stringResource(R.string.permissions))
             Spacer(Modifier.height(8.dp))
             Text(
-                "Manage notifications, battery optimization, and Termux access.",
+                stringResource(R.string.permissions_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -345,7 +346,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
             Spacer(Modifier.height(24.dp))
 
             // --- About ---
-            SectionLabel("About")
+            SectionLabel(stringResource(R.string.about))
             Spacer(Modifier.height(8.dp))
 
             var tapCount by remember { mutableStateOf(0) }
@@ -368,7 +369,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
                 },
             )
             Text(
-                "Strip background music from YouTube videos using AI-powered vocal separation.",
+                stringResource(R.string.about_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -450,7 +451,7 @@ private fun TermuxControls(vm: MainViewModel) {
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    "Termux detected",
+                    stringResource(R.string.termux_detected),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -504,7 +505,7 @@ private fun TermuxControls(vm: MainViewModel) {
 
             Spacer(Modifier.height(12.dp))
             Text(
-                "First time? Tap Install, wait for it to finish, then tap Start.",
+                stringResource(R.string.first_time_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -523,13 +524,13 @@ private fun TermuxNotInstalled() {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                "Termux not found",
+                stringResource(R.string.termux_not_found),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                "To process videos on-device, install Termux from F-Droid, then reopen this app.",
+                stringResource(R.string.termux_not_found_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

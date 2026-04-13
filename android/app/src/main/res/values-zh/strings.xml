@@ -1,41 +1,145 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="url_label">YouTube链接或视频ID</string>
-    <string name="url_placeholder">粘贴链接或从YouTube分享</string>
+    <string name="app_name">Murem</string>
+
+    <!-- Home Screen -->
+    <string name="url_label">YouTube 链接或视频 ID</string>
+    <string name="url_placeholder">粘贴链接或从 YouTube 分享</string>
     <string name="or_divider">或</string>
     <string name="pick_video">选择视频文件</string>
     <string name="remove_music">去除音乐</string>
     <string name="change">更改</string>
     <string name="recent">最近</string>
     <string name="hold_for_info">长按查看详情</string>
-    <string name="leave_app_hint">你可以离开应用——完成后会通知你。</string>
+
+    <!-- Processing -->
+    <string name="leave_app_hint">你可以离开应用 — 处理完成后会通知你。</string>
     <string name="downloading">正在下载视频…</string>
     <string name="separating">正在分离人声…</string>
     <string name="merging">正在合并音频…</string>
     <string name="extracting">正在提取音频…</string>
     <string name="uploading">正在上传…</string>
+    <string name="queued">排队中…</string>
+    <string name="starting">正在启动…</string>
+    <string name="resuming">正在恢复…</string>
+
+    <!-- Done -->
     <string name="vocals_extracted">人声提取完成</string>
     <string name="play">播放</string>
     <string name="save">保存</string>
     <string name="saving">正在保存…</string>
+    <string name="save_as">另存为…</string>
     <string name="share">分享</string>
-    <string name="process_another">处理其他视频</string>
+    <string name="process_another">处理另一个</string>
+
+    <!-- Options -->
     <string name="audio_only">仅音频</string>
-    <string name="ai_model">AI模型</string>
+    <string name="ai_model">AI 模型</string>
+    <string name="choose_model">选择人声分离模型</string>
+    <string name="model_default_name">UVR-MDX-NET HQ3</string>
+    <string name="model_default_desc">质量与速度均衡。适合大多数视频。</string>
+    <string name="model_quality_name">Kim Vocal 2</string>
+    <string name="model_quality_desc">更高质量的提取。速度较慢，但更适合音乐较多的内容。</string>
+    <string name="model_karaoke_name">UVR KARA 2</string>
+    <string name="model_karaoke_desc">卡拉OK风格分离。最适合将歌声从伴奏中分离。</string>
+    <string name="tag_default">默认</string>
+    <string name="tag_quality">高质量</string>
+    <string name="tag_karaoke">卡拉OK</string>
+
+    <!-- Settings -->
     <string name="settings">设置</string>
+    <string name="server_mode">服务器模式</string>
+    <string name="local_termux">本地 (Termux)</string>
+    <string name="custom">自定义</string>
+    <string name="server_url">服务器 URL</string>
+    <string name="on_device_processing">设备端处理</string>
+    <string name="on_device_desc">使用 Termux + Ubuntu (proot) 在手机上本地运行服务器。</string>
+    <string name="termux_detected">已检测到 Termux</string>
+    <string name="termux_not_found">未找到 Termux</string>
+    <string name="termux_not_found_desc">要在设备上处理视频，请从 F-Droid 安装 Termux，然后重新打开此应用。</string>
     <string name="install">安装</string>
     <string name="start">启动</string>
     <string name="stop">停止</string>
-    <string name="history_and_cache">历史和缓存</string>
-    <string name="no_history">暂无历史</string>
-    <string name="clear_history">清除历史</string>
+    <string name="update_server">更新服务器</string>
+    <string name="first_time_hint">第一次使用？点击安装，等待完成，然后点击启动。</string>
+    <string name="history_and_cache">历史记录 &amp; 缓存</string>
+    <string name="processed_videos">%d 个已处理视频 · %s 缓存</string>
+    <string name="no_history">暂无历史记录</string>
+    <string name="clear_history">清除历史记录</string>
     <string name="clear_cache">清除缓存</string>
+    <string name="permissions">权限</string>
+    <string name="manage_permissions">管理权限</string>
+    <string name="permissions_desc">管理通知、电池优化和 Termux 访问权限。</string>
     <string name="about">关于</string>
-    <string name="about_desc">使用AI从YouTube视频中去除背景音乐。</string>
+    <string name="appearance">外观</string>
+    <string name="theme">主题</string>
+    <string name="language">语言</string>
+    <string name="material_you">Material You</string>
+    <string name="material_you_desc">使用壁纸中的颜色</string>
+    <string name="system_default">系统默认</string>
+    <string name="light">浅色</string>
+    <string name="dark">深色</string>
+    <string name="black_oled">纯黑 (OLED)</string>
+    <string name="system">系统</string>
+    <string name="file_details">文件详情</string>
+    <string name="about_desc">使用 AI 人声分离技术去除 YouTube 视频中的背景音乐。</string>
+
+    <!-- Permissions -->
+    <string name="grant_permissions_hint">授予这些权限以获得最佳体验。</string>
+    <string name="notifications">通知</string>
+    <string name="notifications_desc">即使应用在后台也能查看处理进度。</string>
+    <string name="unrestricted_battery">不受限的电池</string>
+    <string name="battery_desc">防止 Android 终止后台处理。强烈推荐开启。</string>
+    <string name="termux_commands">Termux 命令</string>
+    <string name="termux_commands_desc">允许应用在 Termux 中启动和控制本地服务器。</string>
     <string name="grant">授权</string>
-    <string name="all_set">一切就绪！</string>
+    <string name="open_app_info">打开应用信息</string>
+    <string name="all_set">一切就绪！可以开始了。</string>
+
+    <!-- Errors -->
     <string name="retry">重试</string>
+    <string name="enter_url_or_file">输入 YouTube 链接或选择视频文件</string>
     <string name="lost_connection">与服务器的连接已断开</string>
+    <string name="remove_from_history">从历史记录中移除</string>
+
+    <!-- Help -->
     <string name="how_to_use">使用方法</string>
+    <string name="help_server_setup">服务器设置</string>
+    <string name="help_server_required">应用处理前需要先运行一个服务器。</string>
+    <string name="help_quick_start">快速开始</string>
+    <string name="help_local_files">使用本地文件</string>
+    <string name="help_share_yt">从 YouTube 分享</string>
+    <string name="help_ai_models">AI 模型</string>
+    <string name="help_paste_link">粘贴 YouTube 链接</string>
+    <string name="help_paste_desc">从 YouTube 复制链接并粘贴到输入框中。你也可以直接从 YouTube 应用分享。</string>
+    <string name="help_tap_remove">点击去除音乐</string>
+    <string name="help_tap_remove_desc">应用会下载视频，使用 AI 分离人声，然后将所有内容重新合并。</string>
+    <string name="help_play_save">播放或保存</string>
+    <string name="help_play_save_desc">完成后，直接播放结果或保存到设备上的任意位置。</string>
+    <string name="help_pick_file">选择视频文件</string>
+    <string name="help_pick_file_desc">除了 YouTube 链接，你也可以点击"选择视频文件"从设备中选择视频。</string>
+    <string name="help_process_usual">照常处理</string>
+    <string name="help_process_usual_desc">应用将文件上传到服务器，提取音频，分离人声，然后返回结果。</string>
+    <string name="help_tap_share">在 YouTube 中点击分享</string>
+    <string name="help_tap_share_desc">在 YouTube 应用中打开任意视频，点击分享按钮。</string>
+    <string name="help_pick_murem">选择 Murem</string>
+    <string name="help_pick_murem_desc">在分享菜单中选择 Murem。链接会自动填入。</string>
+    <string name="help_local_termux">本地 (Termux)</string>
+    <string name="help_local_termux_desc">在手机上处理。从 F-Droid 安装 Termux，然后进入设置 → 点击安装 → 启动。速度较慢但完全离线。</string>
+    <string name="help_remote_server">远程服务器</string>
+    <string name="help_remote_server_desc">在带有 GPU 的电脑上运行服务器，处理速度会快很多。在设置 → 自定义中设置 URL。</string>
+    <string name="help_start_pc">在电脑上启动服务器</string>
+    <string name="help_docker">Docker（电脑上最简单的方式）</string>
+
+    <!-- Notifications -->
+    <string name="notif_done">完成 — %s</string>
+    <string name="notif_error">错误 — %s</string>
+
+    <!-- Termux status -->
+    <string name="installing_termux">正在 Termux 中安装… 完成后请切回。</string>
+    <string name="starting_server">正在启动服务器… 可能需要一点时间。</string>
+    <string name="stopping_server">正在停止服务器…</string>
+    <string name="updating_termux">正在 Termux 中更新… 完成后请切回。</string>
     <string name="server_online">服务器已上线！</string>
+    <string name="server_timeout">服务器未能上线。请检查 Termux 中的错误信息。</string>
 </resources>

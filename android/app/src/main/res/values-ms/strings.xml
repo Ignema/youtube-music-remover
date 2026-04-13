@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Murem</string>
+
+    <!-- Home Screen -->
     <string name="url_label">URL YouTube atau ID Video</string>
     <string name="url_placeholder">Tampal pautan atau kongsi dari YouTube</string>
     <string name="or_divider">atau</string>
@@ -8,30 +11,135 @@
     <string name="change">Tukar</string>
     <string name="recent">Terkini</string>
     <string name="hold_for_info">tekan lama untuk maklumat</string>
-    <string name="leave_app_hint">Anda boleh keluar dari aplikasi — kami akan maklumkan apabila selesai.</string>
+
+    <!-- Processing -->
+    <string name="leave_app_hint">Anda boleh keluar dari aplikasi — kami akan maklumkan apabila siap.</string>
     <string name="downloading">Memuat turun video…</string>
     <string name="separating">Mengasingkan vokal…</string>
     <string name="merging">Menggabungkan audio…</string>
-    <string name="vocals_extracted">Vokal berjaya diasingkan</string>
+    <string name="extracting">Mengekstrak audio…</string>
+    <string name="uploading">Memuat naik…</string>
+    <string name="queued">Dalam barisan…</string>
+    <string name="starting">Memulakan…</string>
+    <string name="resuming">Menyambung semula…</string>
+
+    <!-- Done -->
+    <string name="vocals_extracted">Vokal berjaya diekstrak</string>
     <string name="play">Main</string>
     <string name="save">Simpan</string>
     <string name="saving">Menyimpan…</string>
+    <string name="save_as">Simpan Sebagai…</string>
     <string name="share">Kongsi</string>
-    <string name="process_another">Proses Lain</string>
+    <string name="process_another">Proses Video Lain</string>
+
+    <!-- Options -->
     <string name="audio_only">Audio sahaja</string>
+    <string name="ai_model">Model AI</string>
+    <string name="choose_model">Pilih model untuk pengasingan vokal</string>
+    <string name="model_default_name">UVR-MDX-NET HQ3</string>
+    <string name="model_default_desc">Kualiti dan kelajuan seimbang. Terbaik untuk kebanyakan video.</string>
+    <string name="model_quality_name">Kim Vocal 2</string>
+    <string name="model_quality_desc">Pengekstrakan kualiti lebih tinggi. Lebih perlahan tetapi lebih baik untuk kandungan yang banyak muzik.</string>
+    <string name="model_karaoke_name">UVR KARA 2</string>
+    <string name="model_karaoke_desc">Pengasingan gaya karaoke. Terbaik untuk mengasingkan nyanyian daripada instrumen.</string>
+    <string name="tag_default">Lalai</string>
+    <string name="tag_quality">Kualiti</string>
+    <string name="tag_karaoke">Karaoke</string>
+
+    <!-- Settings -->
     <string name="settings">Tetapan</string>
+    <string name="server_mode">Mod Pelayan</string>
+    <string name="local_termux">Tempatan (Termux)</string>
+    <string name="custom">Tersuai</string>
+    <string name="server_url">URL Pelayan</string>
+    <string name="on_device_processing">Pemprosesan Pada Peranti</string>
+    <string name="on_device_desc">Jalankan pelayan secara tempatan pada telefon anda menggunakan Termux + Ubuntu (proot).</string>
+    <string name="termux_detected">Termux dikesan</string>
+    <string name="termux_not_found">Termux tidak dijumpai</string>
+    <string name="termux_not_found_desc">Untuk memproses video pada peranti, pasang Termux dari F-Droid, kemudian buka semula aplikasi ini.</string>
     <string name="install">Pasang</string>
     <string name="start">Mula</string>
     <string name="stop">Henti</string>
-    <string name="history_and_cache">Sejarah dan Cache</string>
-    <string name="no_history">Tiada sejarah</string>
+    <string name="update_server">Kemas Kini Pelayan</string>
+    <string name="first_time_hint">Kali pertama? Ketik Pasang, tunggu sehingga selesai, kemudian ketik Mula.</string>
+    <string name="history_and_cache">Sejarah &amp; Cache</string>
+    <string name="processed_videos">%d video diproses · %s di-cache</string>
+    <string name="no_history">Belum ada sejarah</string>
     <string name="clear_history">Padam Sejarah</string>
+    <string name="clear_cache">Padam Cache</string>
+    <string name="permissions">Kebenaran</string>
+    <string name="manage_permissions">Urus Kebenaran</string>
+    <string name="permissions_desc">Urus pemberitahuan, pengoptimuman bateri dan akses Termux.</string>
     <string name="about">Perihal</string>
-    <string name="about_desc">Buang muzik latar dari video YouTube menggunakan AI.</string>
+    <string name="appearance">Penampilan</string>
+    <string name="theme">Tema</string>
+    <string name="language">Bahasa</string>
+    <string name="material_you">Material You</string>
+    <string name="material_you_desc">Gunakan warna dari kertas dinding anda</string>
+    <string name="system_default">Lalai sistem</string>
+    <string name="light">Cerah</string>
+    <string name="dark">Gelap</string>
+    <string name="black_oled">Hitam (OLED)</string>
+    <string name="system">Sistem</string>
+    <string name="file_details">Butiran Fail</string>
+    <string name="about_desc">Buang muzik latar dari video YouTube menggunakan pengasingan vokal berkuasa AI.</string>
+
+    <!-- Permissions -->
+    <string name="grant_permissions_hint">Berikan kebenaran ini untuk pengalaman terbaik.</string>
+    <string name="notifications">Pemberitahuan</string>
+    <string name="notifications_desc">Lihat kemajuan pemprosesan walaupun aplikasi di latar belakang.</string>
+    <string name="unrestricted_battery">Bateri Tanpa Sekatan</string>
+    <string name="battery_desc">Menghalang Android daripada menghentikan pemprosesan latar belakang. Sangat disyorkan.</string>
+    <string name="termux_commands">Arahan Termux</string>
+    <string name="termux_commands_desc">Benarkan aplikasi memulakan dan mengawal pelayan tempatan dalam Termux.</string>
     <string name="grant">Benarkan</string>
-    <string name="all_set">Semua sedia!</string>
+    <string name="open_app_info">Buka Maklumat Aplikasi</string>
+    <string name="all_set">Semua sedia! Anda boleh mula.</string>
+
+    <!-- Errors -->
     <string name="retry">Cuba Lagi</string>
+    <string name="enter_url_or_file">Masukkan URL YouTube atau pilih fail video</string>
     <string name="lost_connection">Sambungan ke pelayan terputus</string>
-    <string name="how_to_use">Cara Guna</string>
+    <string name="remove_from_history">Buang dari Sejarah</string>
+
+    <!-- Help -->
+    <string name="how_to_use">Cara Penggunaan</string>
+    <string name="help_server_setup">Persediaan Pelayan</string>
+    <string name="help_server_required">Anda memerlukan pelayan yang berjalan sebelum aplikasi boleh memproses apa-apa.</string>
+    <string name="help_quick_start">Mula Pantas</string>
+    <string name="help_local_files">Menggunakan Fail Tempatan</string>
+    <string name="help_share_yt">Kongsi dari YouTube</string>
+    <string name="help_ai_models">Model AI</string>
+    <string name="help_paste_link">Tampal pautan YouTube</string>
+    <string name="help_paste_desc">Salin URL dari YouTube dan tampal dalam medan input. Anda juga boleh berkongsi terus dari aplikasi YouTube.</string>
+    <string name="help_tap_remove">Ketik Buang Muzik</string>
+    <string name="help_tap_remove_desc">Aplikasi akan memuat turun video, mengasingkan vokal menggunakan AI, dan menggabungkan semuanya semula.</string>
+    <string name="help_play_save">Main atau simpan</string>
+    <string name="help_play_save_desc">Setelah selesai, mainkan hasilnya terus atau simpan di mana-mana pada peranti anda.</string>
+    <string name="help_pick_file">Pilih fail video</string>
+    <string name="help_pick_file_desc">Selain pautan YouTube, ketik "Pilih fail video" untuk memilih video dari peranti anda.</string>
+    <string name="help_process_usual">Proses seperti biasa</string>
+    <string name="help_process_usual_desc">Aplikasi memuat naik fail ke pelayan, mengekstrak audio, mengasingkan vokal, dan mengembalikan hasilnya.</string>
+    <string name="help_tap_share">Ketik Kongsi di YouTube</string>
+    <string name="help_tap_share_desc">Buka mana-mana video dalam aplikasi YouTube dan ketik butang Kongsi.</string>
+    <string name="help_pick_murem">Pilih Murem</string>
+    <string name="help_pick_murem_desc">Pilih Murem dari menu perkongsian. URL akan diisi secara automatik.</string>
+    <string name="help_local_termux">Tempatan (Termux)</string>
+    <string name="help_local_termux_desc">Proses pada telefon anda. Pasang Termux dari F-Droid, kemudian pergi ke Tetapan → ketik Pasang → Mula. Lebih perlahan tetapi sepenuhnya luar talian.</string>
+    <string name="help_remote_server">Pelayan jauh</string>
+    <string name="help_remote_server_desc">Jalankan pelayan pada PC dengan GPU untuk pemprosesan yang jauh lebih pantas. Tetapkan URL dalam Tetapan → Tersuai.</string>
+    <string name="help_start_pc">Mulakan pelayan pada PC</string>
+    <string name="help_docker">Docker (paling mudah untuk PC)</string>
+
+    <!-- Notifications -->
+    <string name="notif_done">Selesai — %s</string>
+    <string name="notif_error">Ralat — %s</string>
+
+    <!-- Termux status -->
+    <string name="installing_termux">Memasang dalam Termux… Kembali apabila selesai.</string>
+    <string name="starting_server">Memulakan pelayan… Ini mungkin mengambil sedikit masa.</string>
+    <string name="stopping_server">Menghentikan pelayan…</string>
+    <string name="updating_termux">Mengemas kini dalam Termux… Kembali apabila selesai.</string>
     <string name="server_online">Pelayan dalam talian!</string>
+    <string name="server_timeout">Pelayan tidak dapat dalam talian. Semak Termux untuk ralat.</string>
 </resources>

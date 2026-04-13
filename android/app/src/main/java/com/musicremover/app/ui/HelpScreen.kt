@@ -75,25 +75,25 @@ fun HelpScreen(onBack: () -> Unit) {
                 .verticalScroll(rememberScrollState()),
         ) {
             // Server setup — first because it's required
-            SectionTitle("Server Setup")
+            SectionTitle(stringResource(R.string.help_server_setup))
             Spacer(Modifier.height(4.dp))
             Text(
-                "You need a server running before the app can process anything.",
+                stringResource(R.string.help_server_required),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(12.dp))
 
-            TipCard(Icons.Outlined.PhoneAndroid, "Local (Termux)",
-                "Process on your phone. Install Termux from F-Droid, then go to Settings → tap Install → Start. Slower but fully offline.")
+            TipCard(Icons.Outlined.PhoneAndroid, stringResource(R.string.help_local_termux),
+                stringResource(R.string.help_local_termux_desc))
             Spacer(Modifier.height(8.dp))
-            TipCard(Icons.Outlined.Cloud, "Remote server",
-                "Run the server on a PC with a GPU for much faster processing. Set the URL in Settings → Custom.")
+            TipCard(Icons.Outlined.Cloud, stringResource(R.string.help_remote_server),
+                stringResource(R.string.help_remote_server_desc))
             Spacer(Modifier.height(8.dp))
-            TipCard(Icons.Outlined.Terminal, "Start the server on PC",
+            TipCard(Icons.Outlined.Terminal, stringResource(R.string.help_start_pc),
                 "Clone the repo first:\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\nThen start the server:\nuvx --with fastapi --with yt-dlp --with \"audio-separator[gpu]\" uvicorn api.main:app --host 0.0.0.0 --port 8000")
             Spacer(Modifier.height(8.dp))
-            TipCard(Icons.Outlined.Cloud, "Docker (easiest for PC)",
+            TipCard(Icons.Outlined.Cloud, stringResource(R.string.help_docker),
                 "docker build -t music-remover api/\ndocker run -p 8000:8000 music-remover\n\nThat's it — no Python or ffmpeg setup needed.")
 
             Spacer(Modifier.height(24.dp))
@@ -101,62 +101,56 @@ fun HelpScreen(onBack: () -> Unit) {
             Spacer(Modifier.height(24.dp))
 
             // Quick start
-            SectionTitle("Quick Start")
+            SectionTitle(stringResource(R.string.help_quick_start))
             Spacer(Modifier.height(12.dp))
 
-            StepCard(1, Icons.Outlined.ContentPaste, "Paste a YouTube link",
-                "Copy a URL from YouTube and paste it in the input field. You can also share directly from the YouTube app.")
+            StepCard(1, Icons.Outlined.ContentPaste, stringResource(R.string.help_paste_link), stringResource(R.string.help_paste_desc))
             Spacer(Modifier.height(8.dp))
-            StepCard(2, Icons.Outlined.MusicOff, "Tap Remove Music",
-                "The app will download the video, separate the vocals using AI, and merge everything back together.")
+            StepCard(2, Icons.Outlined.MusicOff, stringResource(R.string.help_tap_remove), stringResource(R.string.help_tap_remove_desc))
             Spacer(Modifier.height(8.dp))
-            StepCard(3, Icons.Outlined.PlayArrow, "Play or save",
-                "Once done, play the result directly or save it anywhere on your device.")
+            StepCard(3, Icons.Outlined.PlayArrow, stringResource(R.string.help_play_save), stringResource(R.string.help_play_save_desc))
 
             Spacer(Modifier.height(24.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(Modifier.height(24.dp))
 
             // Local files
-            SectionTitle("Using Local Files")
+            SectionTitle(stringResource(R.string.help_local_files))
             Spacer(Modifier.height(12.dp))
 
-            StepCard(1, Icons.Outlined.VideoFile, "Pick a video file",
-                "Instead of a YouTube link, tap \"Pick a video file\" to select a video from your device.")
+            StepCard(1, Icons.Outlined.VideoFile, stringResource(R.string.help_pick_file), stringResource(R.string.help_pick_file_desc))
             Spacer(Modifier.height(8.dp))
-            StepCard(2, Icons.Outlined.MusicOff, "Process as usual",
-                "The app uploads the file to the server, extracts audio, separates vocals, and returns the result.")
+            StepCard(2, Icons.Outlined.MusicOff, stringResource(R.string.help_process_usual), stringResource(R.string.help_process_usual_desc))
 
             Spacer(Modifier.height(24.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(Modifier.height(24.dp))
 
             // Share from YouTube
-            SectionTitle("Share from YouTube")
+            SectionTitle(stringResource(R.string.help_share_yt))
             Spacer(Modifier.height(12.dp))
 
-            StepCard(1, Icons.Outlined.Share, "Tap Share in YouTube",
-                "Open any video in the YouTube app and tap the Share button.")
+            StepCard(1, Icons.Outlined.Share, stringResource(R.string.help_tap_share), stringResource(R.string.help_tap_share_desc))
             Spacer(Modifier.height(8.dp))
-            StepCard(2, Icons.Outlined.MusicOff, "Pick Murem",
-                "Select Murem from the share sheet. The URL will be filled in automatically.")
+            StepCard(2, Icons.Outlined.MusicOff, stringResource(R.string.help_pick_murem),
+                stringResource(R.string.help_pick_murem_desc))
 
             Spacer(Modifier.height(24.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(Modifier.height(24.dp))
 
             // Models
-            SectionTitle("AI Models")
+            SectionTitle(stringResource(R.string.help_ai_models))
             Spacer(Modifier.height(12.dp))
 
-            TipCard(Icons.Outlined.Tune, "UVR-MDX-NET-Inst_HQ_3",
-                "Default model. Good balance of quality and speed. Works well for most videos.")
+            TipCard(Icons.Outlined.Tune, stringResource(R.string.model_default_name),
+                stringResource(R.string.model_default_desc))
             Spacer(Modifier.height(8.dp))
-            TipCard(Icons.Outlined.Tune, "Kim_Vocal_2",
-                "Higher quality vocal extraction. Slower but better for music-heavy content.")
+            TipCard(Icons.Outlined.Tune, stringResource(R.string.model_quality_name),
+                stringResource(R.string.model_quality_desc))
             Spacer(Modifier.height(8.dp))
-            TipCard(Icons.Outlined.Tune, "UVR_MDXNET_KARA_2",
-                "Karaoke-style separation. Best for isolating singing vocals from instrumental tracks.")
+            TipCard(Icons.Outlined.Tune, stringResource(R.string.model_karaoke_name),
+                stringResource(R.string.model_karaoke_desc))
 
             Spacer(Modifier.height(32.dp))
         }

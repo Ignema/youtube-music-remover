@@ -363,7 +363,7 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                 modifier = Modifier.weight(1f),
             )
             Text(
-                "Change",
+                stringResource(R.string.change),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f),
             )
@@ -387,25 +387,25 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                     Spacer(Modifier.height(16.dp))
 
                     ModelOption(
-                        name = "UVR-MDX-NET-Inst_HQ_3",
-                        description = "Balanced quality and speed. Best for most videos.",
-                        tag = "Default",
+                        name = stringResource(R.string.model_default_name),
+                        description = stringResource(R.string.model_default_desc),
+                        tag = stringResource(R.string.tag_default),
                         selected = ui.selectedModel == "UVR-MDX-NET-Inst_HQ_3.onnx",
                         onClick = { vm.onModelSelect("UVR-MDX-NET-Inst_HQ_3.onnx") },
                     )
                     Spacer(Modifier.height(8.dp))
                     ModelOption(
-                        name = "Kim Vocal 2",
-                        description = "Higher quality extraction. Slower but better for music-heavy content.",
-                        tag = "Quality",
+                        name = stringResource(R.string.model_quality_name),
+                        description = stringResource(R.string.model_quality_desc),
+                        tag = stringResource(R.string.tag_quality),
                         selected = ui.selectedModel == "Kim_Vocal_2.onnx",
                         onClick = { vm.onModelSelect("Kim_Vocal_2.onnx") },
                     )
                     Spacer(Modifier.height(8.dp))
                     ModelOption(
-                        name = "UVR MDXNET KARA 2",
-                        description = "Karaoke-style separation. Best for isolating singing from instrumentals.",
-                        tag = "Karaoke",
+                        name = stringResource(R.string.model_karaoke_name),
+                        description = stringResource(R.string.model_karaoke_desc),
+                        tag = stringResource(R.string.tag_karaoke),
                         selected = ui.selectedModel == "UVR_MDXNET_KARA_2.onnx",
                         onClick = { vm.onModelSelect("UVR_MDXNET_KARA_2.onnx") },
                     )
@@ -926,7 +926,7 @@ private fun FileInfoSheet(item: HistoryItem) {
                 tint = MaterialTheme.colorScheme.primary,
             )
             Spacer(Modifier.width(12.dp))
-            Text("File Details", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.file_details), style = MaterialTheme.typography.titleMedium)
         }
 
         Spacer(Modifier.height(20.dp))
@@ -983,10 +983,11 @@ private fun InfoRow(label: String, value: String) {
 }
 
 
+@Composable
 private fun modelDisplayName(model: String): String = when (model) {
-    "UVR-MDX-NET-Inst_HQ_3.onnx" -> "UVR-MDX-NET HQ3 · Balanced"
-    "Kim_Vocal_2.onnx" -> "Kim Vocal 2 · Quality"
-    "UVR_MDXNET_KARA_2.onnx" -> "UVR KARA 2 · Karaoke"
+    "UVR-MDX-NET-Inst_HQ_3.onnx" -> "${stringResource(R.string.model_default_name)} · ${stringResource(R.string.tag_default)}"
+    "Kim_Vocal_2.onnx" -> "${stringResource(R.string.model_quality_name)} · ${stringResource(R.string.tag_quality)}"
+    "UVR_MDXNET_KARA_2.onnx" -> "${stringResource(R.string.model_karaoke_name)} · ${stringResource(R.string.tag_karaoke)}"
     else -> model.removeSuffix(".onnx")
 }
 

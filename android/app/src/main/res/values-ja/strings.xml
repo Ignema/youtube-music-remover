@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Murem</string>
+
+    <!-- Home Screen -->
     <string name="url_label">YouTube URLまたは動画ID</string>
     <string name="url_placeholder">リンクを貼り付けるかYouTubeから共有</string>
     <string name="or_divider">または</string>
@@ -8,33 +11,135 @@
     <string name="change">変更</string>
     <string name="recent">最近</string>
     <string name="hold_for_info">長押しで詳細</string>
-    <string name="leave_app_hint">アプリを離れても大丈夫です。完了したらお知らせします。</string>
+
+    <!-- Processing -->
+    <string name="leave_app_hint">アプリを離れても大丈夫です — 完了したら通知します。</string>
     <string name="downloading">動画をダウンロード中…</string>
     <string name="separating">ボーカルを分離中…</string>
     <string name="merging">音声を結合中…</string>
     <string name="extracting">音声を抽出中…</string>
     <string name="uploading">アップロード中…</string>
+    <string name="queued">キューに追加済み…</string>
+    <string name="starting">開始中…</string>
+    <string name="resuming">再開中…</string>
+
+    <!-- Done -->
     <string name="vocals_extracted">ボーカル抽出完了</string>
     <string name="play">再生</string>
     <string name="save">保存</string>
     <string name="saving">保存中…</string>
+    <string name="save_as">名前を付けて保存…</string>
     <string name="share">共有</string>
     <string name="process_another">別の動画を処理</string>
+
+    <!-- Options -->
     <string name="audio_only">音声のみ</string>
     <string name="ai_model">AIモデル</string>
+    <string name="choose_model">ボーカル分離のモデルを選択</string>
+    <string name="model_default_name">UVR-MDX-NET HQ3</string>
+    <string name="model_default_desc">品質と速度のバランス型。ほとんどの動画に最適。</string>
+    <string name="model_quality_name">Kim Vocal 2</string>
+    <string name="model_quality_desc">より高品質な抽出。遅いですが音楽の多いコンテンツに最適。</string>
+    <string name="model_karaoke_name">UVR KARA 2</string>
+    <string name="model_karaoke_desc">カラオケスタイルの分離。歌声を楽器から分離するのに最適。</string>
+    <string name="tag_default">デフォルト</string>
+    <string name="tag_quality">高品質</string>
+    <string name="tag_karaoke">カラオケ</string>
+
+    <!-- Settings -->
     <string name="settings">設定</string>
+    <string name="server_mode">サーバーモード</string>
+    <string name="local_termux">ローカル (Termux)</string>
+    <string name="custom">カスタム</string>
+    <string name="server_url">サーバーURL</string>
+    <string name="on_device_processing">デバイス上で処理</string>
+    <string name="on_device_desc">Termux + Ubuntu (proot) を使ってスマホ上でサーバーをローカル実行します。</string>
+    <string name="termux_detected">Termux を検出しました</string>
+    <string name="termux_not_found">Termux が見つかりません</string>
+    <string name="termux_not_found_desc">デバイス上で動画を処理するには、F-Droid から Termux をインストールしてからこのアプリを再度開いてください。</string>
     <string name="install">インストール</string>
     <string name="start">開始</string>
     <string name="stop">停止</string>
-    <string name="history_and_cache">履歴とキャッシュ</string>
-    <string name="no_history">履歴なし</string>
+    <string name="update_server">サーバーを更新</string>
+    <string name="first_time_hint">初めてですか？インストールをタップし、完了を待ってから開始をタップしてください。</string>
+    <string name="history_and_cache">履歴 &amp; キャッシュ</string>
+    <string name="processed_videos">処理済み動画 %d 件 · キャッシュ %s</string>
+    <string name="no_history">履歴はまだありません</string>
     <string name="clear_history">履歴を消去</string>
-    <string name="about">このアプリについて</string>
-    <string name="about_desc">AIを使ってYouTube動画からBGMを除去します。</string>
+    <string name="clear_cache">キャッシュを消去</string>
+    <string name="permissions">権限</string>
+    <string name="manage_permissions">権限を管理</string>
+    <string name="permissions_desc">通知、バッテリー最適化、Termux アクセスを管理します。</string>
+    <string name="about">アプリについて</string>
+    <string name="appearance">外観</string>
+    <string name="theme">テーマ</string>
+    <string name="language">言語</string>
+    <string name="material_you">Material You</string>
+    <string name="material_you_desc">壁紙の色を使用する</string>
+    <string name="system_default">システムのデフォルト</string>
+    <string name="light">ライト</string>
+    <string name="dark">ダーク</string>
+    <string name="black_oled">ブラック (OLED)</string>
+    <string name="system">システム</string>
+    <string name="file_details">ファイル詳細</string>
+    <string name="about_desc">AI搭載のボーカル分離でYouTube動画からBGMを除去します。</string>
+
+    <!-- Permissions -->
+    <string name="grant_permissions_hint">最高の体験のためにこれらの権限を許可してください。</string>
+    <string name="notifications">通知</string>
+    <string name="notifications_desc">アプリがバックグラウンドでも処理の進捗を確認できます。</string>
+    <string name="unrestricted_battery">バッテリー制限なし</string>
+    <string name="battery_desc">Androidがバックグラウンド処理を停止するのを防ぎます。強く推奨します。</string>
+    <string name="termux_commands">Termux コマンド</string>
+    <string name="termux_commands_desc">アプリが Termux のローカルサーバーを起動・制御することを許可します。</string>
     <string name="grant">許可</string>
-    <string name="all_set">準備完了！</string>
+    <string name="open_app_info">アプリ情報を開く</string>
+    <string name="all_set">準備完了！すぐに使えます。</string>
+
+    <!-- Errors -->
     <string name="retry">再試行</string>
+    <string name="enter_url_or_file">YouTube URLを入力するか動画ファイルを選択してください</string>
     <string name="lost_connection">サーバーとの接続が切れました</string>
+    <string name="remove_from_history">履歴から削除</string>
+
+    <!-- Help -->
     <string name="how_to_use">使い方</string>
-    <string name="server_online">サーバーがオンラインです！</string>
+    <string name="help_server_setup">サーバー設定</string>
+    <string name="help_server_required">アプリが処理を行うには、先にサーバーが稼働している必要があります。</string>
+    <string name="help_quick_start">クイックスタート</string>
+    <string name="help_local_files">ローカルファイルを使用</string>
+    <string name="help_share_yt">YouTubeから共有</string>
+    <string name="help_ai_models">AIモデル</string>
+    <string name="help_paste_link">YouTubeリンクを貼り付け</string>
+    <string name="help_paste_desc">YouTubeからURLをコピーして入力欄に貼り付けてください。YouTubeアプリから直接共有することもできます。</string>
+    <string name="help_tap_remove">音楽を除去をタップ</string>
+    <string name="help_tap_remove_desc">アプリが動画をダウンロードし、AIでボーカルを分離し、すべてを再結合します。</string>
+    <string name="help_play_save">再生または保存</string>
+    <string name="help_play_save_desc">完了したら、結果を直接再生するかデバイスの好きな場所に保存できます。</string>
+    <string name="help_pick_file">動画ファイルを選択</string>
+    <string name="help_pick_file_desc">YouTubeリンクの代わりに「動画ファイルを選択」をタップしてデバイスから動画を選べます。</string>
+    <string name="help_process_usual">通常通り処理</string>
+    <string name="help_process_usual_desc">アプリがファイルをサーバーにアップロードし、音声を抽出、ボーカルを分離して結果を返します。</string>
+    <string name="help_tap_share">YouTubeで共有をタップ</string>
+    <string name="help_tap_share_desc">YouTubeアプリで任意の動画を開き、共有ボタンをタップしてください。</string>
+    <string name="help_pick_murem">Muremを選択</string>
+    <string name="help_pick_murem_desc">共有メニューからMuremを選択してください。URLが自動的に入力されます。</string>
+    <string name="help_local_termux">ローカル (Termux)</string>
+    <string name="help_local_termux_desc">スマホで処理します。F-DroidからTermuxをインストールし、設定 → インストール → 開始をタップ。遅いですが完全オフラインで動作します。</string>
+    <string name="help_remote_server">リモートサーバー</string>
+    <string name="help_remote_server_desc">GPU搭載のPCでサーバーを実行すると、はるかに高速に処理できます。設定 → カスタムでURLを設定してください。</string>
+    <string name="help_start_pc">PCでサーバーを起動</string>
+    <string name="help_docker">Docker（PCで最も簡単）</string>
+
+    <!-- Notifications -->
+    <string name="notif_done">完了 — %s</string>
+    <string name="notif_error">エラー — %s</string>
+
+    <!-- Termux status -->
+    <string name="installing_termux">Termux にインストール中… 完了したら戻ってください。</string>
+    <string name="starting_server">サーバーを起動中… 少々お待ちください。</string>
+    <string name="stopping_server">サーバーを停止中…</string>
+    <string name="updating_termux">Termux を更新中… 完了したら戻ってください。</string>
+    <string name="server_online">サーバーがオンラインになりました！</string>
+    <string name="server_timeout">サーバーがオンラインになりませんでした。Termux でエラーを確認してください。</string>
 </resources>

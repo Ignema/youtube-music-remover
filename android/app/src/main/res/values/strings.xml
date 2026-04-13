@@ -80,6 +80,8 @@
     <string name="light">Light</string>
     <string name="dark">Dark</string>
     <string name="black_oled">Black (OLED)</string>
+    <string name="system">System</string>
+    <string name="file_details">File Details</string>
     <string name="about_desc">Strip background music from YouTube videos using AI-powered vocal separation.</string>
 
     <!-- Permissions -->
@@ -102,6 +104,32 @@
 
     <!-- Help -->
     <string name="how_to_use">How to Use</string>
+    <string name="help_server_setup">Server Setup</string>
+    <string name="help_server_required">You need a server running before the app can process anything.</string>
+    <string name="help_quick_start">Quick Start</string>
+    <string name="help_local_files">Using Local Files</string>
+    <string name="help_share_yt">Share from YouTube</string>
+    <string name="help_ai_models">AI Models</string>
+    <string name="help_paste_link">Paste a YouTube link</string>
+    <string name="help_paste_desc">Copy a URL from YouTube and paste it in the input field. You can also share directly from the YouTube app.</string>
+    <string name="help_tap_remove">Tap Remove Music</string>
+    <string name="help_tap_remove_desc">The app will download the video, separate the vocals using AI, and merge everything back together.</string>
+    <string name="help_play_save">Play or save</string>
+    <string name="help_play_save_desc">Once done, play the result directly or save it anywhere on your device.</string>
+    <string name="help_pick_file">Pick a video file</string>
+    <string name="help_pick_file_desc">Instead of a YouTube link, tap "Pick a video file" to select a video from your device.</string>
+    <string name="help_process_usual">Process as usual</string>
+    <string name="help_process_usual_desc">The app uploads the file to the server, extracts audio, separates vocals, and returns the result.</string>
+    <string name="help_tap_share">Tap Share in YouTube</string>
+    <string name="help_tap_share_desc">Open any video in the YouTube app and tap the Share button.</string>
+    <string name="help_pick_murem">Pick Murem</string>
+    <string name="help_pick_murem_desc">Select Murem from the share sheet. The URL will be filled in automatically.</string>
+    <string name="help_local_termux">Local (Termux)</string>
+    <string name="help_local_termux_desc">Process on your phone. Install Termux from F-Droid, then go to Settings → tap Install → Start. Slower but fully offline.</string>
+    <string name="help_remote_server">Remote server</string>
+    <string name="help_remote_server_desc">Run the server on a PC with a GPU for much faster processing. Set the URL in Settings → Custom.</string>
+    <string name="help_start_pc">Start the server on PC</string>
+    <string name="help_docker">Docker (easiest for PC)</string>
 
     <!-- Notifications -->
     <string name="notif_done">Done — %s</string>
