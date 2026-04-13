@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-// Expressive warm palette
+// Expressive warm palette (fallback when dynamic color is off)
 private val Peach = Color(0xFFFF8A65)
 private val PeachDark = Color(0xFFFFAB91)
 private val PeachContainer = Color(0xFFFFE0D0)
@@ -45,11 +45,18 @@ private val DarkColors = darkColorScheme(
 
 @Composable
 fun MusicRemoverTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    themeMode: String = "system",
+    dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
+    val darkTheme = when (themeMode) {
+        "dark" -> true
+        "light" -> false
+        else -> isSystemInDarkTheme()
+    }
+
     val colors = when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val ctx = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(ctx) else dynamicLightColorScheme(ctx)
         }

@@ -8,6 +8,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -26,7 +28,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         handleShareIntent(intent)
         setContent {
-            MusicRemoverTheme {
+            val ui by vm.ui.collectAsState()
+            MusicRemoverTheme(
+                themeMode = ui.themeMode,
+                dynamicColor = ui.dynamicColor,
+            ) {
                 val navController = rememberNavController()
 
                 // First run → show permissions screen

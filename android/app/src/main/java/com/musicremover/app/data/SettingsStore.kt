@@ -9,4 +9,19 @@ class SettingsStore(context: Context) {
     var serverUrl: String
         get() = prefs.getString("server_url", null) ?: BuildConfig.API_BASE_URL
         set(value) = prefs.edit().putString("server_url", value).apply()
+
+    /** "system", "light", or "dark" */
+    var themeMode: String
+        get() = prefs.getString("theme_mode", "system") ?: "system"
+        set(value) = prefs.edit().putString("theme_mode", value).apply()
+
+    /** Whether to use Material You dynamic colors (Android 12+) */
+    var dynamicColor: Boolean
+        get() = prefs.getBoolean("dynamic_color", true)
+        set(value) = prefs.edit().putBoolean("dynamic_color", value).apply()
+
+    /** Language code, e.g. "en", "ar", "fr". Empty = system default */
+    var language: String
+        get() = prefs.getString("language", "") ?: ""
+        set(value) = prefs.edit().putString("language", value).apply()
 }

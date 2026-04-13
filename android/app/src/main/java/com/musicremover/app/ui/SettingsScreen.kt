@@ -31,9 +31,9 @@ import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -87,6 +87,104 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
                 .padding(horizontal = 24.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
+            // --- Appearance ---
+            SectionLabel("Appearance")
+            Spacer(Modifier.height(8.dp))
+
+            // Theme mode
+            Text("Theme", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("system" to "System", "light" to "Light", "dark" to "Dark").forEach { (value, label) ->
+                    FilterChip(
+                        selected = ui.themeMode == value,
+                        onClick = { vm.setThemeMode(value) },
+                        label = { Text(label) },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        ),
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // Dynamic color toggle
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Material You", style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            "Use colors from your wallpaper",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    androidx.compose.material3.Switch(
+                        checked = ui.dynamicColor,
+                        onCheckedChange = { vm.setDynamicColor(it) },
+                    )
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+
+            // Language picker
+            Text("Language", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(8.dp))
+
+            val languages = listOf(
+                "" to "System default",
+                "en" to "English",
+                "ar" to "العربية",
+                "fr" to "Français",
+                "es" to "Español",
+                "de" to "Deutsch",
+                "tr" to "Türkçe",
+                "id" to "Bahasa Indonesia",
+                "ms" to "Bahasa Melayu",
+                "pt" to "Português",
+                "it" to "Italiano",
+                "ru" to "Русский",
+                "ja" to "日本語",
+                "ko" to "한국어",
+                "zh" to "中文",
+                "hi" to "हिन्दी",
+                "ur" to "اردو",
+            )
+
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                languages.forEach { (code, name) ->
+                    FilterChip(
+                        selected = ui.language == code,
+                        onClick = { vm.setLanguage(code) },
+                        label = { Text(name, style = MaterialTheme.typography.labelMedium) },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        ),
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "App restart may be needed for language changes to take full effect.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.outline,
+            )
+
+            Spacer(Modifier.height(24.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Spacer(Modifier.height(24.dp))
+
             // --- Server Mode ---
             SectionLabel("Server Mode")
             Spacer(Modifier.height(8.dp))

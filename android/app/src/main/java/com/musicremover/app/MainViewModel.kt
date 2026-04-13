@@ -62,6 +62,10 @@ data class MainUiState(
     // Termux operation status
     val termuxOperation: String? = null, // null = no operation, else = status message
     val termuxServerOnline: Boolean = false,
+    // Appearance
+    val themeMode: String = "system",
+    val dynamicColor: Boolean = true,
+    val language: String = "",
 )
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -82,6 +86,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             history = historyStore.getAll(),
             serverUrl = settingsStore.serverUrl,
             termuxInstalled = TermuxHelper.isTermuxInstalled(application),
+            themeMode = settingsStore.themeMode,
+            dynamicColor = settingsStore.dynamicColor,
+            language = settingsStore.language,
         )
         // Resume polling if app was killed mid-processing
         val savedJobId = prefs.getString("active_job_id", null)
@@ -131,6 +138,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setBitrate(value: String) {
         _ui.value = _ui.value.copy(bitrate = value)
+    }
+
+    fun setThemeMode(mode: String) {
+        _ui.value = _ui.value.copy(themeMode = mode)
+        settingsStore.themeMode = mode
+    }
+
+    fun setDynamicColor(enabled: Boolean) {
+        _ui.value = _ui.value.copy(dynamicColor = enabled)
+        settingsStore.dynamicColor = enabled
+    }
+
+    fun setLanguage(code: String) {
+        _ui.value = _ui.value.copy(language = code)
+        settingsStore.language = code
     }
 
     fun reset() {
