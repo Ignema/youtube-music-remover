@@ -1,6 +1,6 @@
 [project]
 name = "murem"
-version = "2.0.0"
+version = "2.1.0"
 description = "Strip background music from YouTube videos using AI"
 requires-python = ">=3.10"
 dependencies = [
