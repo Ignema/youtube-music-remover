@@ -413,10 +413,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         process()
     }
 
+    /** Cancel the current processing */
+    fun cancelProcessing() {
+        pollingJob?.cancel()
+        pollingJob = null
+        prefs.edit().remove("active_job_id").apply()
+        ProcessingService.stop(getApplication())
+        notif.dismiss()
+        _ui.value = _ui.value.copy(state = UiState.Idle, progress = 0, statusText = "")
+    }
+
     private fun str(id: Int): String = getApplication<Application>().getString(id)
 
+    private var pollingJob: kotlinx.coroutines.Job? = null
+
     private fun processFile(uri: android.net.Uri) {
-        bgScope.launch {
+        pollingJob = bgScope.launch {
             _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.uploading))
             ProcessingService.start(getApplication(), str(R.string.uploading), 0)
             try {
@@ -446,7 +458,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun processUrl(url: String) {
-        bgScope.launch {
+        pollingJob = bgScope.launch {
             _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.starting))
             ProcessingService.start(getApplication(), str(R.string.starting), 0)
             try {

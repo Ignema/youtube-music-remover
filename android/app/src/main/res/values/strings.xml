@@ -98,6 +98,7 @@
 
     <!-- Errors -->
     <string name="retry">Retry</string>
+    <string name="cancel">Cancel</string>
     <string name="enter_url_or_file">Enter a YouTube URL or pick a video file</string>
     <string name="lost_connection">Lost connection to server</string>
     <string name="remove_from_history">Remove from History</string>

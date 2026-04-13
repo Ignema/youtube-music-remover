@@ -98,6 +98,7 @@
 
     <!-- Errors -->
     <string name="retry">إعادة المحاولة</string>
+    <string name="cancel">إلغاء</string>
     <string name="enter_url_or_file">أدخل رابط YouTube أو اختر ملف فيديو</string>
     <string name="lost_connection">انقطع الاتصال بالسيرفر</string>
     <string name="remove_from_history">حذف من السجل</string>

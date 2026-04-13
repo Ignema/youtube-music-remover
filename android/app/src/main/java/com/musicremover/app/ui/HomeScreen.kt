@@ -164,7 +164,7 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
             ) { state ->
                 when (state) {
                     UiState.Idle, UiState.Error -> IdleContent(ui, vm)
-                    UiState.Processing -> ProcessingContent(ui)
+                    UiState.Processing -> ProcessingContent(ui, vm)
                     UiState.Done -> DoneContent(ui, vm, context, onPlay)
                 }
             }
@@ -503,7 +503,7 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
 }
 
 @Composable
-private fun ProcessingContent(ui: MainUiState) {
+private fun ProcessingContent(ui: MainUiState, vm: MainViewModel) {
     val animatedProgress by animateFloatAsState(
         targetValue = ui.progress / 100f,
         animationSpec = spring(stiffness = Spring.StiffnessLow),
@@ -629,6 +629,15 @@ private fun ProcessingContent(ui: MainUiState) {
             color = MaterialTheme.colorScheme.outline,
             textAlign = TextAlign.Center,
         )
+
+        Spacer(Modifier.height(16.dp))
+
+        OutlinedButton(
+            onClick = vm::cancelProcessing,
+            shape = RoundedCornerShape(12.dp),
+        ) {
+            Text(stringResource(R.string.cancel), style = MaterialTheme.typography.labelMedium)
+        }
     }
 }
 
