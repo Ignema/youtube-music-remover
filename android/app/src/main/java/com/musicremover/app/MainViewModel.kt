@@ -153,6 +153,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setLanguage(code: String) {
         _ui.value = _ui.value.copy(language = code)
         settingsStore.language = code
+        // Apply locale change via AppCompat
+        val locales = if (code.isEmpty()) {
+            androidx.core.os.LocaleListCompat.getEmptyLocaleList()
+        } else {
+            androidx.core.os.LocaleListCompat.forLanguageTags(code)
+        }
+        androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(locales)
     }
 
     fun reset() {

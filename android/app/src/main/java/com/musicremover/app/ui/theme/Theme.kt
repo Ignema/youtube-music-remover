@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-// Expressive warm palette (fallback when dynamic color is off)
 private val Peach = Color(0xFFFF8A65)
 private val PeachDark = Color(0xFFFFAB91)
 private val PeachContainer = Color(0xFFFFE0D0)
@@ -43,24 +42,46 @@ private val DarkColors = darkColorScheme(
     background = SurfaceDark,
 )
 
+private val BlackColors = darkColorScheme(
+    primary = PeachDark,
+    onPrimary = Color(0xFF5D1900),
+    primaryContainer = Color(0xFF7D2E0D),
+    onPrimaryContainer = PeachContainer,
+    secondary = Color(0xFFE7BDB0),
+    secondaryContainer = Color(0xFF5D4037),
+    surface = Color.Black,
+    surfaceVariant = Color(0xFF1A1110),
+    background = Color.Black,
+    surfaceContainer = Color(0xFF0A0A0A),
+    surfaceContainerHigh = Color(0xFF121212),
+    surfaceContainerHighest = Color(0xFF1A1A1A),
+)
+
 @Composable
 fun MusicRemoverTheme(
     themeMode: String = "system",
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val darkTheme = when (themeMode) {
-        "dark" -> true
+    val isDark = when (themeMode) {
+        "dark", "black" -> true
         "light" -> false
         else -> isSystemInDarkTheme()
     }
+    val isBlack = themeMode == "black"
 
     val colors = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val ctx = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(ctx) else dynamicLightColorScheme(ctx)
+            val base = if (isDark) dynamicDarkColorScheme(ctx) else dynamicLightColorScheme(ctx)
+            if (isBlack) base.copy(
+                surface = Color.Black,
+                background = Color.Black,
+                surfaceVariant = Color(0xFF1A1A1A),
+            ) else base
         }
-        darkTheme -> DarkColors
+        isBlack -> BlackColors
+        isDark -> DarkColors
         else -> LightColors
     }
 
