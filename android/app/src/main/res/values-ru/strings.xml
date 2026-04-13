@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="url_label">YouTube URL или ID видео</string>
+    <string name="url_placeholder">Вставьте ссылку или поделитесь из YouTube</string>
+    <string name="or_divider">или</string>
+    <string name="pick_video">Выбрать видеофайл</string>
+    <string name="remove_music">Убрать музыку</string>
+    <string name="change">Изменить</string>
+    <string name="recent">Недавние</string>
+    <string name="hold_for_info">удерживайте для подробностей</string>
+    <string name="leave_app_hint">Можете свернуть приложение — уведомим, когда будет готово.</string>
+    <string name="downloading">Загрузка видео…</string>
+    <string name="separating">Разделение вокала…</string>
+    <string name="merging">Объединение аудио…</string>
+    <string name="extracting">Извлечение аудио…</string>
+    <string name="uploading">Загрузка…</string>
+    <string name="vocals_extracted">Вокал извлечён</string>
+    <string name="play">Воспроизвести</string>
+    <string name="save">Сохранить</string>
+    <string name="saving">Сохранение…</string>
+    <string name="share">Поделиться</string>
+    <string name="process_another">Обработать другое</string>
+    <string name="audio_only">Только аудио</string>
+    <string name="ai_model">ИИ-модель</string>
+    <string name="settings">Настройки</string>
+    <string name="install">Установить</string>
+    <string name="start">Запустить</string>
+    <string name="stop">Остановить</string>
+    <string name="history_and_cache">История и кэш</string>
+    <string name="no_history">Истории пока нет</string>
+    <string name="clear_history">Очистить историю</string>
+    <string name="clear_cache">Очистить кэш</string>
+    <string name="about">О приложении</string>
+    <string name="about_desc">Удаление фоновой музыки из видео YouTube с помощью ИИ.</string>
+    <string name="grant">Разрешить</string>
+    <string name="all_set">Всё готово!</string>
+    <string name="retry">Повторить</string>
+    <string name="lost_connection">Потеряно соединение с сервером</string>
+    <string name="how_to_use">Как пользоваться</string>
+    <string name="server_online">Сервер онлайн!</string>
+</resources>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="url_label">URL YouTube o ID video</string>
+    <string name="url_placeholder">Incolla un link o condividi da YouTube</string>
+    <string name="or_divider">o</string>
+    <string name="pick_video">Scegli un file video</string>
+    <string name="remove_music">Rimuovi Musica</string>
+    <string name="change">Cambia</string>
+    <string name="recent">Recenti</string>
+    <string name="hold_for_info">tieni premuto per i dettagli</string>
+    <string name="leave_app_hint">Puoi uscire dall\'app — ti avviseremo quando sarà pronto.</string>
+    <string name="downloading">Download del video…</string>
+    <string name="separating">Separazione delle voci…</string>
+    <string name="merging">Unione audio…</string>
+    <string name="vocals_extracted">Voci estratte</string>
+    <string name="play">Riproduci</string>
+    <string name="save">Salva</string>
+    <string name="saving">Salvataggio…</string>
+    <string name="share">Condividi</string>
+    <string name="process_another">Elabora un altro</string>
+    <string name="audio_only">Solo audio</string>
+    <string name="settings">Impostazioni</string>
+    <string name="install">Installa</string>
+    <string name="start">Avvia</string>
+    <string name="stop">Ferma</string>
+    <string name="history_and_cache">Cronologia e cache</string>
+    <string name="no_history">Nessuna cronologia</string>
+    <string name="clear_history">Cancella cronologia</string>
+    <string name="about">Info</string>
+    <string name="about_desc">Rimuovi la musica di sottofondo dai video YouTube con l\'IA.</string>
+    <string name="grant">Consenti</string>
+    <string name="all_set">Tutto pronto!</string>
+    <string name="retry">Riprova</string>
+    <string name="lost_connection">Connessione al server persa</string>
+    <string name="how_to_use">Come usare</string>
+    <string name="server_online">Server online!</string>
+</resources>

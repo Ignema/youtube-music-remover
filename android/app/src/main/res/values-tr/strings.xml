@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="url_label">YouTube URL veya Video ID</string>
+    <string name="url_placeholder">Bir bağlantı yapıştırın veya YouTube\'dan paylaşın</string>
+    <string name="or_divider">veya</string>
+    <string name="pick_video">Video dosyası seçin</string>
+    <string name="remove_music">Müziği Kaldır</string>
+    <string name="change">Değiştir</string>
+    <string name="recent">Son</string>
+    <string name="hold_for_info">detaylar için basılı tutun</string>
+    <string name="leave_app_hint">Uygulamadan çıkabilirsiniz — bittiğinde sizi bilgilendireceğiz.</string>
+    <string name="downloading">Video indiriliyor…</string>
+    <string name="separating">Sesler ayrılıyor…</string>
+    <string name="merging">Ses birleştiriliyor…</string>
+    <string name="extracting">Ses çıkarılıyor…</string>
+    <string name="uploading">Yükleniyor…</string>
+    <string name="queued">Sırada…</string>
+    <string name="starting">Başlatılıyor…</string>
+    <string name="vocals_extracted">Sesler çıkarıldı</string>
+    <string name="play">Oynat</string>
+    <string name="save">Kaydet</string>
+    <string name="saving">Kaydediliyor…</string>
+    <string name="save_as">Farklı Kaydet…</string>
+    <string name="share">Paylaş</string>
+    <string name="process_another">Başka Bir Video</string>
+    <string name="audio_only">Yalnızca ses</string>
+    <string name="ai_model">AI Modeli</string>
+    <string name="settings">Ayarlar</string>
+    <string name="install">Kur</string>
+    <string name="start">Başlat</string>
+    <string name="stop">Durdur</string>
+    <string name="update_server">Güncelle</string>
+    <string name="history_and_cache">Geçmiş ve Önbellek</string>
+    <string name="no_history">Henüz geçmiş yok</string>
+    <string name="clear_history">Geçmişi Temizle</string>
+    <string name="clear_cache">Önbelleği Temizle</string>
+    <string name="permissions">İzinler</string>
+    <string name="about">Hakkında</string>
+    <string name="about_desc">YouTube videolarından arka plan müziğini AI ile kaldırın.</string>
+    <string name="grant">İzin Ver</string>
+    <string name="all_set">Her şey hazır!</string>
+    <string name="retry">Tekrar Dene</string>
+    <string name="lost_connection">Sunucu bağlantısı kesildi</string>
+    <string name="how_to_use">Nasıl Kullanılır</string>
+    <string name="server_online">Sunucu çevrimiçi!</string>
+</resources>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="url_label">YouTube-URL oder Video-ID</string>
+    <string name="url_placeholder">Link einfügen oder von YouTube teilen</string>
+    <string name="or_divider">oder</string>
+    <string name="pick_video">Videodatei auswählen</string>
+    <string name="remove_music">Musik entfernen</string>
+    <string name="change">Ändern</string>
+    <string name="recent">Zuletzt</string>
+    <string name="hold_for_info">gedrückt halten für Details</string>
+    <string name="leave_app_hint">Du kannst die App verlassen — wir benachrichtigen dich, wenn es fertig ist.</string>
+    <string name="downloading">Video wird heruntergeladen…</string>
+    <string name="separating">Stimmen werden getrennt…</string>
+    <string name="merging">Audio wird zusammengeführt…</string>
+    <string name="extracting">Audio wird extrahiert…</string>
+    <string name="uploading">Wird hochgeladen…</string>
+    <string name="vocals_extracted">Stimmen extrahiert</string>
+    <string name="play">Abspielen</string>
+    <string name="save">Speichern</string>
+    <string name="saving">Wird gespeichert…</string>
+    <string name="save_as">Speichern unter…</string>
+    <string name="share">Teilen</string>
+    <string name="process_another">Weiteres Video</string>
+    <string name="audio_only">Nur Audio</string>
+    <string name="ai_model">KI-Modell</string>
+    <string name="settings">Einstellungen</string>
+    <string name="install">Installieren</string>
+    <string name="start">Starten</string>
+    <string name="stop">Stoppen</string>
+    <string name="update_server">Server aktualisieren</string>
+    <string name="history_and_cache">Verlauf und Cache</string>
+    <string name="no_history">Noch kein Verlauf</string>
+    <string name="clear_history">Verlauf löschen</string>
+    <string name="clear_cache">Cache leeren</string>
+    <string name="permissions">Berechtigungen</string>
+    <string name="about">Über</string>
+    <string name="about_desc">Hintergrundmusik aus YouTube-Videos mit KI entfernen.</string>
+    <string name="grant">Erlauben</string>
+    <string name="all_set">Alles bereit!</string>
+    <string name="retry">Erneut versuchen</string>
+    <string name="lost_connection">Verbindung zum Server verloren</string>
+    <string name="how_to_use">Anleitung</string>
+    <string name="server_online">Server ist online!</string>
+</resources>

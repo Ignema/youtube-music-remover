@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="url_label">YouTube URL یا ویڈیو ID</string>
+    <string name="url_placeholder">لنک پیسٹ کریں یا YouTube سے شیئر کریں</string>
+    <string name="or_divider">یا</string>
+    <string name="pick_video">ویڈیو فائل منتخب کریں</string>
+    <string name="remove_music">موسیقی ہٹائیں</string>
+    <string name="change">تبدیل کریں</string>
+    <string name="recent">حالیہ</string>
+    <string name="hold_for_info">تفصیلات کے لیے دبائے رکھیں</string>
+    <string name="leave_app_hint">آپ ایپ چھوڑ سکتے ہیں — مکمل ہونے پر مطلع کریں گے۔</string>
+    <string name="downloading">ویڈیو ڈاؤنلوڈ ہو رہی ہے…</string>
+    <string name="separating">آوازیں الگ ہو رہی ہیں…</string>
+    <string name="merging">آڈیو ملایا جا رہا ہے…</string>
+    <string name="vocals_extracted">آوازیں نکال لی گئیں</string>
+    <string name="play">چلائیں</string>
+    <string name="save">محفوظ کریں</string>
+    <string name="saving">محفوظ ہو رہا ہے…</string>
+    <string name="share">شیئر کریں</string>
+    <string name="process_another">اور پروسیس کریں</string>
+    <string name="audio_only">صرف آڈیو</string>
+    <string name="settings">ترتیبات</string>
+    <string name="install">انسٹال</string>
+    <string name="start">شروع</string>
+    <string name="stop">روکیں</string>
+    <string name="history_and_cache">تاریخ اور کیش</string>
+    <string name="no_history">ابھی تک کوئی تاریخ نہیں</string>
+    <string name="clear_history">تاریخ صاف کریں</string>
+    <string name="about">کے بارے میں</string>
+    <string name="about_desc">AI سے YouTube ویڈیوز سے پس منظر کی موسیقی ہٹائیں۔</string>
+    <string name="grant">اجازت دیں</string>
+    <string name="all_set">سب تیار!</string>
+    <string name="retry">دوبارہ کوشش</string>
+    <string name="lost_connection">سرور سے رابطہ منقطع ہو گیا</string>
+    <string name="how_to_use">استعمال کا طریقہ</string>
+    <string name="server_online">سرور آن لائن ہے!</string>
+</resources>

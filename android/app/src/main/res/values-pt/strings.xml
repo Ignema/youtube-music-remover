@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="url_label">URL do YouTube ou ID do vídeo</string>
+    <string name="url_placeholder">Cole um link ou compartilhe do YouTube</string>
+    <string name="or_divider">ou</string>
+    <string name="pick_video">Escolher arquivo de vídeo</string>
+    <string name="remove_music">Remover Música</string>
+    <string name="change">Alterar</string>
+    <string name="recent">Recentes</string>
+    <string name="hold_for_info">segure para detalhes</string>
+    <string name="leave_app_hint">Você pode sair do app — avisaremos quando terminar.</string>
+    <string name="downloading">Baixando vídeo…</string>
+    <string name="separating">Separando vocais…</string>
+    <string name="merging">Mesclando áudio…</string>
+    <string name="extracting">Extraindo áudio…</string>
+    <string name="uploading">Enviando…</string>
+    <string name="vocals_extracted">Vocais extraídos</string>
+    <string name="play">Reproduzir</string>
+    <string name="save">Salvar</string>
+    <string name="saving">Salvando…</string>
+    <string name="save_as">Salvar como…</string>
+    <string name="share">Compartilhar</string>
+    <string name="process_another">Processar outro</string>
+    <string name="audio_only">Apenas áudio</string>
+    <string name="ai_model">Modelo IA</string>
+    <string name="settings">Configurações</string>
+    <string name="install">Instalar</string>
+    <string name="start">Iniciar</string>
+    <string name="stop">Parar</string>
+    <string name="history_and_cache">Histórico e cache</string>
+    <string name="no_history">Sem histórico</string>
+    <string name="clear_history">Limpar histórico</string>
+    <string name="clear_cache">Limpar cache</string>
+    <string name="about">Sobre</string>
+    <string name="about_desc">Remova música de fundo de vídeos do YouTube com IA.</string>
+    <string name="grant">Permitir</string>
+    <string name="all_set">Tudo pronto!</string>
+    <string name="retry">Tentar novamente</string>
+    <string name="lost_connection">Conexão com o servidor perdida</string>
+    <string name="how_to_use">Como usar</string>
+    <string name="server_online">Servidor online!</string>
+</resources>

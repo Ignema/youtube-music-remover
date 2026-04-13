@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="url_label">YouTube URLまたは動画ID</string>
+    <string name="url_placeholder">リンクを貼り付けるかYouTubeから共有</string>
+    <string name="or_divider">または</string>
+    <string name="pick_video">動画ファイルを選択</string>
+    <string name="remove_music">音楽を除去</string>
+    <string name="change">変更</string>
+    <string name="recent">最近</string>
+    <string name="hold_for_info">長押しで詳細</string>
+    <string name="leave_app_hint">アプリを離れても大丈夫です。完了したらお知らせします。</string>
+    <string name="downloading">動画をダウンロード中…</string>
+    <string name="separating">ボーカルを分離中…</string>
+    <string name="merging">音声を結合中…</string>
+    <string name="extracting">音声を抽出中…</string>
+    <string name="uploading">アップロード中…</string>
+    <string name="vocals_extracted">ボーカル抽出完了</string>
+    <string name="play">再生</string>
+    <string name="save">保存</string>
+    <string name="saving">保存中…</string>
+    <string name="share">共有</string>
+    <string name="process_another">別の動画を処理</string>
+    <string name="audio_only">音声のみ</string>
+    <string name="ai_model">AIモデル</string>
+    <string name="settings">設定</string>
+    <string name="install">インストール</string>
+    <string name="start">開始</string>
+    <string name="stop">停止</string>
+    <string name="history_and_cache">履歴とキャッシュ</string>
+    <string name="no_history">履歴なし</string>
+    <string name="clear_history">履歴を消去</string>
+    <string name="about">このアプリについて</string>
+    <string name="about_desc">AIを使ってYouTube動画からBGMを除去します。</string>
+    <string name="grant">許可</string>
+    <string name="all_set">準備完了！</string>
+    <string name="retry">再試行</string>
+    <string name="lost_connection">サーバーとの接続が切れました</string>
+    <string name="how_to_use">使い方</string>
+    <string name="server_online">サーバーがオンラインです！</string>
+</resources>

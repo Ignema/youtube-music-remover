@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="url_label">URL YouTube atau ID Video</string>
+    <string name="url_placeholder">Tempel tautan atau bagikan dari YouTube</string>
+    <string name="or_divider">atau</string>
+    <string name="pick_video">Pilih file video</string>
+    <string name="remove_music">Hapus Musik</string>
+    <string name="change">Ubah</string>
+    <string name="recent">Terbaru</string>
+    <string name="hold_for_info">tahan untuk info</string>
+    <string name="leave_app_hint">Anda bisa meninggalkan aplikasi — kami akan memberi tahu saat selesai.</string>
+    <string name="downloading">Mengunduh video…</string>
+    <string name="separating">Memisahkan vokal…</string>
+    <string name="merging">Menggabungkan audio…</string>
+    <string name="extracting">Mengekstrak audio…</string>
+    <string name="uploading">Mengunggah…</string>
+    <string name="vocals_extracted">Vokal berhasil diekstrak</string>
+    <string name="play">Putar</string>
+    <string name="save">Simpan</string>
+    <string name="saving">Menyimpan…</string>
+    <string name="share">Bagikan</string>
+    <string name="process_another">Proses Lainnya</string>
+    <string name="audio_only">Audio saja</string>
+    <string name="settings">Pengaturan</string>
+    <string name="install">Pasang</string>
+    <string name="start">Mulai</string>
+    <string name="stop">Hentikan</string>
+    <string name="history_and_cache">Riwayat dan Cache</string>
+    <string name="no_history">Belum ada riwayat</string>
+    <string name="clear_history">Hapus Riwayat</string>
+    <string name="about">Tentang</string>
+    <string name="about_desc">Hapus musik latar dari video YouTube menggunakan AI.</string>
+    <string name="grant">Izinkan</string>
+    <string name="all_set">Semua siap!</string>
+    <string name="retry">Coba Lagi</string>
+    <string name="lost_connection">Koneksi ke server terputus</string>
+    <string name="how_to_use">Cara Penggunaan</string>
+    <string name="server_online">Server online!</string>
+</resources>
