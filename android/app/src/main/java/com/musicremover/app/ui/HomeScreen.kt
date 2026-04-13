@@ -16,10 +16,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -79,6 +78,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -114,14 +114,29 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
                         val statusText = if (ui.serverConnected)
                             stringResource(R.string.server_online)
                         else stringResource(R.string.lost_connection)
+
+                        val pulseTransition = rememberInfiniteTransition(label = "serverPulse")
+                        val pulseAlpha by pulseTransition.animateFloat(
+                            initialValue = 0.3f,
+                            targetValue = 1f,
+                            animationSpec = infiniteRepeatable(
+                                animation = tween(600),
+                                repeatMode = RepeatMode.Reverse,
+                            ),
+                            label = "dotPulse",
+                        )
+
+                        val dotColor = when {
+                            ui.serverChecking -> MaterialTheme.colorScheme.outline.copy(alpha = pulseAlpha)
+                            ui.serverConnected -> Color(0xFF4CAF50)
+                            else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                        }
+
                         Box(
                             modifier = Modifier
                                 .size(8.dp)
                                 .clip(CircleShape)
-                                .background(
-                                    if (ui.serverConnected) Color(0xFF4CAF50)
-                                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
-                                )
+                                .background(dotColor)
                                 .clickable {
                                     android.widget.Toast.makeText(context, statusText, android.widget.Toast.LENGTH_SHORT).show()
                                 },
@@ -155,23 +170,31 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
         ) {
             Spacer(Modifier.height(8.dp))
 
-            AnimatedContent(
-                targetState = ui.state,
-                transitionSpec = {
-                    (fadeIn() + slideInVertically { it / 3 }) togetherWith fadeOut()
-                },
-                label = "state",
-            ) { state ->
-                when (state) {
-                    UiState.Idle, UiState.Error -> IdleContent(ui, vm)
-                    UiState.Processing -> ProcessingContent(ui, vm)
-                    UiState.Done -> DoneContent(ui, vm, context, onPlay)
+            // Mini progress banner when processing is minimized
+            if (ui.state == UiState.Processing && ui.processingMinimized) {
+                ProcessingBanner(ui, vm)
+                Spacer(Modifier.height(16.dp))
+                IdleContent(ui, vm)
+            } else {
+                AnimatedContent(
+                    targetState = ui.state,
+                    transitionSpec = {
+                        (fadeIn() + slideInVertically { it / 3 }) togetherWith fadeOut()
+                    },
+                    label = "state",
+                ) { state ->
+                    when (state) {
+                        UiState.Idle, UiState.Error -> IdleContent(ui, vm)
+                        UiState.Processing -> ProcessingContent(ui, vm)
+                        UiState.Done -> DoneContent(ui, vm, context, onPlay)
+                    }
                 }
             }
 
             Spacer(Modifier.height(32.dp))
 
-            if ((ui.state == UiState.Idle || ui.state == UiState.Error) && ui.history.isNotEmpty()) {
+            if ((ui.state == UiState.Idle ||
+                (ui.state == UiState.Processing && ui.processingMinimized)) && ui.history.isNotEmpty()) {
                 HistorySection(ui.history, vm, onPlay)
             }
         }
@@ -245,19 +268,28 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
             modifier = Modifier.fillMaxWidth(),
             enabled = ui.selectedFileUri == null,
             trailingIcon = {
-                if (ui.url.isNotEmpty()) {
-                    IconButton(onClick = { vm.onUrlChange("") }) {
-                        Icon(Icons.Outlined.Close, "Clear", Modifier.size(18.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (ui.loadingPreview) {
+                        androidx.compose.material3.CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                        )
+                        Spacer(Modifier.width(4.dp))
                     }
-                } else {
-                    val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
-                    IconButton(onClick = {
-                        val clip = clipboardManager.getText()?.text ?: ""
-                        if (clip.isNotEmpty()) {
-                            vm.onUrlChange(clip)
+                    if (ui.url.isNotEmpty()) {
+                        IconButton(onClick = { vm.onUrlChange("") }) {
+                            Icon(Icons.Outlined.Close, "Clear", Modifier.size(18.dp))
                         }
-                    }) {
-                        Icon(Icons.Outlined.ContentPaste, "Paste", Modifier.size(18.dp))
+                    } else {
+                        val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+                        IconButton(onClick = {
+                            val clip = clipboardManager.getText()?.text ?: ""
+                            if (clip.isNotEmpty()) {
+                                vm.onUrlChange(clip)
+                            }
+                        }) {
+                            Icon(Icons.Outlined.ContentPaste, "Paste", Modifier.size(18.dp))
+                        }
                     }
                 }
             },
@@ -304,11 +336,6 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                     }
                 }
             }
-        } else if (ui.loadingPreview) {
-            Spacer(Modifier.height(8.dp))
-            androidx.compose.material3.LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth().height(2.dp),
-            )
         }
 
         Spacer(Modifier.height(16.dp))
@@ -458,30 +485,27 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
         }
 
         Spacer(Modifier.height(24.dp))
-        AnimatedVisibility(visible = ui.state == UiState.Error) {
+
+        // Transient error banner
+        AnimatedVisibility(visible = ui.snackError != null) {
             Column {
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         Text(
-                            text = ui.errorMessage,
+                            text = ui.snackError ?: "",
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f),
                         )
-                        Spacer(Modifier.height(12.dp))
-                        OutlinedButton(
-                            onClick = vm::retry,
-                            shape = RoundedCornerShape(12.dp),
-                            colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                            ),
-                        ) {
-                            Icon(Icons.Outlined.Refresh, null, Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(stringResource(R.string.retry))
+                        IconButton(onClick = vm::dismissSnackError) {
+                            Icon(Icons.Outlined.Close, "Dismiss", Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onErrorContainer)
                         }
                     }
                 }
@@ -490,6 +514,7 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
         }
 
         // CTA
+        val isQueueMode = ui.state == UiState.Processing && ui.processingMinimized
         Button(
             onClick = vm::process,
             shape = RoundedCornerShape(16.dp),
@@ -497,7 +522,11 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
         ) {
             Icon(Icons.Outlined.MusicOff, null, Modifier.size(20.dp))
             Spacer(Modifier.width(10.dp))
-            Text(stringResource(R.string.remove_music), style = MaterialTheme.typography.titleMedium)
+            Text(
+                if (isQueueMode) stringResource(R.string.add_to_queue)
+                else stringResource(R.string.remove_music),
+                style = MaterialTheme.typography.titleMedium,
+            )
         }
     }
 }
@@ -632,11 +661,112 @@ private fun ProcessingContent(ui: MainUiState, vm: MainViewModel) {
 
         Spacer(Modifier.height(16.dp))
 
-        OutlinedButton(
-            onClick = vm::cancelProcessing,
-            shape = RoundedCornerShape(12.dp),
-        ) {
-            Text(stringResource(R.string.cancel), style = MaterialTheme.typography.labelMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(
+                onClick = vm::minimizeProcessing,
+                shape = RoundedCornerShape(12.dp),
+            ) {
+                Text(stringResource(R.string.minimize), style = MaterialTheme.typography.labelMedium)
+            }
+            OutlinedButton(
+                onClick = vm::cancelProcessing,
+                shape = RoundedCornerShape(12.dp),
+                colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error,
+                ),
+            ) {
+                Text(stringResource(R.string.cancel), style = MaterialTheme.typography.labelMedium)
+            }
+        }
+
+        // Queue display
+        if (ui.queue.isNotEmpty()) {
+            Spacer(Modifier.height(20.dp))
+            Text(
+                stringResource(R.string.queue_count, ui.queue.size),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(8.dp))
+            ui.queue.forEachIndexed { index, item ->
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = if (item.fileUri != null) (item.fileName ?: "File") else item.url.takeLast(30),
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                        IconButton(onClick = { vm.removeFromQueue(index) }) {
+                            Icon(Icons.Outlined.Close, "Remove", Modifier.size(16.dp))
+                        }
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProcessingBanner(ui: MainUiState, vm: MainViewModel) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { vm.expandProcessing() },
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.material3.CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        "${ui.progress}% · ${ui.statusText}",
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                if (ui.queue.isNotEmpty()) {
+                    Text(
+                        "+${ui.queue.size}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            Spacer(Modifier.height(6.dp))
+            LinearProgressIndicator(
+                progress = { ui.progress / 100f },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp)),
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            )
         }
     }
 }
@@ -768,7 +898,6 @@ private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, String) -> Unit) {
     val dateFormat = SimpleDateFormat("MMM d, h:mm a", Locale.getDefault())
@@ -780,47 +909,58 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
         ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .combinedClickable(
-                onClick = {
-                    val url = "$serverUrl/api/download/${item.jobId}"
-                    onPlay(url, item.filename.removeSuffix(".mp4"))
-                },
-                onLongClick = {
-                    vm.hapticTick()
-                    if (item.isFileUpload) {
-                        vm.showFileInfo(item)
-                    } else if (item.url.isNotEmpty()) {
-                        vm.fetchVideoInfo(item.url, item)
-                    }
-                },
-            ),
+        modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                Icons.Outlined.PlayArrow, null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(22.dp),
-            )
-            Spacer(Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = item.filename.removeSuffix(".mp4"),
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+            // Tappable / long-pressable area (everything except the redo button)
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .pointerInput(item.jobId) {
+                        detectTapGestures(
+                            onTap = {
+                                val url = "$serverUrl/api/download/${item.jobId}"
+                                onPlay(url, item.filename.removeSuffix(".mp4"))
+                            },
+                            onLongPress = {
+                                vm.hapticTick()
+                                if (item.isFileUpload) {
+                                    vm.showFileInfo(item)
+                                } else if (item.url.isNotEmpty()) {
+                                    vm.fetchVideoInfo(item.url, item)
+                                }
+                            },
+                        )
+                    }
+                    .padding(start = 16.dp, top = 10.dp, bottom = 10.dp, end = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Outlined.PlayArrow, null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp),
                 )
-                Text(
-                    text = "$dateStr · ${item.model.removeSuffix(".onnx")}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = item.filename.removeSuffix(".mp4"),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = "$dateStr · ${item.model.removeSuffix(".onnx")}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
+            // Redo button — outside pointerInput so it gets its own clicks
             if (!item.isFileUpload && item.url.isNotEmpty()) {
                 IconButton(onClick = { vm.onUrlChange(item.url) }) {
                     Icon(Icons.Outlined.Refresh, "Reprocess", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.outline)
@@ -847,6 +987,24 @@ private fun VideoInfoSheet(ui: MainUiState) {
                 androidx.compose.material3.CircularProgressIndicator(
                     modifier = Modifier.size(32.dp),
                     strokeWidth = 3.dp,
+                )
+            }
+        } else if (ui.videoInfoError) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Icon(
+                    Icons.Outlined.CloudDownload, null,
+                    Modifier.size(36.dp),
+                    tint = MaterialTheme.colorScheme.outline,
+                )
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    stringResource(R.string.video_info_unavailable),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
                 )
             }
         } else if (ui.videoInfo != null) {

@@ -100,6 +100,7 @@
     <string name="retry">Reintentar</string>
     <string name="enter_url_or_file">Introduce una URL de YouTube o elige un archivo de video</string>
     <string name="lost_connection">Se perdió la conexión con el servidor</string>
+    <string name="video_info_unavailable">No se pudo cargar la info del video — el servidor podría estar desconectado</string>
     <string name="remove_from_history">Eliminar del historial</string>
 
     <!-- Help -->

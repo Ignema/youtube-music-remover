@@ -29,6 +29,34 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 
 enum class UiState { Idle, Processing, Done, Error }
 
+data class QueueItem(
+    val url: String,
+    val model: String,
+    val audioOnly: Boolean,
+    val bitrate: String,
+    val fileUri: android.net.Uri? = null,
+    val fileName: String? = null,
+    val fileSize: Long? = null,
+) {
+    /** Serialize for SharedPreferences (file URIs stored as strings) */
+    fun toJsonMap(): Map<String, Any?> = mapOf(
+        "url" to url, "model" to model, "audioOnly" to audioOnly, "bitrate" to bitrate,
+        "fileUri" to fileUri?.toString(), "fileName" to fileName, "fileSize" to fileSize,
+    )
+
+    companion object {
+        fun fromJsonMap(m: Map<String, Any?>): QueueItem = QueueItem(
+            url = m["url"] as? String ?: "",
+            model = m["model"] as? String ?: "UVR-MDX-NET-Inst_HQ_3.onnx",
+            audioOnly = m["audioOnly"] as? Boolean ?: false,
+            bitrate = m["bitrate"] as? String ?: "192k",
+            fileUri = (m["fileUri"] as? String)?.let { android.net.Uri.parse(it) },
+            fileName = m["fileName"] as? String,
+            fileSize = (m["fileSize"] as? Number)?.toLong(),
+        )
+    }
+}
+
 data class MainUiState(
     val state: UiState = UiState.Idle,
     val url: String = "",
@@ -48,11 +76,15 @@ data class MainUiState(
     val serverUrl: String = "",
     val termuxInstalled: Boolean = false,
     val selectedFileUri: android.net.Uri? = null,
+    // Queue
+    val queue: List<QueueItem> = emptyList(),
+    val processingMinimized: Boolean = false,
     val selectedFileName: String? = null,
     val selectedFileSize: Long? = null,
     val videoInfo: VideoInfo? = null,
     val showInfoSheet: Boolean = false,
     val loadingInfo: Boolean = false,
+    val videoInfoError: Boolean = false,
     val fileInfoItem: HistoryItem? = null,
     // New options
     val audioOnly: Boolean = false,
@@ -65,6 +97,9 @@ data class MainUiState(
     val termuxServerOnline: Boolean = false,
     // Server connectivity
     val serverConnected: Boolean = false,
+    val serverChecking: Boolean = true,
+    // Transient error (auto-dismissing)
+    val snackError: String? = null,
     // Appearance
     val themeMode: String = "system",
     val dynamicColor: Boolean = true,
@@ -83,6 +118,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val serverUrl: String get() = _ui.value.serverUrl
     private fun api() = ApiClient.getService(serverUrl)
+    private val gson = com.google.gson.Gson()
+
+    private fun saveQueue(queue: List<QueueItem>) {
+        val json = gson.toJson(queue.map { it.toJsonMap() })
+        prefs.edit().putString("queue", json).apply()
+    }
+
+    private fun loadQueue(): List<QueueItem> {
+        val json = prefs.getString("queue", null) ?: return emptyList()
+        return try {
+            val type = object : com.google.gson.reflect.TypeToken<List<Map<String, Any?>>>() {}.type
+            val list: List<Map<String, Any?>> = gson.fromJson(json, type)
+            list.map { QueueItem.fromJsonMap(it) }
+        } catch (_: Exception) { emptyList() }
+    }
 
     init {
         _ui.value = _ui.value.copy(
@@ -95,9 +145,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
         // Resume polling if app was killed mid-processing
         val savedJobId = prefs.getString("active_job_id", null)
+        val savedQueue = loadQueue()
         if (savedJobId != null) {
-            _ui.value = _ui.value.copy(state = UiState.Processing, jobId = savedJobId, statusText = application.getString(R.string.resuming))
+            _ui.value = _ui.value.copy(
+                state = UiState.Processing, jobId = savedJobId,
+                statusText = application.getString(R.string.resuming),
+                queue = savedQueue,
+            )
             bgScope.launch { pollStatus(savedJobId) }
+        } else if (savedQueue.isNotEmpty()) {
+            // No active job but queue was saved — clear stale queue
+            prefs.edit().remove("queue").apply()
         }
 
         // Periodic server connectivity check
@@ -109,8 +167,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     conn.readTimeout = 5000
                     conn.getInputStream().bufferedReader().readText().contains("ok")
                 } catch (_: Exception) { false }
-                _ui.value = _ui.value.copy(serverConnected = connected)
-                kotlinx.coroutines.delay(10000) // Check every 10s
+                _ui.value = _ui.value.copy(serverConnected = connected, serverChecking = false)
+                kotlinx.coroutines.delay(10000)
+                _ui.value = _ui.value.copy(serverChecking = true)
             }
         }
     }
@@ -134,9 +193,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     // --- Basic state ---
     fun onUrlChange(url: String) {
-        _ui.value = _ui.value.copy(url = url, urlPreview = null)
+        _ui.value = _ui.value.copy(url = url, urlPreview = null, loadingPreview = false)
+        previewJob?.cancel()
         // Auto-fetch preview for YouTube URLs
-        if (url.length > 10 && (url.contains("youtu") || url.matches(Regex("^[a-zA-Z0-9_-]{11}$")))) {
+        if (url.length > 10 && (url.contains("youtu") || url.contains("youtube"))) {
+            fetchUrlPreview(url)
+        } else if (url.matches(Regex("^[a-zA-Z0-9_-]{11}$"))) {
             fetchUrlPreview(url)
         }
     }
@@ -201,13 +263,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun fetchUrlPreview(url: String) {
         previewJob?.cancel()
         previewJob = bgScope.launch {
-            delay(800) // Debounce
+            delay(500) // Debounce
             _ui.value = _ui.value.copy(loadingPreview = true)
             try {
-                val info = api().info(url)
-                // Only update if URL hasn't changed
-                if (_ui.value.url == url || _ui.value.url.contains(url.takeLast(11))) {
+                val info = kotlinx.coroutines.withTimeout(10_000) {
+                    api().info(url)
+                }
+                // Only update if URL field still has a YouTube URL
+                if (_ui.value.url.isNotEmpty()) {
                     _ui.value = _ui.value.copy(urlPreview = info, loadingPreview = false)
+                } else {
+                    _ui.value = _ui.value.copy(loadingPreview = false)
                 }
             } catch (_: Exception) {
                 _ui.value = _ui.value.copy(loadingPreview = false)
@@ -272,7 +338,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun fetchVideoInfo(url: String, item: HistoryItem? = null) {
         if (url.isEmpty()) return
         _ui.value = _ui.value.copy(
-            loadingInfo = true, showInfoSheet = true, videoInfo = null,
+            loadingInfo = true, showInfoSheet = true, videoInfo = null, videoInfoError = false,
             fileInfoItem = if (item?.isFileUpload == true) item else null,
         )
         // Store the item for delete button (YouTube items too)
@@ -282,7 +348,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val info = api().info(url)
                 _ui.value = _ui.value.copy(videoInfo = info, loadingInfo = false)
             } catch (_: Exception) {
-                _ui.value = _ui.value.copy(loadingInfo = false, showInfoSheet = false)
+                _ui.value = _ui.value.copy(loadingInfo = false, videoInfoError = true)
             }
         }
     }
@@ -292,12 +358,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         private set
 
     fun dismissInfoSheet() {
-        _ui.value = _ui.value.copy(showInfoSheet = false, videoInfo = null, fileInfoItem = null)
+        _ui.value = _ui.value.copy(showInfoSheet = false, videoInfo = null, videoInfoError = false, fileInfoItem = null)
         currentInfoItem = null
     }
 
     fun showFileInfo(item: HistoryItem) {
-        _ui.value = _ui.value.copy(showInfoSheet = true, fileInfoItem = item)
+        currentInfoItem = item
+        _ui.value = _ui.value.copy(showInfoSheet = true, fileInfoItem = item, videoInfoError = false, loadingInfo = false, videoInfo = null)
     }
 
     // --- Server/Termux ---
@@ -398,13 +465,89 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val fileUri = _ui.value.selectedFileUri
         val url = _ui.value.url.trim()
 
-        if (fileUri != null) processFile(fileUri)
-        else if (url.isNotEmpty()) processUrl(url)
-        else {
-            _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = str(R.string.enter_url_or_file))
+        if (fileUri == null && url.isEmpty()) {
+            // Don't clobber processing state — just show a transient error
+            showTransientError(str(R.string.enter_url_or_file))
             return
         }
+
+        // If already processing, add to queue instead
+        if (_ui.value.state == UiState.Processing) {
+            if (fileUri != null) {
+                addFileToQueue(fileUri)
+                clearFile()
+            } else if (url.isNotEmpty()) {
+                addToQueue(url)
+                _ui.value = _ui.value.copy(url = "", urlPreview = null)
+            }
+            return
+        }
+
+        if (fileUri != null) processFile(fileUri)
+        else if (url.isNotEmpty()) processUrl(url)
         hapticTick()
+    }
+
+    fun addToQueue(url: String) {
+        val item = QueueItem(
+            url = url,
+            model = _ui.value.selectedModel,
+            audioOnly = _ui.value.audioOnly,
+            bitrate = _ui.value.bitrate,
+        )
+        val updated = _ui.value.queue + item
+        _ui.value = _ui.value.copy(queue = updated)
+        saveQueue(updated)
+        hapticTick()
+    }
+
+    private fun addFileToQueue(uri: android.net.Uri) {
+        val item = QueueItem(
+            url = "",
+            model = _ui.value.selectedModel,
+            audioOnly = _ui.value.audioOnly,
+            bitrate = _ui.value.bitrate,
+            fileUri = uri,
+            fileName = _ui.value.selectedFileName,
+            fileSize = _ui.value.selectedFileSize,
+        )
+        val updated = _ui.value.queue + item
+        _ui.value = _ui.value.copy(queue = updated)
+        saveQueue(updated)
+        hapticTick()
+    }
+
+    fun removeFromQueue(index: Int) {
+        val updated = _ui.value.queue.toMutableList()
+        if (index in updated.indices) updated.removeAt(index)
+        _ui.value = _ui.value.copy(queue = updated)
+        saveQueue(updated)
+    }
+
+    private fun processNextInQueue() {
+        val queue = _ui.value.queue
+        if (queue.isEmpty()) {
+            saveQueue(emptyList())
+            return
+        }
+        val next = queue.first()
+        val remaining = queue.drop(1)
+        _ui.value = _ui.value.copy(
+            queue = remaining,
+            url = next.url,
+            selectedModel = next.model,
+            audioOnly = next.audioOnly,
+            bitrate = next.bitrate,
+            selectedFileUri = next.fileUri,
+            selectedFileName = next.fileName,
+            selectedFileSize = next.fileSize,
+        )
+        saveQueue(remaining)
+        if (next.fileUri != null) {
+            processFile(next.fileUri)
+        } else {
+            processUrl(next.url)
+        }
     }
 
     /** Retry the last failed operation */
@@ -417,13 +560,37 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun cancelProcessing() {
         pollingJob?.cancel()
         pollingJob = null
-        prefs.edit().remove("active_job_id").apply()
+        prefs.edit().remove("active_job_id").remove("queue").apply()
         ProcessingService.stop(getApplication())
         notif.dismiss()
-        _ui.value = _ui.value.copy(state = UiState.Idle, progress = 0, statusText = "")
+        _ui.value = _ui.value.copy(state = UiState.Idle, progress = 0, statusText = "", processingMinimized = false, queue = emptyList())
+    }
+
+    fun minimizeProcessing() {
+        _ui.value = _ui.value.copy(processingMinimized = true)
+    }
+
+    fun expandProcessing() {
+        _ui.value = _ui.value.copy(processingMinimized = false)
     }
 
     private fun str(id: Int): String = getApplication<Application>().getString(id)
+
+    private var snackJob: kotlinx.coroutines.Job? = null
+
+    fun showTransientError(msg: String) {
+        snackJob?.cancel()
+        _ui.value = _ui.value.copy(snackError = msg)
+        snackJob = bgScope.launch {
+            delay(4000)
+            _ui.value = _ui.value.copy(snackError = null)
+        }
+    }
+
+    fun dismissSnackError() {
+        snackJob?.cancel()
+        _ui.value = _ui.value.copy(snackError = null)
+    }
 
     private var pollingJob: kotlinx.coroutines.Job? = null
 
@@ -451,8 +618,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 prefs.edit().putString("active_job_id", resp.job_id).apply()
                 pollStatus(resp.job_id)
             } catch (e: Exception) {
-                _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = e.message ?: "Upload failed")
                 ProcessingService.stop(getApplication())
+                showTransientError(e.message ?: "Upload failed")
+                if (_ui.value.queue.isNotEmpty()) {
+                    processNextInQueue()
+                } else {
+                    _ui.value = _ui.value.copy(state = UiState.Idle)
+                }
             }
         }
     }
@@ -474,8 +646,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 prefs.edit().putString("active_job_id", resp.job_id).apply()
                 pollStatus(resp.job_id)
             } catch (e: Exception) {
-                _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = e.message ?: "Connection failed")
                 ProcessingService.stop(getApplication())
+                showTransientError(e.message ?: "Connection failed")
+                if (_ui.value.queue.isNotEmpty()) {
+                    processNextInQueue()
+                } else {
+                    _ui.value = _ui.value.copy(state = UiState.Idle)
+                }
             }
         }
     }
@@ -520,23 +697,37 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         ProcessingService.stop(getApplication())
                         notif.showDone(filename)
                         hapticTick()
+                        // Process next in queue if any
+                        if (_ui.value.queue.isNotEmpty()) {
+                            processNextInQueue()
+                        }
                         return
                     }
                     "error" -> {
-                        _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = text)
                         prefs.edit().remove("active_job_id").apply()
                         ProcessingService.stop(getApplication())
                         notif.showError(text)
+                        showTransientError(text)
+                        if (_ui.value.queue.isNotEmpty()) {
+                            processNextInQueue()
+                        } else {
+                            _ui.value = _ui.value.copy(state = UiState.Idle)
+                        }
                         return
                     }
                 }
             } catch (e: Exception) {
                 retries++
                 if (retries >= 30) {
-                    _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = str(R.string.lost_connection))
                     prefs.edit().remove("active_job_id").apply()
                     ProcessingService.stop(getApplication())
                     notif.showError(str(R.string.lost_connection))
+                    showTransientError(str(R.string.lost_connection))
+                    if (_ui.value.queue.isNotEmpty()) {
+                        processNextInQueue()
+                    } else {
+                        _ui.value = _ui.value.copy(state = UiState.Idle)
+                    }
                     return
                 }
                 delay(retries * 1000L)

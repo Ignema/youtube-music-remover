@@ -100,6 +100,7 @@
     <string name="retry">Coba Lagi</string>
     <string name="enter_url_or_file">Masukkan URL YouTube atau pilih file video</string>
     <string name="lost_connection">Koneksi ke server terputus</string>
+    <string name="video_info_unavailable">Tidak bisa memuat info video — server mungkin offline</string>
     <string name="remove_from_history">Hapus dari Riwayat</string>
 
     <!-- Help -->

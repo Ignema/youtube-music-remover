@@ -100,6 +100,7 @@
     <string name="retry">재시도</string>
     <string name="enter_url_or_file">YouTube URL을 입력하거나 동영상 파일을 선택하세요</string>
     <string name="lost_connection">서버와의 연결이 끊어졌습니다</string>
+    <string name="video_info_unavailable">동영상 정보를 불러올 수 없습니다 — 서버가 오프라인일 수 있습니다</string>
     <string name="remove_from_history">기록에서 삭제</string>
 
     <!-- Help -->

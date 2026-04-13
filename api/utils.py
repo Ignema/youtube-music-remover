@@ -27,10 +27,14 @@ def extract_video_id(input_str: str) -> str:
     return input_str
 
 
-def run_cmd(*cmd, cwd=None) -> tuple[bool, str, str]:
+def run_cmd(*cmd, cwd=None, timeout=None) -> tuple[bool, str, str]:
     """Run a subprocess command and return (success, stdout, stderr)."""
     logger.debug(f"Running: {' '.join(cmd)}")
-    result = subprocess.run(
-        cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-    )
-    return result.returncode == 0, result.stdout, result.stderr
+    try:
+        result = subprocess.run(
+            cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            timeout=timeout,
+        )
+        return result.returncode == 0, result.stdout, result.stderr
+    except subprocess.TimeoutExpired:
+        return False, "", "Command timed out"

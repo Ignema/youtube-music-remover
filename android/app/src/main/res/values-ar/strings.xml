@@ -99,8 +99,12 @@
     <!-- Errors -->
     <string name="retry">إعادة المحاولة</string>
     <string name="cancel">إلغاء</string>
+    <string name="minimize">تصغير</string>
+    <string name="add_to_queue">أضف للقائمة</string>
+    <string name="queue_count">%d في الانتظار</string>
     <string name="enter_url_or_file">أدخل رابط YouTube أو اختر ملف فيديو</string>
     <string name="lost_connection">انقطع الاتصال بالسيرفر</string>
+    <string name="video_info_unavailable">ما قدرنا نجيب معلومات الفيديو — يمكن السيرفر مطفي</string>
     <string name="remove_from_history">حذف من السجل</string>
 
     <!-- Help -->

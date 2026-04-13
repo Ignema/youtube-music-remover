@@ -100,6 +100,7 @@
     <string name="retry">دوبارہ کوشش کریں</string>
     <string name="enter_url_or_file">YouTube URL درج کریں یا ویڈیو فائل منتخب کریں</string>
     <string name="lost_connection">سرور سے کنکشن ٹوٹ گیا</string>
+    <string name="video_info_unavailable">ویڈیو کی معلومات لوڈ نہیں ہو سکیں — سرور آف لائن ہو سکتا ہے</string>
     <string name="remove_from_history">تاریخ سے ہٹائیں</string>
 
     <!-- Help -->

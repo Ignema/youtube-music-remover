@@ -100,6 +100,7 @@
     <string name="retry">Tekrar Dene</string>
     <string name="enter_url_or_file">Bir YouTube URL\'si girin veya video dosyası seçin</string>
     <string name="lost_connection">Sunucu bağlantısı kesildi</string>
+    <string name="video_info_unavailable">Video bilgisi yüklenemedi — sunucu çevrimdışı olabilir</string>
     <string name="remove_from_history">Geçmişten Kaldır</string>
 
     <!-- Help -->

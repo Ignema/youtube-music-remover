@@ -100,6 +100,7 @@
     <string name="retry">Cuba Lagi</string>
     <string name="enter_url_or_file">Masukkan URL YouTube atau pilih fail video</string>
     <string name="lost_connection">Sambungan ke pelayan terputus</string>
+    <string name="video_info_unavailable">Tidak dapat memuatkan maklumat video — pelayan mungkin luar talian</string>
     <string name="remove_from_history">Buang dari Sejarah</string>
 
     <!-- Help -->

@@ -100,6 +100,7 @@
     <string name="retry">重试</string>
     <string name="enter_url_or_file">输入 YouTube 链接或选择视频文件</string>
     <string name="lost_connection">与服务器的连接已断开</string>
+    <string name="video_info_unavailable">无法加载视频信息 — 服务器可能已离线</string>
     <string name="remove_from_history">从历史记录中移除</string>
 
     <!-- Help -->

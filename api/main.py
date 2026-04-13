@@ -451,14 +451,18 @@ def list_models():
 
 @app.get("/api/info")
 @rate_limit("20/minute")
-def video_info(request: Request, url: str):
+async def video_info(request: Request, url: str):
     """Get YouTube video metadata without downloading."""
     video_id = extract_video_id(url.strip())
     if not YT_ID_RE.match(video_id):
         raise HTTPException(400, "Invalid YouTube URL or video ID")
     yt_url = f"https://www.youtube.com/watch?v={video_id}"
 
-    ok, stdout, err = run_cmd("yt-dlp", "--dump-json", "--no-download", yt_url)
+    import asyncio
+    loop = asyncio.get_event_loop()
+    ok, stdout, err = await loop.run_in_executor(
+        None, lambda: run_cmd("yt-dlp", "--dump-json", "--no-download", yt_url, timeout=15)
+    )
     if not ok:
         raise HTTPException(400, f"Failed to fetch info: {err}")
     try:
