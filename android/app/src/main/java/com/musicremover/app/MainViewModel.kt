@@ -616,6 +616,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val resp = api().upload(filePart, model, batch, audioOnly, bitrate)
                 _ui.value = _ui.value.copy(jobId = resp.job_id)
                 prefs.edit().putString("active_job_id", resp.job_id).apply()
+                // Clean up cached upload file
+                if (uri.scheme == "file") {
+                    try { java.io.File(uri.path!!).delete() } catch (_: Exception) {}
+                }
                 pollStatus(resp.job_id)
             } catch (e: Exception) {
                 ProcessingService.stop(getApplication())

@@ -246,7 +246,16 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                     } else null
                 }
             } catch (_: Exception) { null }
-            vm.onFileSelected(uri, name, size)
+            // Copy to cache immediately while URI permission is valid
+            val cachedUri = try {
+                val fileName = name ?: "video.mp4"
+                val cacheFile = java.io.File(context.cacheDir, "upload_${System.currentTimeMillis()}_$fileName")
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    cacheFile.outputStream().use { output -> input.copyTo(output) }
+                }
+                android.net.Uri.fromFile(cacheFile)
+            } catch (_: Exception) { uri }
+            vm.onFileSelected(cachedUri, name, size)
         }
     }
 
