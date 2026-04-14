@@ -250,6 +250,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
+    /** Pull-to-refresh: reload history and check server status */
+    fun refresh() {
+        _ui.value = _ui.value.copy(history = historyStore.getAll(), serverChecking = true)
+        bgScope.launch {
+            val connected = try {
+                val conn = java.net.URL("${_ui.value.serverUrl}/health").openConnection()
+                conn.connectTimeout = 5000
+                conn.readTimeout = 5000
+                conn.getInputStream().bufferedReader().readText().contains("ok")
+            } catch (_: Exception) { false }
+            _ui.value = _ui.value.copy(serverConnected = connected, serverChecking = false)
+        }
+    }
+
     fun onFileSelected(uri: android.net.Uri?, name: String?, size: Long? = null, originalUri: String? = null) {
         _ui.value = _ui.value.copy(selectedFileUri = uri, selectedFileName = name, selectedFileSize = size, originalFileUri = originalUri)
     }

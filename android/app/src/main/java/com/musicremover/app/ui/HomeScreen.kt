@@ -77,6 +77,8 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -165,10 +167,26 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
             )
         },
     ) { padding ->
+        var isRefreshing by remember { mutableStateOf(false) }
+        val refreshScope = androidx.compose.runtime.rememberCoroutineScope()
+
+        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                vm.refresh()
+                refreshScope.launch {
+                    kotlinx.coroutines.delay(1000)
+                    isRefreshing = false
+                }
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
                 .padding(horizontal = 24.dp)
                 .verticalScroll(rememberScrollState())
                 .imePadding(),
@@ -203,6 +221,7 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
                 (ui.state == UiState.Processing && ui.processingMinimized)) && ui.history.isNotEmpty()) {
                 HistorySection(ui.history, vm, onPlay)
             }
+        }
         }
     }
 
