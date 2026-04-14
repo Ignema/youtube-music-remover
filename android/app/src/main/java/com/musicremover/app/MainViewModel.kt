@@ -81,6 +81,7 @@ data class MainUiState(
     val processingMinimized: Boolean = false,
     val selectedFileName: String? = null,
     val selectedFileSize: Long? = null,
+    val originalFileUri: String? = null,
     val videoInfo: VideoInfo? = null,
     val showInfoSheet: Boolean = false,
     val loadingInfo: Boolean = false,
@@ -249,12 +250,41 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    fun onFileSelected(uri: android.net.Uri?, name: String?, size: Long? = null) {
-        _ui.value = _ui.value.copy(selectedFileUri = uri, selectedFileName = name, selectedFileSize = size)
+    fun onFileSelected(uri: android.net.Uri?, name: String?, size: Long? = null, originalUri: String? = null) {
+        _ui.value = _ui.value.copy(selectedFileUri = uri, selectedFileName = name, selectedFileSize = size, originalFileUri = originalUri)
+    }
+
+    fun reprocessFromHistory(item: HistoryItem) {
+        val uriStr = item.sourceFilePath
+        if (uriStr != null) {
+            val uri = android.net.Uri.parse(uriStr)
+            // Copy to cache again for processing (persistable permission lets us read it)
+            val context = getApplication<Application>()
+            try {
+                val fileName = item.sourceFileName ?: "video.mp4"
+                val cacheFile = java.io.File(context.cacheDir, "upload_${System.currentTimeMillis()}_$fileName")
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    cacheFile.outputStream().use { output -> input.copyTo(output) }
+                }
+                val cachedUri = android.net.Uri.fromFile(cacheFile)
+                _ui.value = _ui.value.copy(
+                    selectedFileUri = cachedUri,
+                    selectedFileName = item.sourceFileName,
+                    selectedFileSize = item.sourceFileSize,
+                    originalFileUri = uriStr,
+                    url = "",
+                    urlPreview = null,
+                )
+            } catch (_: Exception) {
+                showTransientError("Original file no longer available")
+            }
+        } else {
+            showTransientError("Original file path not saved")
+        }
     }
 
     fun clearFile() {
-        _ui.value = _ui.value.copy(selectedFileUri = null, selectedFileName = null, selectedFileSize = null)
+        _ui.value = _ui.value.copy(selectedFileUri = null, selectedFileName = null, selectedFileSize = null, originalFileUri = null)
     }
 
     // --- URL preview ---
@@ -734,6 +764,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val isFileUpload: Boolean,
         val sourceFileName: String?,
         val sourceFileSize: Long?,
+        val sourceFilePath: String? = null,
         val ytTitle: String? = null,
         val ytChannel: String? = null,
         val ytThumbnail: String? = null,
@@ -750,6 +781,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             isFileUpload = true,
             sourceFileName = _ui.value.selectedFileName,
             sourceFileSize = _ui.value.selectedFileSize,
+            sourceFilePath = _ui.value.originalFileUri,
         )
         pollingJob = bgScope.launch {
             _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.uploading))
@@ -772,10 +804,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val resp = api().upload(filePart, model, batch, audioOnly, bitrate)
                 _ui.value = _ui.value.copy(jobId = resp.job_id)
                 prefs.edit().putString("active_job_id", resp.job_id).apply()
-                // Clean up cached upload file
-                if (uri.scheme == "file") {
-                    try { java.io.File(uri.path!!).delete() } catch (_: Exception) {}
-                }
                 pollStatus(resp.job_id)
             } catch (e: Exception) {
                 ProcessingService.stop(getApplication())
@@ -804,6 +832,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             ytDescription = preview?.description,
         )
         pollingJob = bgScope.launch {
+            // Try to enrich metadata with server API in background (for views, duration, etc.)
+            if (preview != null && preview.duration == 0) {
+                launch {
+                    try {
+                        val rich = kotlinx.coroutines.withTimeout(15_000) { api().info(url) }
+                        activeJobMeta = activeJobMeta?.copy(
+                            ytDuration = rich.duration,
+                            ytViewCount = rich.view_count,
+                            ytUploadDate = rich.upload_date,
+                            ytDescription = rich.description,
+                        )
+                    } catch (_: Exception) { /* keep oEmbed data */ }
+                }
+            }
             _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.starting))
             ProcessingService.start(getApplication(), str(R.string.starting), 0)
             try {
@@ -867,6 +909,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             isFileUpload = meta?.isFileUpload ?: false,
                             sourceFileName = meta?.sourceFileName,
                             sourceFileSize = meta?.sourceFileSize,
+                            sourceFilePath = meta?.sourceFilePath,
                             ytTitle = meta?.ytTitle,
                             ytChannel = meta?.ytChannel,
                             ytThumbnail = meta?.ytThumbnail,

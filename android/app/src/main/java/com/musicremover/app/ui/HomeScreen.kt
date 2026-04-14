@@ -222,9 +222,15 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
 private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
     val context = LocalContext.current
     val filePicker = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent(),
+        contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
     ) { uri ->
         if (uri != null) {
+            // Take persistable permission so we can re-read this file later
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: Exception) {}
             val name = try {
                 val cursor = context.contentResolver.query(uri, null, null, null, null)
                 cursor?.use {
@@ -243,7 +249,7 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                     } else null
                 }
             } catch (_: Exception) { null }
-            // Copy to cache immediately while URI permission is valid
+            // Copy to cache for immediate processing (original URI kept for redo)
             val cachedUri = try {
                 val fileName = name ?: "video.mp4"
                 val cacheFile = java.io.File(context.cacheDir, "upload_${System.currentTimeMillis()}_$fileName")
@@ -252,7 +258,7 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                 }
                 android.net.Uri.fromFile(cacheFile)
             } catch (_: Exception) { uri }
-            vm.onFileSelected(cachedUri, name, size)
+            vm.onFileSelected(cachedUri, name, size, uri.toString())
         }
     }
 
@@ -391,7 +397,7 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
             }
         } else {
             OutlinedButton(
-                onClick = { filePicker.launch("video/*") },
+                onClick = { filePicker.launch(arrayOf("video/*")) },
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth().height(52.dp),
             ) {
@@ -974,10 +980,11 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            if (isYouTube) {
-                IconButton(onClick = { vm.onUrlChange(item.url) }) {
-                    Icon(Icons.Outlined.Refresh, "Reprocess", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.outline)
-                }
+            IconButton(onClick = {
+                if (isYouTube) vm.onUrlChange(item.url)
+                else vm.reprocessFromHistory(item)
+            }) {
+                Icon(Icons.Outlined.Refresh, "Reprocess", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.outline)
             }
         }
     }
