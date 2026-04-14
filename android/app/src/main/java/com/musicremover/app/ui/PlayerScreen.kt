@@ -49,7 +49,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -168,22 +167,19 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                // Blurred background — scaled up video behind main
-                AndroidView(
-                    factory = { ctx ->
-                        PlayerView(ctx).apply {
-                            this.player = player
-                            useController = false
-                        }
-                    },
+                // Ambient background — gradient from surface to black
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .graphicsLayer {
-                            scaleX = 1.5f
-                            scaleY = 1.5f
-                            alpha = 0.4f
-                        }
-                        .blur(20.dp),
+                        .background(
+                            brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.surfaceContainerHighest,
+                                    Color.Black,
+                                    MaterialTheme.colorScheme.surfaceContainerHighest,
+                                ),
+                            ),
+                        ),
                 )
 
                 // Main video
