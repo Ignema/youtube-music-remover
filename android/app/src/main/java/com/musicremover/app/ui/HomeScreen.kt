@@ -1030,7 +1030,7 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                 if (hasUrl) vm.onUrlChange(item.url)
                 else vm.reprocessFromHistory(item)
             }) {
-                Icon(Icons.Outlined.Redo, "Reprocess", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.outline)
+                Icon(Icons.Outlined.Replay, "Reprocess", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.outline)
             }
         }
     }
