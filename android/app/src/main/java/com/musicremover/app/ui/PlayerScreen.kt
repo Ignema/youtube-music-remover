@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Replay10
 import androidx.compose.material.icons.outlined.Repeat
+import androidx.compose.material.icons.outlined.VolumeUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -51,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -295,31 +297,10 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
 
                     Spacer(Modifier.height(8.dp))
 
-                    // Volume slider
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text("🔊", style = MaterialTheme.typography.labelSmall)
-                        var volume by remember { mutableFloatStateOf(1f) }
-                        Slider(
-                            value = volume,
-                            onValueChange = {
-                                volume = it
-                                player.volume = it
-                            },
-                            modifier = Modifier.weight(1f).height(24.dp),
-                            colors = SliderDefaults.colors(
-                                thumbColor = MaterialTheme.colorScheme.primary,
-                                activeTrackColor = MaterialTheme.colorScheme.primary,
-                                inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
-                            ),
-                        )
-                    }
+                    // Controls — single row
+                    var volume by remember { mutableFloatStateOf(1f) }
+                    var showVolume by remember { mutableStateOf(false) }
 
-                    Spacer(Modifier.height(4.dp))
-
-                    // Controls
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
@@ -337,14 +318,14 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                             )
                         }
 
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(4.dp))
 
                         // Rewind 10s
                         IconButton(onClick = { player.seekTo((player.currentPosition - 10000).coerceAtLeast(0)) }) {
                             Icon(Icons.Outlined.Replay10, "Rewind", Modifier.size(28.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
 
-                        Spacer(Modifier.width(12.dp))
+                        Spacer(Modifier.width(8.dp))
 
                         // Play/Pause
                         Box(
@@ -364,17 +345,56 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                             }
                         }
 
-                        Spacer(Modifier.width(12.dp))
+                        Spacer(Modifier.width(8.dp))
 
                         // Forward 10s
                         IconButton(onClick = { player.seekTo((player.currentPosition + 10000).coerceAtMost(player.duration)) }) {
                             Icon(Icons.Outlined.Forward10, "Forward", Modifier.size(28.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
 
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(4.dp))
 
-                        // Placeholder for symmetry
-                        Spacer(Modifier.size(48.dp))
+                        // Volume — tap for popup
+                        Box {
+                            IconButton(onClick = { showVolume = !showVolume }) {
+                                Icon(
+                                    Icons.Outlined.VolumeUp, "Volume",
+                                    Modifier.size(24.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            if (showVolume) {
+                                androidx.compose.material3.DropdownMenu(
+                                    expanded = showVolume,
+                                    onDismissRequest = { showVolume = false },
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).width(48.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                    ) {
+                                        Text("${(volume * 100).toInt()}%", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                                        Spacer(Modifier.height(4.dp))
+                                        // Vertical slider via rotated horizontal
+                                        Slider(
+                                            value = volume,
+                                            onValueChange = {
+                                                volume = it
+                                                player.volume = it
+                                            },
+                                            modifier = Modifier
+                                                .height(140.dp)
+                                                .width(36.dp)
+                                                .graphicsLayer { rotationZ = -90f },
+                                            colors = SliderDefaults.colors(
+                                                thumbColor = MaterialTheme.colorScheme.primary,
+                                                activeTrackColor = MaterialTheme.colorScheme.primary,
+                                                inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                                            ),
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     Spacer(Modifier.height(8.dp))
