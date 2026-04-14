@@ -328,8 +328,17 @@ def separate_and_merge(job_id: str, video_file: Path, audio_file: Path,
             sep_pct = int(m.group(1))
             max_sep_pct = max(max_sep_pct, sep_pct)
             update_job(job_id, progress=30 + int(max_sep_pct * 0.4))
+        # Check cancellation during separation
+        if is_cancelled(job_id):
+            sep_proc.kill()
+            sep_proc.wait()
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            return False
     sep_proc.wait()
     if sep_proc.returncode != 0:
+        if is_cancelled(job_id):
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            return False
         update_job(job_id, status="error", error="Separation failed")
         return False
 
