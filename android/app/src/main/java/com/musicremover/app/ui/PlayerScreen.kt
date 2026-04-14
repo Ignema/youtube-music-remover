@@ -94,6 +94,7 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
     var isSeeking by remember { mutableStateOf(false) }
     var seekPreviewTime by remember { mutableStateOf("") }
     var isFullscreen by remember { mutableStateOf(false) }
+    var videoAspectRatio by remember { mutableFloatStateOf(16f / 9f) }
 
     // Handle orientation for fullscreen
     LaunchedEffect(isFullscreen, videoAspectRatio) {
@@ -124,6 +125,10 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
             }
             isPlaying = player.isPlaying
             isBuffering = player.playbackState == Player.STATE_BUFFERING
+            val format = player.videoFormat
+            if (format != null && format.width > 0 && format.height > 0) {
+                videoAspectRatio = format.width.toFloat() / format.height.toFloat()
+            }
             delay(80)
         }
     }
