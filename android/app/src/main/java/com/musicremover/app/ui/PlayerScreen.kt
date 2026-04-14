@@ -25,6 +25,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Forward10
+import androidx.compose.material.icons.outlined.Fullscreen
+import androidx.compose.material.icons.outlined.FullscreenExit
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Replay10
@@ -87,6 +89,7 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
     var looping by remember { mutableStateOf(false) }
     var isSeeking by remember { mutableStateOf(false) }
     var seekPreviewTime by remember { mutableStateOf("") }
+    var isFullscreen by remember { mutableStateOf(false) }
 
     // Tap-to-toggle overlay
     var showOverlay by remember { mutableStateOf(false) }
@@ -229,6 +232,28 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                     )
                 }
 
+                // Fullscreen toggle — top right
+                IconButton(
+                    onClick = { isFullscreen = !isFullscreen },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(
+                            end = 8.dp,
+                            top = 40.dp,
+                        )
+                        .size(40.dp)
+                        .shadow(4.dp, CircleShape)
+                        .clip(CircleShape)
+                        .background(Color.Black.copy(alpha = 0.4f)),
+                ) {
+                    Icon(
+                        if (isFullscreen) Icons.Outlined.FullscreenExit else Icons.Outlined.Fullscreen,
+                        "Fullscreen",
+                        tint = Color.White,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+
                 // Seek preview time (shown while dragging waveform)
                 if (isSeeking && seekPreviewTime.isNotEmpty()) {
                     Box(
@@ -244,7 +269,8 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                 }
             }
 
-            // Bottom panel — overlaps video slightly
+            // Bottom panel — hidden in fullscreen
+            if (!isFullscreen) {
             Card(
                 shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
                 colors = CardDefaults.cardColors(
@@ -415,6 +441,7 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                     Spacer(Modifier.height(8.dp))
                 }
             }
+            } // end if (!isFullscreen)
         }
     }
 }
