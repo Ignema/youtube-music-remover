@@ -442,7 +442,8 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                 onDismissRequest = vm::toggleModelPicker,
             ) {
                 Column(
-                    modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp),
+                    modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp)
+                        .verticalScroll(rememberScrollState()),
                 ) {
                     Text(stringResource(R.string.ai_model), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(4.dp))
@@ -476,6 +477,58 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                         selected = ui.selectedModel == "UVR_MDXNET_KARA_2.onnx",
                         onClick = { vm.onModelSelect("UVR_MDXNET_KARA_2.onnx") },
                     )
+
+                    Spacer(Modifier.height(16.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    Spacer(Modifier.height(12.dp))
+                    Text(stringResource(R.string.premium_models), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        stringResource(R.string.premium_models_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(12.dp))
+
+                    ModelOption(
+                        name = stringResource(R.string.model_melband_name),
+                        description = stringResource(R.string.model_melband_desc),
+                        tag = stringResource(R.string.tag_best),
+                        selected = ui.selectedModel == "vocals_mel_band_roformer.ckpt",
+                        onClick = { vm.onModelSelect("vocals_mel_band_roformer.ckpt") },
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    ModelOption(
+                        name = stringResource(R.string.model_bsroformer_name),
+                        description = stringResource(R.string.model_bsroformer_desc),
+                        tag = stringResource(R.string.tag_premium),
+                        selected = ui.selectedModel == "model_bs_roformer_ep_317_sdr_12.9755.ckpt",
+                        onClick = { vm.onModelSelect("model_bs_roformer_ep_317_sdr_12.9755.ckpt") },
+                    )
+
+                    Spacer(Modifier.height(16.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    Spacer(Modifier.height(12.dp))
+                    Text(stringResource(R.string.custom_model), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = ui.customModel,
+                        onValueChange = vm::onCustomModelChange,
+                        label = { Text(stringResource(R.string.custom_model_hint)) },
+                        placeholder = { Text("model_name.ckpt") },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    FilledTonalButton(
+                        onClick = vm::applyCustomModel,
+                        enabled = ui.customModel.isNotBlank(),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.use_custom_model))
+                    }
                 }
             }
         }
@@ -1360,7 +1413,9 @@ private fun modelDisplayName(model: String): String = when (model) {
     "UVR-MDX-NET-Inst_HQ_3.onnx" -> "${stringResource(R.string.model_default_name)} · ${stringResource(R.string.tag_default)}"
     "Kim_Vocal_2.onnx" -> "${stringResource(R.string.model_quality_name)} · ${stringResource(R.string.tag_quality)}"
     "UVR_MDXNET_KARA_2.onnx" -> "${stringResource(R.string.model_karaoke_name)} · ${stringResource(R.string.tag_karaoke)}"
-    else -> model.removeSuffix(".onnx")
+    "vocals_mel_band_roformer.ckpt" -> "${stringResource(R.string.model_melband_name)} · ${stringResource(R.string.tag_best)}"
+    "model_bs_roformer_ep_317_sdr_12.9755.ckpt" -> "${stringResource(R.string.model_bsroformer_name)} · ${stringResource(R.string.tag_premium)}"
+    else -> model.removeSuffix(".onnx").removeSuffix(".ckpt")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

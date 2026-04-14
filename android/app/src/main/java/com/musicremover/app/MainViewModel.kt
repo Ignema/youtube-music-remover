@@ -65,7 +65,10 @@ data class MainUiState(
         "UVR-MDX-NET-Inst_HQ_3.onnx",
         "Kim_Vocal_2.onnx",
         "UVR_MDXNET_KARA_2.onnx",
+        "vocals_mel_band_roformer.ckpt",
+        "model_bs_roformer_ep_317_sdr_12.9755.ckpt",
     ),
+    val customModel: String = "",
     val progress: Int = 0,
     val statusText: String = "",
     val errorMessage: String = "",
@@ -206,6 +209,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun onModelSelect(model: String) {
         _ui.value = _ui.value.copy(selectedModel = model, showModelPicker = false)
+    }
+
+    fun onCustomModelChange(value: String) {
+        _ui.value = _ui.value.copy(customModel = value)
+    }
+
+    fun applyCustomModel() {
+        val custom = _ui.value.customModel.trim()
+        if (custom.isNotEmpty()) {
+            _ui.value = _ui.value.copy(selectedModel = custom, showModelPicker = false)
+        }
     }
 
     fun toggleModelPicker() {

@@ -45,6 +45,17 @@
     <string name="tag_default">افتراضي</string>
     <string name="tag_quality">جودة</string>
     <string name="tag_karaoke">كاريوكي</string>
+    <string name="tag_best">الأفضل</string>
+    <string name="tag_premium">متقدم</string>
+    <string name="premium_models">نماذج Roformer</string>
+    <string name="premium_models_desc">جودة أعلى لكن أبطأ. الأفضل مع سيرفر GPU.</string>
+    <string name="model_melband_name">Mel-Band RoFormer</string>
+    <string name="model_melband_desc">أحدث تقنية لفصل الأصوات. أفضل جودة متاحة.</string>
+    <string name="model_bsroformer_name">BS-RoFormer</string>
+    <string name="model_bsroformer_desc">جودة ممتازة مع أعلى نتيجة SDR.</string>
+    <string name="custom_model">نموذج مخصص</string>
+    <string name="custom_model_hint">اسم ملف النموذج</string>
+    <string name="use_custom_model">استخدم النموذج المخصص</string>
 
     <!-- Settings -->
     <string name="settings">الإعدادات</string>

@@ -59,6 +59,8 @@ MODELS = [
     "UVR-MDX-NET-Inst_HQ_3.onnx",
     "Kim_Vocal_2.onnx",
     "UVR_MDXNET_KARA_2.onnx",
+    "vocals_mel_band_roformer.ckpt",
+    "model_bs_roformer_ep_317_sdr_12.9755.ckpt",
 ]
 BITRATES = ["128k", "192k", "320k"]
 JOB_TTL_HOURS = 24  # Auto-cleanup jobs older than this
@@ -277,9 +279,10 @@ class ProcessRequest(BaseModel):
     @field_validator("model")
     @classmethod
     def validate_model(cls, v: str) -> str:
-        if v not in MODELS:
-            raise ValueError(f"Invalid model. Choose from: {MODELS}")
-        return v
+        # Allow known models and any custom model filename (audio-separator validates it)
+        if not v or not v.strip():
+            raise ValueError("Model name is required")
+        return v.strip()
 
     @field_validator("bitrate")
     @classmethod
@@ -561,8 +564,8 @@ def batch_processing(
     bitrate: str = "192k",
 ):
     """Queue multiple URLs for sequential processing."""
-    if model not in MODELS:
-        raise HTTPException(400, "Invalid model")
+    if not model or not model.strip():
+        raise HTTPException(400, "Model name is required")
 
     job_ids = []
     for url in urls:
@@ -592,8 +595,8 @@ async def upload_processing(
     audio_only: bool = Form(False),
     bitrate: str = Form("192k"),
 ):
-    if model not in MODELS:
-        raise HTTPException(400, "Invalid model")
+    if not model or not model.strip():
+        raise HTTPException(400, "Model name is required")
     if bitrate not in BITRATES:
         raise HTTPException(400, "Invalid bitrate")
 

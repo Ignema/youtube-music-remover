@@ -45,6 +45,21 @@
     <string name="tag_default">Default</string>
     <string name="tag_quality">Quality</string>
     <string name="tag_karaoke">Karaoke</string>
+    <string name="tag_best">Best</string>
+    <string name="tag_premium">Premium</string>
+
+    <!-- Premium models -->
+    <string name="premium_models">Roformer Models</string>
+    <string name="premium_models_desc">Higher quality but slower. Best with a GPU server.</string>
+    <string name="model_melband_name">Mel-Band RoFormer</string>
+    <string name="model_melband_desc">State-of-the-art vocal separation. Best quality available.</string>
+    <string name="model_bsroformer_name">BS-RoFormer</string>
+    <string name="model_bsroformer_desc">Excellent quality with high SDR score. Great all-rounder.</string>
+
+    <!-- Custom model -->
+    <string name="custom_model">Custom Model</string>
+    <string name="custom_model_hint">Model filename</string>
+    <string name="use_custom_model">Use Custom Model</string>
 
     <!-- Settings -->
     <string name="settings">Settings</string>
