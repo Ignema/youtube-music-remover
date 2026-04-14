@@ -313,6 +313,14 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
                         Text(stringResource(R.string.clear_cache))
                     }
                 }
+                Spacer(Modifier.height(8.dp))
+                val exportContext = androidx.compose.ui.platform.LocalContext.current
+                OutlinedButton(
+                    onClick = { vm.exportHistory(exportContext) },
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Text(stringResource(R.string.export_history))
+                }
             } else {
                 Text(
                     stringResource(R.string.no_history),

@@ -85,6 +85,7 @@
     <string name="no_history">No history yet</string>
     <string name="clear_history">Clear History</string>
     <string name="clear_cache">Clear Cache</string>
+    <string name="export_history">Export All Results</string>
     <string name="permissions">Permissions</string>
     <string name="manage_permissions">Manage Permissions</string>
     <string name="permissions_desc">Manage notifications, battery optimization, and Termux access.</string>

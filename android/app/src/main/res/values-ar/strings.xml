@@ -81,6 +81,7 @@
     <string name="no_history">ما في سجل لحد الآن</string>
     <string name="clear_history">مسح السجل</string>
     <string name="clear_cache">مسح التخزين المؤقت</string>
+    <string name="export_history">تصدير كل النتائج</string>
     <string name="permissions">الصلاحيات</string>
     <string name="manage_permissions">إدارة الصلاحيات</string>
     <string name="permissions_desc">إدارة الإشعارات وتحسين البطارية وصلاحيات Termux.</string>

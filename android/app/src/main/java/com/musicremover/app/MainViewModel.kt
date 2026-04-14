@@ -528,6 +528,70 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         cache.clear()
     }
 
+    /** Export all history results — downloads from server and shares as a batch */
+    fun exportHistory(context: Context) {
+        val items = _ui.value.history
+        if (items.isEmpty()) return
+        showTransientError("Exporting ${items.size} items…")
+        bgScope.launch {
+            try {
+                val exportDir = java.io.File(context.cacheDir, "export")
+                exportDir.mkdirs()
+                // Clean old exports
+                exportDir.listFiles()?.forEach { it.delete() }
+
+                var exported = 0
+                for (item in items) {
+                    try {
+                        // Try local cache first
+                        val cachedFile = cache.getCachedFile(item.jobId)
+                        val target = java.io.File(exportDir, item.filename)
+                        if (cachedFile != null) {
+                            cachedFile.copyTo(target, overwrite = true)
+                            exported++
+                        } else {
+                            // Download from server
+                            val url = java.net.URL("$serverUrl/api/download/${item.jobId}")
+                            val conn = url.openConnection() as java.net.HttpURLConnection
+                            conn.connectTimeout = 10000
+                            conn.readTimeout = 30000
+                            conn.connect()
+                            if (conn.responseCode == 200) {
+                                conn.inputStream.use { input ->
+                                    target.outputStream().use { output -> input.copyTo(output) }
+                                }
+                                exported++
+                            }
+                            conn.disconnect()
+                        }
+                    } catch (_: Exception) { /* skip failed items */ }
+                }
+
+                if (exported > 0) {
+                    // Share all files
+                    val uris = exportDir.listFiles()?.map {
+                        androidx.core.content.FileProvider.getUriForFile(
+                            context, "${context.packageName}.fileprovider", it
+                        )
+                    } ?: emptyList()
+
+                    val intent = android.content.Intent(android.content.Intent.ACTION_SEND_MULTIPLE).apply {
+                        type = "video/*"
+                        putParcelableArrayListExtra(android.content.Intent.EXTRA_STREAM, ArrayList(uris))
+                        addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    val chooser = android.content.Intent.createChooser(intent, "Export $exported files")
+                    chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(chooser)
+                } else {
+                    showTransientError("No files available to export")
+                }
+            } catch (e: Exception) {
+                showTransientError("Export failed: ${e.message}")
+            }
+        }
+    }
+
     private fun pollServerOnline() {
         bgScope.launch {
             repeat(60) { // Try for ~2 minutes
