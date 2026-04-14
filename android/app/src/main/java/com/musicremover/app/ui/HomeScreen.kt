@@ -918,7 +918,7 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
     val dateFormat = SimpleDateFormat("MMM d, h:mm a", Locale.getDefault())
     val dateStr = dateFormat.format(Date(item.timestamp))
     val serverUrl = vm.ui.collectAsState().value.serverUrl
-    val isYouTube = !item.isFileUpload && item.url.isNotEmpty() && (item.url.contains("youtu") || item.url.matches(Regex("^[a-zA-Z0-9_-]{11}$")))
+    val isYouTube = item.url.isNotEmpty() && (item.url.contains("youtu") || item.url.matches(Regex("^[a-zA-Z0-9_-]{11}$")))
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -930,51 +930,41 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 4.dp),
+                .combinedClickable(
+                    onClick = {
+                        val url = "$serverUrl/api/download/${item.jobId}"
+                        onPlay(url, item.filename.removeSuffix(".mp4"))
+                    },
+                    onLongClick = {
+                        vm.hapticTick()
+                        if (isYouTube) {
+                            vm.showVideoInfoSheet(item)
+                        } else {
+                            vm.showFileInfo(item)
+                        }
+                    },
+                )
+                .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .combinedClickable(
-                        onClick = {
-                            val url = "$serverUrl/api/download/${item.jobId}"
-                            onPlay(url, item.filename.removeSuffix(".mp4"))
-                        },
-                        onLongClick = {
-                            vm.hapticTick()
-                            if (item.isFileUpload) {
-                                vm.showFileInfo(item)
-                            } else if (isYouTube) {
-                                vm.fetchVideoInfo(item.url, item)
-                            } else {
-                                // Non-YouTube, non-file item — show file info as fallback
-                                vm.showFileInfo(item)
-                            }
-                        },
-                    )
-                    .padding(start = 16.dp, top = 10.dp, bottom = 10.dp, end = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    Icons.Outlined.PlayArrow, null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp),
+            Icon(
+                Icons.Outlined.PlayArrow, null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(22.dp),
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = item.filename.removeSuffix(".mp4"),
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = item.filename.removeSuffix(".mp4"),
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        text = "$dateStr · ${item.model.removeSuffix(".onnx")}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                Text(
+                    text = "$dateStr · ${item.model.removeSuffix(".onnx")}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             if (isYouTube) {
                 IconButton(onClick = { vm.onUrlChange(item.url) }) {

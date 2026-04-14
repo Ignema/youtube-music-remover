@@ -418,6 +418,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _ui.value = _ui.value.copy(showInfoSheet = true, fileInfoItem = item, videoInfoError = false, loadingInfo = false, videoInfo = null)
     }
 
+    /** Show video info sheet for YouTube history items — fetches oEmbed data */
+    fun showVideoInfoSheet(item: HistoryItem) {
+        currentInfoItem = item
+        _ui.value = _ui.value.copy(
+            showInfoSheet = true, fileInfoItem = null,
+            loadingInfo = true, videoInfo = null, videoInfoError = false,
+        )
+        bgScope.launch {
+            try {
+                val directInfo = fetchYouTubeInfoDirect(item.url)
+                if (directInfo != null) {
+                    _ui.value = _ui.value.copy(videoInfo = directInfo, loadingInfo = false)
+                } else {
+                    _ui.value = _ui.value.copy(loadingInfo = false, videoInfoError = true)
+                }
+            } catch (_: Exception) {
+                _ui.value = _ui.value.copy(loadingInfo = false, videoInfoError = true)
+            }
+        }
+    }
+
     // --- Server/Termux ---
     fun onServerUrlChange(url: String) {
         _ui.value = _ui.value.copy(serverUrl = url)
