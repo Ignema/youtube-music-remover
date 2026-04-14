@@ -640,6 +640,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun cancelProcessing() {
         pollingJob?.cancel()
         pollingJob = null
+        activeJobMeta = null
         prefs.edit().remove("active_job_id").remove("queue").apply()
         ProcessingService.stop(getApplication())
         notif.dismiss()
@@ -674,7 +675,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private var pollingJob: kotlinx.coroutines.Job? = null
 
+    /** Metadata captured at job start — used when saving to history */
+    private data class JobMeta(
+        val url: String,
+        val model: String,
+        val isFileUpload: Boolean,
+        val sourceFileName: String?,
+        val sourceFileSize: Long?,
+    )
+    private var activeJobMeta: JobMeta? = null
+
     private fun processFile(uri: android.net.Uri) {
+        activeJobMeta = JobMeta(
+            url = "", model = _ui.value.selectedModel,
+            isFileUpload = true,
+            sourceFileName = _ui.value.selectedFileName,
+            sourceFileSize = _ui.value.selectedFileSize,
+        )
         pollingJob = bgScope.launch {
             _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.uploading))
             ProcessingService.start(getApplication(), str(R.string.uploading), 0)
@@ -714,6 +731,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun processUrl(url: String) {
+        activeJobMeta = JobMeta(
+            url = url, model = _ui.value.selectedModel,
+            isFileUpload = false,
+            sourceFileName = null, sourceFileSize = null,
+        )
         pollingJob = bgScope.launch {
             _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.starting))
             ProcessingService.start(getApplication(), str(R.string.starting), 0)
@@ -769,18 +791,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         _ui.value = _ui.value.copy(state = UiState.Done, statusText = filename)
                         // Cache result on-device
                         cache.cacheResult(serverUrl, jobId, filename)
+                        val meta = activeJobMeta
                         historyStore.add(HistoryItem(
-                            filename = filename, url = _ui.value.url,
-                            model = _ui.value.selectedModel, jobId = jobId,
-                            isFileUpload = _ui.value.selectedFileUri != null,
-                            sourceFileName = _ui.value.selectedFileName,
-                            sourceFileSize = _ui.value.selectedFileSize,
+                            filename = filename,
+                            url = meta?.url ?: "",
+                            model = meta?.model ?: _ui.value.selectedModel,
+                            jobId = jobId,
+                            isFileUpload = meta?.isFileUpload ?: false,
+                            sourceFileName = meta?.sourceFileName,
+                            sourceFileSize = meta?.sourceFileSize,
                         ))
                         _ui.value = _ui.value.copy(history = historyStore.getAll())
                         prefs.edit().remove("active_job_id").apply()
                         ProcessingService.stop(getApplication())
                         notif.showDone(filename)
                         hapticTick()
+                        activeJobMeta = null
                         // Process next in queue if any
                         if (_ui.value.queue.isNotEmpty()) {
                             processNextInQueue()
