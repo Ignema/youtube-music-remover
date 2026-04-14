@@ -22,6 +22,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -388,27 +389,41 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
 
         Spacer(Modifier.height(16.dp))
 
-        // Model selector — opens bottom sheet
-        FilledTonalButton(
-            onClick = vm::toggleModelPicker,
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth().height(48.dp),
+        // Options — single scrollable chip row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(Icons.Outlined.Tune, null, Modifier.size(18.dp))
-            Spacer(Modifier.width(10.dp))
-            Text(
-                modelDisplayName(ui.selectedModel),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f),
+            // Model chip — opens bottom sheet
+            androidx.compose.material3.FilterChip(
+                selected = true,
+                onClick = vm::toggleModelPicker,
+                label = { Text(modelShortName(ui.selectedModel), maxLines = 1) },
+                leadingIcon = { Icon(Icons.Outlined.Tune, null, Modifier.size(16.dp)) },
+                shape = RoundedCornerShape(12.dp),
             )
-            Text(
-                stringResource(R.string.change),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f),
+            // Audio only
+            androidx.compose.material3.FilterChip(
+                selected = ui.audioOnly,
+                onClick = { vm.setAudioOnly(!ui.audioOnly) },
+                label = { Text(stringResource(R.string.audio_only)) },
+                shape = RoundedCornerShape(12.dp),
             )
+            // Bitrate
+            listOf("128k", "192k", "320k").forEach { br ->
+                androidx.compose.material3.FilterChip(
+                    selected = ui.bitrate == br,
+                    onClick = { vm.setBitrate(br) },
+                    label = { Text(br) },
+                    shape = RoundedCornerShape(12.dp),
+                )
+            }
         }
 
-        // Model picker bottom sheet
+        // Model picker bottom sheet (unchanged)
         if (ui.showModelPicker) {
             androidx.compose.material3.ModalBottomSheet(
                 onDismissRequest = vm::toggleModelPicker,
@@ -502,29 +517,6 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                         Text(stringResource(R.string.use_custom_model))
                     }
                 }
-            }
-        }
-
-        // Options row: audio-only + bitrate
-        Spacer(Modifier.height(10.dp))
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            androidx.compose.material3.FilterChip(
-                selected = ui.audioOnly,
-                onClick = { vm.setAudioOnly(!ui.audioOnly) },
-                label = { Text(stringResource(R.string.audio_only)) },
-                shape = RoundedCornerShape(12.dp),
-            )
-            // Bitrate selector
-            listOf("128k", "192k", "320k").forEach { br ->
-                androidx.compose.material3.FilterChip(
-                    selected = ui.bitrate == br,
-                    onClick = { vm.setBitrate(br) },
-                    label = { Text(br) },
-                    shape = RoundedCornerShape(12.dp),
-                )
             }
         }
 
@@ -1484,6 +1476,16 @@ private fun modelDisplayName(model: String): String = when (model) {
     "vocals_mel_band_roformer.ckpt" -> "${stringResource(R.string.model_melband_name)} · ${stringResource(R.string.tag_best)}"
     "model_bs_roformer_ep_317_sdr_12.9755.ckpt" -> "${stringResource(R.string.model_bsroformer_name)} · ${stringResource(R.string.tag_premium)}"
     else -> model.removeSuffix(".onnx").removeSuffix(".ckpt")
+}
+
+@Composable
+private fun modelShortName(model: String): String = when (model) {
+    "Kim_Vocal_2.onnx" -> "Kim Vocal 2"
+    "UVR-MDX-NET-Inst_HQ_3.onnx" -> "MDX-NET HQ3"
+    "UVR_MDXNET_KARA_2.onnx" -> "Karaoke"
+    "vocals_mel_band_roformer.ckpt" -> "Mel-Band"
+    "model_bs_roformer_ep_317_sdr_12.9755.ckpt" -> "BS-Roformer"
+    else -> model.removeSuffix(".onnx").removeSuffix(".ckpt").take(15)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
