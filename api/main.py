@@ -431,11 +431,21 @@ def process_video(job_id: str, url: str, model: str, batch_size: int,
 
         audio_files = [
             f for f in temp_dir.iterdir()
-            if f != video_file and f.suffix in (".opus", ".m4a", ".webm", ".mp3")
+            if f != video_file and f.suffix in (".opus", ".m4a", ".webm", ".mp3", ".wav")
         ]
         if not audio_files:
-            update_job(job_id, status="error", error="No audio file found")
-            return
+            # Single muxed file (TikTok, Twitter, etc.) — extract audio
+            update_job(job_id, status="extracting", progress=15)
+            extracted_audio = temp_dir / "extracted_audio.wav"
+            ok_ext, _, err_ext = run_cmd(
+                "ffmpeg", "-i", str(video_file),
+                "-vn", "-acodec", "pcm_s16le", "-ar", "44100", "-ac", "2",
+                "-y", str(extracted_audio),
+            )
+            if not ok_ext or not extracted_audio.exists():
+                update_job(job_id, status="error", error=f"Audio extraction failed: {err_ext}")
+                return
+            audio_files = [extracted_audio]
 
         separate_and_merge(job_id, video_file, audio_files[0], model, batch_size,
                            title, temp_dir, output_dir, audio_only, bitrate)
