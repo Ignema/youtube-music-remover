@@ -167,27 +167,12 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
             )
         },
     ) { padding ->
-        var isRefreshing by remember { mutableStateOf(false) }
-        val refreshScope = androidx.compose.runtime.rememberCoroutineScope()
         val scrollState = rememberScrollState()
 
-        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh = {
-                isRefreshing = true
-                vm.refresh()
-                refreshScope.launch {
-                    delay(1000)
-                    isRefreshing = false
-                }
-            },
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-        ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(padding)
                 .padding(horizontal = 24.dp)
                 .verticalScroll(scrollState)
                 .imePadding(),
@@ -222,7 +207,6 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
                 (ui.state == UiState.Processing && ui.processingMinimized)) && ui.history.isNotEmpty()) {
                 HistorySection(ui.history, vm, onPlay)
             }
-        }
         }
     }
 
@@ -959,7 +943,9 @@ private fun DoneContent(ui: MainUiState, vm: MainViewModel, context: android.con
 private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay: (String, String) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { vm.refresh() },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -972,10 +958,10 @@ private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.recent), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Text(
-                stringResource(R.string.hold_for_info),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.outline,
+            Icon(
+                Icons.Outlined.Refresh, stringResource(R.string.hold_for_info),
+                tint = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.size(18.dp),
             )
         }
 
