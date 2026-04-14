@@ -13,6 +13,10 @@
     <string name="tab_batch">Batch</string>
     <string name="batch_label">URLs (one per line)</string>
     <string name="batch_placeholder">https://youtube.com/watch?v=…\nhttps://tiktok.com/…</string>
+    <string name="input_mode">Input Mode</string>
+    <string name="mode_url_desc">Paste a video URL from any supported site</string>
+    <string name="mode_file_desc">Pick a video file from your device</string>
+    <string name="mode_batch_desc">Process multiple URLs at once</string>
     <string name="remove_music">Remove Music</string>
     <string name="change">Change</string>
     <string name="recent">Recent</string>

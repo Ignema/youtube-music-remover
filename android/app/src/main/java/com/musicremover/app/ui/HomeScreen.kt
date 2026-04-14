@@ -476,9 +476,17 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
             2 -> Icons.Outlined.ContentPaste
             else -> Icons.Outlined.MusicOff
         }
+        val modeLabel = when (ui.inputTab) {
+            1 -> stringResource(R.string.tab_file)
+            2 -> stringResource(R.string.tab_batch)
+            else -> stringResource(R.string.tab_url)
+        }
+        var showModeDialog by remember { mutableStateOf(false) }
+
         Row(
-            modifier = Modifier.fillMaxWidth().height(56.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.Top,
         ) {
             // Main CTA
             Button(
@@ -492,15 +500,60 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
-            // Mode switcher — cycles through tabs
-            OutlinedButton(
-                onClick = { vm.setInputTab((ui.inputTab + 1) % 3) },
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.size(56.dp),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
-            ) {
-                Icon(modeIcon, stringResource(R.string.tab_url), Modifier.size(22.dp))
+            // Mode switcher — tap to cycle, long-press for picker
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .combinedClickable(
+                            onClick = { vm.setInputTab((ui.inputTab + 1) % 3) },
+                            onLongClick = {
+                                vm.hapticTick()
+                                showModeDialog = true
+                            },
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(modeIcon, modeLabel, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Spacer(Modifier.height(2.dp))
+                Text(modeLabel, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             }
+        }
+
+        if (showModeDialog) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { showModeDialog = false },
+                title = { Text(stringResource(R.string.input_mode)) },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        ModeDialogOption(
+                            icon = Icons.Outlined.MusicOff,
+                            title = stringResource(R.string.tab_url),
+                            desc = stringResource(R.string.mode_url_desc),
+                            selected = ui.inputTab == 0,
+                            onClick = { vm.setInputTab(0); showModeDialog = false },
+                        )
+                        ModeDialogOption(
+                            icon = Icons.Outlined.VideoFile,
+                            title = stringResource(R.string.tab_file),
+                            desc = stringResource(R.string.mode_file_desc),
+                            selected = ui.inputTab == 1,
+                            onClick = { vm.setInputTab(1); showModeDialog = false },
+                        )
+                        ModeDialogOption(
+                            icon = Icons.Outlined.ContentPaste,
+                            title = stringResource(R.string.tab_batch),
+                            desc = stringResource(R.string.mode_batch_desc),
+                            selected = ui.inputTab == 2,
+                            onClick = { vm.setInputTab(2); showModeDialog = false },
+                        )
+                    }
+                },
+                confirmButton = {},
+            )
         }
     }
 }
@@ -1166,6 +1219,32 @@ private fun VideoInfoSheet(ui: MainUiState) {
                     maxLines = 4,
                     overflow = TextOverflow.Ellipsis,
                 )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ModeDialogOption(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, desc: String, selected: Boolean, onClick: () -> Unit) {
+    Card(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        ),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, null, Modifier.size(22.dp), tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleSmall)
+                Text(desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (selected) {
+                Icon(Icons.Outlined.CheckCircle, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
             }
         }
     }

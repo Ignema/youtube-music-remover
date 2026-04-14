@@ -13,6 +13,10 @@
     <string name="tab_batch">دفعة</string>
     <string name="batch_label">روابط (واحد في كل سطر)</string>
     <string name="batch_placeholder">https://youtube.com/watch?v=…\nhttps://tiktok.com/…</string>
+    <string name="input_mode">وضع الإدخال</string>
+    <string name="mode_url_desc">الصق رابط فيديو من أي موقع مدعوم</string>
+    <string name="mode_file_desc">اختر ملف فيديو من جهازك</string>
+    <string name="mode_batch_desc">عالج عدة روابط دفعة واحدة</string>
     <string name="remove_music">شيل الموسيقى</string>
     <string name="change">تغيير</string>
     <string name="recent">الأخيرة</string>
