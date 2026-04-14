@@ -120,9 +120,23 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
         }
     }
 
-    // Streaming waveform
+    // Waveform — try server pre-computed first, fall back to local streaming
     val amplitudes = remember { mutableStateListOf<Float>() }
     LaunchedEffect(url) {
+        // Extract job ID from URL
+        val jobId = url.substringAfterLast("/")
+        // Try server waveform
+        try {
+            val serverUrl = url.substringBefore("/api/")
+            val service = com.musicremover.app.data.ApiClient.getService(serverUrl)
+            val response = service.waveform(jobId)
+            if (response.waveform.isNotEmpty()) {
+                amplitudes.clear()
+                amplitudes.addAll(response.waveform)
+                return@LaunchedEffect
+            }
+        } catch (_: Exception) { /* fall through to local */ }
+        // Fall back to local streaming extraction
         streamWaveform(context, url, 150).collect { wave ->
             amplitudes.clear()
             amplitudes.addAll(wave)
@@ -382,7 +396,7 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                                                 player.volume = it
                                             },
                                             modifier = Modifier
-                                                .height(140.dp)
+                                                .height(200.dp)
                                                 .width(36.dp)
                                                 .graphicsLayer { rotationZ = -90f },
                                             colors = SliderDefaults.colors(

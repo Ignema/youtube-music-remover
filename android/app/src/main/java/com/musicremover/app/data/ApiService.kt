@@ -62,6 +62,11 @@ interface ApiService {
     @GET("/api/info")
     suspend fun info(@retrofit2.http.Query("url") url: String): VideoInfo
 
+    @GET("/api/waveform/{jobId}")
+    suspend fun waveform(@Path("jobId") jobId: String): WaveformResponse
+
     @GET("/api/models")
     suspend fun models(): ModelsResponse
 }
+
+data class WaveformResponse(val waveform: List<Float> = emptyList())

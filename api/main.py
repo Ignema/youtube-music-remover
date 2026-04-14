@@ -441,7 +441,60 @@ def separate_and_merge(job_id: str, video_file: Path, audio_file: Path,
     update_job(job_id, status="done", progress=100,
                output_path=str(final_output), filename=final_output.name)
     logger.info(f"Job {job_id[:8]} complete: {final_output.name}")
+
+    # Generate waveform data in background
+    threading.Thread(target=generate_waveform, args=(job_id, str(final_output)), daemon=True).start()
+
     return True
+
+
+def generate_waveform(job_id: str, file_path: str, bar_count: int = 150):
+    """Extract audio waveform amplitudes from the output file."""
+    try:
+        import struct
+        import wave as wave_mod
+
+        # Extract audio to temp WAV
+        temp_wav = file_path + ".waveform.wav"
+        ok, _, err = run_cmd(
+            "ffmpeg", "-i", file_path,
+            "-vn", "-acodec", "pcm_s16le", "-ar", "8000", "-ac", "1",
+            "-y", temp_wav,
+            timeout=30,
+        )
+        if not ok:
+            logger.warning(f"Waveform extraction failed for {job_id[:8]}: {err}")
+            return
+
+        # Read samples
+        with wave_mod.open(temp_wav, "rb") as wf:
+            n_frames = wf.getnframes()
+            raw = wf.readframes(n_frames)
+            samples = struct.unpack(f"<{n_frames}h", raw)
+
+        # Downsample to bar_count
+        chunk_size = max(1, len(samples) // bar_count)
+        amplitudes = []
+        max_amp = max(abs(s) for s in samples) if samples else 1
+        for i in range(bar_count):
+            start = i * chunk_size
+            end = min(start + chunk_size, len(samples))
+            if start >= len(samples):
+                break
+            chunk_max = max(abs(s) for s in samples[start:end])
+            amplitudes.append(round(chunk_max / max_amp, 3))
+
+        # Store as JSON in DB
+        db_set(job_id, metadata=json.dumps({
+            **json.loads(db_get(job_id).get("metadata") or "{}"),
+            "waveform": amplitudes,
+        }))
+        logger.info(f"Waveform generated for {job_id[:8]}: {len(amplitudes)} bars")
+
+        # Cleanup temp
+        Path(temp_wav).unlink(missing_ok=True)
+    except Exception as e:
+        logger.warning(f"Waveform generation failed for {job_id[:8]}: {e}")
 
 
 def process_video(job_id: str, url: str, model: str, batch_size: int,
@@ -731,6 +784,24 @@ def download_result(job_id: str):
         raise HTTPException(404, "Output file not found")
     media = "audio/mpeg" if path.endswith(".mp3") else "video/mp4"
     return FileResponse(path, media_type=media, filename=job["filename"])
+
+
+@app.get("/api/waveform/{job_id}")
+def get_waveform(job_id: str):
+    """Get pre-computed waveform data for a job."""
+    job = db_get(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    metadata = job.get("metadata")
+    if metadata:
+        try:
+            data = json.loads(metadata) if isinstance(metadata, str) else metadata
+            waveform = data.get("waveform")
+            if waveform:
+                return {"waveform": waveform}
+        except Exception:
+            pass
+    raise HTTPException(404, "Waveform not available yet")
 
 
 @app.websocket("/ws/{job_id}")
