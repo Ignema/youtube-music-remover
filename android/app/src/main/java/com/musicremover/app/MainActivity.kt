@@ -29,6 +29,7 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         handleShareIntent(intent)
         handlePlayIntent(intent)
+        handleShareAction(intent)
         setContent {
             val ui by vm.ui.collectAsState()
             MusicRemoverTheme(
@@ -116,6 +117,7 @@ class MainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         handleShareIntent(intent)
         handlePlayIntent(intent)
+        handleShareAction(intent)
     }
 
     private fun handleShareIntent(intent: Intent?) {
@@ -133,5 +135,11 @@ class MainActivity : AppCompatActivity() {
         val title = intent.getStringExtra("play_title") ?: "Result"
         vm.pendingPlayUrl = url
         vm.pendingPlayTitle = title
+    }
+
+    private fun handleShareAction(intent: Intent?) {
+        val url = intent?.getStringExtra("share_url") ?: return
+        val filename = intent.getStringExtra("share_filename") ?: "result"
+        vm.shareByJobUrl(this, url, filename)
     }
 }

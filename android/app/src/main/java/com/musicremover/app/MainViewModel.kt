@@ -952,6 +952,39 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun shareByJobUrl(context: Context, downloadUrl: String, filename: String) {
+        bgScope.launch {
+            try {
+                val cacheDir = java.io.File(context.cacheDir, "shared")
+                cacheDir.mkdirs()
+                val file = java.io.File(cacheDir, filename)
+
+                val url = java.net.URL(downloadUrl)
+                val conn = url.openConnection() as java.net.HttpURLConnection
+                conn.connect()
+                conn.inputStream.use { input ->
+                    file.outputStream().use { output -> input.copyTo(output) }
+                }
+                conn.disconnect()
+
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    context, "${context.packageName}.fileprovider", file
+                )
+                val mime = if (filename.endsWith(".mp3")) "audio/mpeg" else "video/mp4"
+                val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                    type = mime
+                    putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                val chooser = android.content.Intent.createChooser(intent, "Share")
+                chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(chooser)
+            } catch (e: Exception) {
+                showTransientError("Share failed: ${e.message}")
+            }
+        }
+    }
+
     fun saveToUri(context: Context, uri: android.net.Uri) {
         val jobId = _ui.value.jobId ?: return
         _ui.value = _ui.value.copy(downloading = true)
