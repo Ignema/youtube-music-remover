@@ -976,7 +976,7 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
     val dateFormat = SimpleDateFormat("MMM d, h:mm a", Locale.getDefault())
     val dateStr = dateFormat.format(Date(item.timestamp))
     val serverUrl = vm.ui.collectAsState().value.serverUrl
-    val isYouTube = item.url.isNotEmpty() && (item.url.contains("youtu") || item.url.matches(Regex("^[a-zA-Z0-9_-]{11}$")))
+    val hasUrl = item.url.isNotEmpty()
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -1021,7 +1021,7 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                 )
             }
             IconButton(onClick = {
-                if (isYouTube) vm.onUrlChange(item.url)
+                if (hasUrl) vm.onUrlChange(item.url)
                 else vm.reprocessFromHistory(item)
             }) {
                 Icon(Icons.Outlined.Refresh, "Reprocess", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.outline)

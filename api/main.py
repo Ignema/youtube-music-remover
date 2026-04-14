@@ -27,7 +27,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator
 
-from api.utils import extract_video_id, run_cmd, YT_ID_RE
+from api.utils import extract_video_id, normalize_url, is_valid_url, run_cmd, YT_ID_RE
 
 try:
     from slowapi import Limiter
@@ -270,9 +270,8 @@ class ProcessRequest(BaseModel):
         v = v.strip()
         if not v:
             raise ValueError("URL is required")
-        vid = extract_video_id(v)
-        if not YT_ID_RE.match(vid):
-            raise ValueError("Invalid YouTube URL or video ID")
+        if not is_valid_url(v):
+            raise ValueError("Invalid URL — enter a video URL or YouTube video ID")
         return v
 
     @field_validator("model")
@@ -381,12 +380,11 @@ def process_video(job_id: str, url: str, model: str, batch_size: int,
 
     try:
         update_job(job_id, status="downloading", progress=10)
-        video_id = extract_video_id(url)
-        yt_url = f"https://www.youtube.com/watch?v={video_id}"
+        dl_url = normalize_url(url)
 
         ok, _, err = run_cmd(
             "yt-dlp", "-f", "bv*,ba",
-            "-o", f"{temp_dir}/%(format_id)s.%(ext)s", yt_url,
+            "-o", f"{temp_dir}/%(format_id)s.%(ext)s", dl_url,
         )
         if not ok:
             update_job(job_id, status="error", error=f"Download failed: {err}")
@@ -413,17 +411,14 @@ def process_video(job_id: str, url: str, model: str, batch_size: int,
             update_job(job_id, status="error", error="No audio file found")
             return
 
-        ok, title, _ = run_cmd("yt-dlp", "--print", "title", yt_url)
-        title = title.strip() if ok and title else video_id
-
-        # Fetch full metadata and store it
-        ok_meta, meta_json, _ = run_cmd("yt-dlp", "--dump-json", "--no-download", yt_url, timeout=15)
-        yt_meta = {}
+        # Fetch metadata (title, thumbnail, etc.) — works for any yt-dlp supported site
+        title = url
+        ok_meta, meta_json, _ = run_cmd("yt-dlp", "--dump-json", "--no-download", dl_url, timeout=15)
         if ok_meta and meta_json:
             try:
                 data = json.loads(meta_json)
                 title = data.get("title", title)
-                yt_meta = {
+                meta = {
                     "title": data.get("title", ""),
                     "channel": data.get("channel", data.get("uploader", "")),
                     "duration": data.get("duration", 0),
@@ -432,7 +427,7 @@ def process_video(job_id: str, url: str, model: str, batch_size: int,
                     "upload_date": data.get("upload_date", ""),
                     "description": (data.get("description", "") or "")[:300],
                 }
-                db_set(job_id, metadata=json.dumps(yt_meta))
+                db_set(job_id, metadata=json.dumps(meta))
             except Exception:
                 pass
 
@@ -494,16 +489,16 @@ def list_models():
 @app.get("/api/info")
 @rate_limit("20/minute")
 async def video_info(request: Request, url: str):
-    """Get YouTube video metadata without downloading."""
-    video_id = extract_video_id(url.strip())
-    if not YT_ID_RE.match(video_id):
-        raise HTTPException(400, "Invalid YouTube URL or video ID")
-    yt_url = f"https://www.youtube.com/watch?v={video_id}"
+    """Get video metadata without downloading. Works with any yt-dlp supported URL."""
+    url = url.strip()
+    if not is_valid_url(url):
+        raise HTTPException(400, "Invalid URL")
+    dl_url = normalize_url(url)
 
     import asyncio
     loop = asyncio.get_event_loop()
     ok, stdout, err = await loop.run_in_executor(
-        None, lambda: run_cmd("yt-dlp", "--dump-json", "--no-download", yt_url, timeout=15)
+        None, lambda: run_cmd("yt-dlp", "--dump-json", "--no-download", dl_url, timeout=15)
     )
     if not ok:
         raise HTTPException(400, f"Failed to fetch info: {err}")
@@ -555,8 +550,7 @@ def batch_processing(
 
     job_ids = []
     for url in urls:
-        vid = extract_video_id(url.strip())
-        if not YT_ID_RE.match(vid):
+        if not is_valid_url(url.strip()):
             raise HTTPException(400, f"Invalid URL: {url}")
         job_id = str(uuid.uuid4())
         db_create(job_id)

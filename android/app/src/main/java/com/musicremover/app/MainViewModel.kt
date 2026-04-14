@@ -194,12 +194,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     // --- Basic state ---
     fun onUrlChange(url: String) {
-        val videoId = extractVideoId(url)
-        if (videoId != null) {
-            _ui.value = _ui.value.copy(url = url)
-            fetchUrlPreview(videoId)
+        previewJob?.cancel()
+        if (looksLikeUrl(url)) {
+            _ui.value = _ui.value.copy(url = url, urlPreview = null, loadingPreview = true)
+            fetchUrlPreview(url)
         } else {
-            previewJob?.cancel()
             _ui.value = _ui.value.copy(url = url, urlPreview = null, loadingPreview = false)
         }
     }
@@ -290,26 +289,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // --- URL preview ---
     private var previewJob: kotlinx.coroutines.Job? = null
 
-    private fun fetchUrlPreview(videoId: String) {
+    private fun fetchUrlPreview(url: String) {
         previewJob?.cancel()
-        // Show thumbnail immediately (static CDN image, no API)
-        val thumbnail = "https://img.youtube.com/vi/$videoId/hqdefault.jpg"
-        _ui.value = _ui.value.copy(
-            urlPreview = VideoInfo(thumbnail = thumbnail),
-            loadingPreview = true,
-        )
-        // Try own server for title/channel in background
         previewJob = bgScope.launch {
-            delay(300)
+            delay(600) // Debounce
             try {
-                val info = kotlinx.coroutines.withTimeout(8_000) {
-                    api().info(_ui.value.url)
+                val info = kotlinx.coroutines.withTimeout(10_000) {
+                    api().info(url)
                 }
                 if (_ui.value.url.isNotEmpty()) {
-                    _ui.value = _ui.value.copy(
-                        urlPreview = info.copy(thumbnail = thumbnail),
-                        loadingPreview = false,
-                    )
+                    _ui.value = _ui.value.copy(urlPreview = info, loadingPreview = false)
                 }
             } catch (_: Exception) {
                 _ui.value = _ui.value.copy(loadingPreview = false)
@@ -317,19 +306,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun extractVideoId(input: String): String? {
+    /** Check if input looks like a URL or YouTube video ID */
+    private fun looksLikeUrl(input: String): Boolean {
         val trimmed = input.trim()
-        if (trimmed.matches(Regex("^[a-zA-Z0-9_-]{11}$"))) return trimmed
-        val patterns = listOf(
-            Regex("(?:https?://)?(?:www\\.)?youtu\\.be/([a-zA-Z0-9_-]{11})"),
-            Regex("(?:https?://)?(?:www\\.)?youtube\\.com/watch\\?v=([a-zA-Z0-9_-]{11})"),
-            Regex("(?:https?://)?(?:www\\.)?youtube\\.com/shorts/([a-zA-Z0-9_-]{11})"),
-        )
-        for (p in patterns) {
-            val match = p.find(trimmed)
-            if (match != null) return match.groupValues[1]
-        }
-        return null
+        if (trimmed.length < 5) return false
+        if (trimmed.matches(Regex("^[a-zA-Z0-9_-]{11}$"))) return true
+        return trimmed.matches(Regex("^https?://\\S+$"))
     }
 
     // --- History ---
@@ -416,8 +398,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             )
         } else null
 
-        val isYt = item.url.isNotEmpty() && (item.url.contains("youtu") || item.url.matches(Regex("^[a-zA-Z0-9_-]{11}$")))
-        val needsFetch = isYt && cachedInfo == null
+        val hasUrl = item.url.isNotEmpty()
+        val needsFetch = hasUrl && cachedInfo == null
 
         _ui.value = _ui.value.copy(
             showInfoSheet = true, fileInfoItem = null,
@@ -431,19 +413,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     val info = kotlinx.coroutines.withTimeout(10_000) { api().info(item.url) }
                     _ui.value = _ui.value.copy(videoInfo = info, loadingInfo = false)
                 } catch (_: Exception) {
-                    // Show thumbnail-only fallback
-                    val videoId = extractVideoId(item.url)
-                    if (videoId != null) {
-                        _ui.value = _ui.value.copy(
-                            videoInfo = VideoInfo(thumbnail = "https://img.youtube.com/vi/$videoId/hqdefault.jpg"),
-                            loadingInfo = false,
-                        )
-                    } else {
-                        _ui.value = _ui.value.copy(loadingInfo = false, videoInfoError = true)
-                    }
+                    _ui.value = _ui.value.copy(loadingInfo = false, videoInfoError = true)
                 }
             }
-        } else if (isYt && cachedInfo != null && cachedInfo.duration == 0) {
+        } else if (hasUrl && cachedInfo != null && cachedInfo.duration == 0) {
             // Have basic info but missing rich data — try server in background
             bgScope.launch {
                 try {
