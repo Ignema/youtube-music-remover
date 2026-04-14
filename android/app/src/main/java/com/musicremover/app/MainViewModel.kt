@@ -168,20 +168,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             prefs.edit().remove("queue").apply()
         }
 
-        // Periodic server connectivity check
+        // Periodic server connectivity check (only when app is in foreground)
         bgScope.launch {
             while (true) {
-                val connected = try {
-                    val conn = java.net.URL("${_ui.value.serverUrl}/health").openConnection()
-                    conn.connectTimeout = 5000
-                    conn.readTimeout = 5000
-                    conn.getInputStream().bufferedReader().readText().contains("ok")
-                } catch (_: Exception) { false }
-                _ui.value = _ui.value.copy(serverConnected = connected, serverChecking = false)
-                kotlinx.coroutines.delay(10000)
-                _ui.value = _ui.value.copy(serverChecking = true)
+                if (appInForeground) {
+                    val connected = try {
+                        val conn = java.net.URL("${_ui.value.serverUrl}/health").openConnection()
+                        conn.connectTimeout = 5000
+                        conn.readTimeout = 5000
+                        conn.getInputStream().bufferedReader().readText().contains("ok")
+                    } catch (_: Exception) { false }
+                    _ui.value = _ui.value.copy(serverConnected = connected, serverChecking = false)
+                    kotlinx.coroutines.delay(10000)
+                    _ui.value = _ui.value.copy(serverChecking = true)
+                } else {
+                    kotlinx.coroutines.delay(2000)
+                }
             }
         }
+    }
+
+    @Volatile
+    private var appInForeground = true
+
+    fun setForeground(foreground: Boolean) {
+        appInForeground = foreground
     }
 
     // --- Haptics ---

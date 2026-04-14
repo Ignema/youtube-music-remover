@@ -24,6 +24,16 @@ import com.musicremover.app.ui.theme.MusicRemoverTheme
 class MainActivity : AppCompatActivity() {
     private val vm: MainViewModel by viewModels()
 
+    override fun onResume() {
+        super.onResume()
+        vm.setForeground(true)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        vm.setForeground(false)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
