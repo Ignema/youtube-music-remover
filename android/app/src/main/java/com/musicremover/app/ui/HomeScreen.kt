@@ -297,18 +297,29 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
             stringResource(R.string.tab_file),
             stringResource(R.string.tab_batch),
         )
-        androidx.compose.material3.SingleChoiceSegmentedButtonRow(
+        Row(
             modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(0.dp),
         ) {
             tabLabels.forEachIndexed { index, label ->
-                androidx.compose.material3.SegmentedButton(
-                    selected = ui.inputTab == index,
-                    onClick = { vm.setInputTab(index) },
-                    shape = androidx.compose.material3.SegmentedButtonDefaults.itemShape(
-                        index = index, count = tabLabels.size,
-                    ),
-                ) {
-                    Text(label)
+                val isSelected = ui.inputTab == index
+                val shape = when (index) {
+                    0 -> RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)
+                    tabLabels.lastIndex -> RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp)
+                    else -> RoundedCornerShape(0.dp)
+                }
+                if (isSelected) {
+                    Button(
+                        onClick = {},
+                        shape = shape,
+                        modifier = Modifier.weight(1f).height(48.dp),
+                    ) { Text(label) }
+                } else {
+                    OutlinedButton(
+                        onClick = { vm.setInputTab(index) },
+                        shape = shape,
+                        modifier = Modifier.weight(1f).height(48.dp),
+                    ) { Text(label) }
                 }
             }
         }
