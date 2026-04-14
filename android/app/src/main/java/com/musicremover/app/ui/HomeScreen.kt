@@ -674,14 +674,32 @@ private fun ProcessingContent(ui: MainUiState, vm: MainViewModel) {
             ) {
                 Text(stringResource(R.string.minimize), style = MaterialTheme.typography.labelMedium)
             }
-            OutlinedButton(
-                onClick = vm::cancelProcessing,
-                shape = RoundedCornerShape(12.dp),
-                colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error,
-                ),
-            ) {
-                Text(stringResource(R.string.cancel), style = MaterialTheme.typography.labelMedium)
+            if (ui.queue.isNotEmpty()) {
+                OutlinedButton(
+                    onClick = vm::cancelProcessing,
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Text(stringResource(R.string.skip), style = MaterialTheme.typography.labelMedium)
+                }
+                OutlinedButton(
+                    onClick = vm::cancelAll,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error,
+                    ),
+                ) {
+                    Text(stringResource(R.string.cancel_all), style = MaterialTheme.typography.labelMedium)
+                }
+            } else {
+                OutlinedButton(
+                    onClick = vm::cancelProcessing,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error,
+                    ),
+                ) {
+                    Text(stringResource(R.string.cancel), style = MaterialTheme.typography.labelMedium)
+                }
             }
         }
 

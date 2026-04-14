@@ -99,6 +99,8 @@
     <!-- Errors -->
     <string name="retry">Retry</string>
     <string name="cancel">Cancel</string>
+    <string name="cancel_all">Cancel All</string>
+    <string name="skip">Skip</string>
     <string name="minimize">Minimize</string>
     <string name="add_to_queue">Add to Queue</string>
     <string name="queue_count">%d in queue</string>

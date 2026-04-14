@@ -99,6 +99,8 @@
     <!-- Errors -->
     <string name="retry">إعادة المحاولة</string>
     <string name="cancel">إلغاء</string>
+    <string name="cancel_all">إلغاء الكل</string>
+    <string name="skip">تخطي</string>
     <string name="minimize">تصغير</string>
     <string name="add_to_queue">أضف للقائمة</string>
     <string name="queue_count">%d في الانتظار</string>

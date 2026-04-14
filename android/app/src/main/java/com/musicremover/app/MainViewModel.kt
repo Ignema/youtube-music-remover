@@ -663,8 +663,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         process()
     }
 
-    /** Cancel the current processing */
+    /** Cancel current item — processes next in queue if any */
     fun cancelProcessing() {
+        pollingJob?.cancel()
+        pollingJob = null
+        activeJobMeta = null
+        prefs.edit().remove("active_job_id").apply()
+        ProcessingService.stop(getApplication())
+        notif.dismiss()
+        if (_ui.value.queue.isNotEmpty()) {
+            _ui.value = _ui.value.copy(progress = 0, statusText = "")
+            processNextInQueue()
+        } else {
+            prefs.edit().remove("queue").apply()
+            _ui.value = _ui.value.copy(state = UiState.Idle, progress = 0, statusText = "", processingMinimized = false, queue = emptyList())
+        }
+    }
+
+    /** Cancel current item and clear entire queue */
+    fun cancelAll() {
         pollingJob?.cancel()
         pollingJob = null
         activeJobMeta = null
