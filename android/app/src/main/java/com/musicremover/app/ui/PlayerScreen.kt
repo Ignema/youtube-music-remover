@@ -149,12 +149,11 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
             .background(MaterialTheme.colorScheme.surface),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Video area
+            // Video area — no bottom corners (bottom card overlaps)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
                     .background(Color.Black)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
@@ -167,21 +166,6 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                // Ambient background — gradient from surface to black
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.surfaceContainerHighest,
-                                    Color.Black,
-                                    MaterialTheme.colorScheme.surfaceContainerHighest,
-                                ),
-                            ),
-                        ),
-                )
-
                 // Main video
                 AndroidView(
                     factory = { ctx ->
@@ -260,13 +244,15 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                 }
             }
 
-            // Bottom panel
+            // Bottom panel — overlaps video slightly
             Card(
                 shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { translationY = -24.dp.toPx() },
             ) {
                 Column(
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
