@@ -994,6 +994,8 @@ private fun DoneContent(ui: MainUiState, vm: MainViewModel, context: android.con
 
 @Composable
 private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay: (String, String) -> Unit) {
+    var filterText by remember { mutableStateOf("") }
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -1018,13 +1020,50 @@ private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay
             }
         }
 
-        Spacer(Modifier.height(10.dp))
+        if (history.size > 3) {
+            OutlinedTextField(
+                value = filterText,
+                onValueChange = { filterText = it },
+                placeholder = { Text(stringResource(R.string.filter_history), style = MaterialTheme.typography.bodySmall) },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                textStyle = MaterialTheme.typography.bodySmall,
+                trailingIcon = {
+                    if (filterText.isNotEmpty()) {
+                        IconButton(onClick = { filterText = "" }) {
+                            Icon(Icons.Outlined.Close, "Clear", Modifier.size(16.dp))
+                        }
+                    }
+                },
+            )
+            Spacer(Modifier.height(8.dp))
+        }
 
-        history.forEach { item ->
+        val filtered = if (filterText.isBlank()) history else history.filter {
+            it.filename.contains(filterText, ignoreCase = true) ||
+            it.model.contains(filterText, ignoreCase = true) ||
+            it.url.contains(filterText, ignoreCase = true) ||
+            (it.ytTitle ?: "").contains(filterText, ignoreCase = true) ||
+            (it.ytChannel ?: "").contains(filterText, ignoreCase = true)
+        }
+
+        Spacer(Modifier.height(2.dp))
+
+        filtered.forEach { item ->
             key(item.jobId) {
                 HistoryCard(item, vm, onPlay)
                 Spacer(Modifier.height(8.dp))
             }
+        }
+
+        if (filtered.isEmpty() && filterText.isNotBlank()) {
+            Text(
+                stringResource(R.string.no_results),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.padding(vertical = 16.dp),
+            )
         }
     }
 }

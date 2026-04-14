@@ -127,6 +127,8 @@
     <string name="video_info_unavailable">ما قدرنا نجيب معلومات الفيديو — يمكن السيرفر مطفي</string>
     <string name="remove_from_history">حذف من السجل</string>
     <string name="view_original">عرض الأصلي ↗</string>
+    <string name="filter_history">بحث…</string>
+    <string name="no_results">ما لقينا شي</string>
 
     <!-- Help -->
     <string name="how_to_use">طريقة الاستخدام</string>

@@ -131,6 +131,8 @@
     <string name="video_info_unavailable">Couldn\'t load video info — server might be offline</string>
     <string name="remove_from_history">Remove from History</string>
     <string name="view_original">View original ↗</string>
+    <string name="filter_history">Filter…</string>
+    <string name="no_results">No matches found</string>
 
     <!-- Help -->
     <string name="how_to_use">How to Use</string>
