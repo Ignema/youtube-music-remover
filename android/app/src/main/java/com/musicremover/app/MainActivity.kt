@@ -1,5 +1,6 @@
 package com.musicremover.app
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -40,6 +41,7 @@ class MainActivity : AppCompatActivity() {
         handleShareIntent(intent)
         handlePlayIntent(intent)
         handleShareAction(intent)
+        handleWidgetPaste(intent)
         setContent {
             val ui by vm.ui.collectAsState()
             MusicRemoverTheme(
@@ -128,6 +130,7 @@ class MainActivity : AppCompatActivity() {
         handleShareIntent(intent)
         handlePlayIntent(intent)
         handleShareAction(intent)
+        handleWidgetPaste(intent)
     }
 
     private fun handleShareIntent(intent: Intent?) {
@@ -151,5 +154,15 @@ class MainActivity : AppCompatActivity() {
         val url = intent?.getStringExtra("share_url") ?: return
         val filename = intent.getStringExtra("share_filename") ?: "result"
         vm.shareByJobUrl(this, url, filename)
+    }
+
+    private fun handleWidgetPaste(intent: Intent?) {
+        if (intent?.action != MuremWidget.ACTION_PASTE_PROCESS) return
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        val clip = clipboard.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
+        if (clip.isNotEmpty()) {
+            vm.onUrlChange(clip)
+            vm.process()
+        }
     }
 }
