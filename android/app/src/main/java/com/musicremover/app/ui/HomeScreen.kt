@@ -332,9 +332,9 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
             pageCount = { 3 },
         )
         // Sync pager with ViewModel
-        androidx.compose.runtime.LaunchedEffect(pagerState.currentPage) {
-            if (pagerState.currentPage != ui.inputTab) {
-                vm.setInputTab(pagerState.currentPage)
+        androidx.compose.runtime.LaunchedEffect(pagerState.settledPage) {
+            if (pagerState.settledPage != ui.inputTab) {
+                vm.setInputTab(pagerState.settledPage)
             }
         }
         androidx.compose.runtime.LaunchedEffect(ui.inputTab) {
@@ -347,6 +347,7 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
             state = pagerState,
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.Top,
+            pageSpacing = 16.dp,
         ) { page ->
             Column(modifier = Modifier.fillMaxWidth()) {
                 when (page) {
@@ -357,21 +358,30 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
             }
         }
 
-        // Dot indicator
-        Spacer(Modifier.height(8.dp))
+        // Animated dot indicator
+        Spacer(Modifier.height(10.dp))
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             modifier = Modifier.align(Alignment.CenterHorizontally),
         ) {
+            val pageOffset = pagerState.currentPage + pagerState.currentPageOffsetFraction
             repeat(3) { i ->
+                val distance = kotlin.math.abs(pageOffset - i).coerceIn(0f, 1f)
+                val dotSize by animateFloatAsState(
+                    targetValue = 8f - (distance * 2f),
+                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                    label = "dotSize$i",
+                )
+                val dotAlpha by animateFloatAsState(
+                    targetValue = 1f - (distance * 0.7f),
+                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                    label = "dotAlpha$i",
+                )
                 Box(
                     modifier = Modifier
-                        .size(if (i == pagerState.currentPage) 8.dp else 6.dp)
+                        .size(dotSize.dp)
                         .clip(CircleShape)
-                        .background(
-                            if (i == pagerState.currentPage) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                        ),
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = dotAlpha)),
                 )
             }
         }
