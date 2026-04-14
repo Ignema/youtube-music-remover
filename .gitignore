@@ -1,4 +1,5 @@
 output/
+jobs.db
 .venv/
 
 # Python package metadata
