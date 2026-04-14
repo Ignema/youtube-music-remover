@@ -180,13 +180,13 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
                     2 -> stringResource(R.string.tab_batch)
                     else -> stringResource(R.string.tab_url)
                 }
-                androidx.compose.material3.SmallFloatingActionButton(
+                androidx.compose.material3.FloatingActionButton(
                     onClick = { vm.setInputTab((ui.inputTab + 1) % 3) },
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(modeIcon, modeLabel, Modifier.size(18.dp))
-                        Text(modeLabel, style = MaterialTheme.typography.labelSmall, fontSize = 9.sp)
+                        Icon(modeIcon, modeLabel, Modifier.size(24.dp))
+                        Text(modeLabel, style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
