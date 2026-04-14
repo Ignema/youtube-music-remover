@@ -92,6 +92,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import com.musicremover.app.MainUiState
 import com.musicremover.app.MainViewModel
@@ -501,25 +502,24 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                 )
             }
             // Mode switcher — tap to cycle, long-press for picker
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .combinedClickable(
-                            onClick = { vm.setInputTab((ui.inputTab + 1) % 3) },
-                            onLongClick = {
-                                vm.hapticTick()
-                                showModeDialog = true
-                            },
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(modeIcon, modeLabel, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .combinedClickable(
+                        onClick = { vm.setInputTab((ui.inputTab + 1) % 3) },
+                        onLongClick = {
+                            vm.hapticTick()
+                            showModeDialog = true
+                        },
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(modeIcon, modeLabel, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(modeLabel, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 9.sp)
                 }
-                Spacer(Modifier.height(2.dp))
-                Text(modeLabel, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
             }
         }
 
