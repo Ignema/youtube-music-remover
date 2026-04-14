@@ -483,8 +483,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
 
-        if (fileUri != null) processFile(fileUri)
-        else if (url.isNotEmpty()) processUrl(url)
+        if (fileUri != null) {
+            processFile(fileUri)
+            clearFile()
+        } else if (url.isNotEmpty()) {
+            processUrl(url)
+            _ui.value = _ui.value.copy(url = "", urlPreview = null)
+        }
         hapticTick()
     }
 
