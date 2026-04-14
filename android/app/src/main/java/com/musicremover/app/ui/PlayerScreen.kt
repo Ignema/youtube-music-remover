@@ -171,7 +171,7 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                 }
 
                 // Tap overlay — play/pause icon
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = showOverlay && !isBuffering,
                     enter = fadeIn(tween(200)),
                     exit = fadeOut(tween(400)),
