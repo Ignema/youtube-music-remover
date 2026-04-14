@@ -613,7 +613,14 @@ def get_status(job_id: str):
     job = db_get(job_id)
     if not job:
         raise HTTPException(404, "Job not found")
-    return job
+    result = dict(job)
+    # Parse metadata JSON string into object for the response
+    if result.get("metadata"):
+        try:
+            result["metadata"] = json.loads(result["metadata"])
+        except Exception:
+            pass
+    return result
 
 
 @app.post("/api/cancel/{job_id}")

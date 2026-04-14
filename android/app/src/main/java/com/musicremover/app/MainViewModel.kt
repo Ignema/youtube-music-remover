@@ -809,12 +809,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         // Cache result on-device
                         cache.cacheResult(serverUrl, jobId, filename)
                         val meta = activeJobMeta
-                        // Parse YouTube metadata from server (yt-dlp data)
-                        val ytMeta = status.metadata?.let { raw ->
-                            try {
-                                gson.fromJson(raw, VideoInfo::class.java)
-                            } catch (_: Exception) { null }
-                        }
+                        // Parse metadata from server (yt-dlp data)
+                        val ytMeta = status.metadata
                         historyStore.add(HistoryItem(
                             filename = filename,
                             url = meta?.url ?: "",
