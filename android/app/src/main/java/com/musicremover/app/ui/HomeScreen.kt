@@ -181,7 +181,6 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
                     isRefreshing = false
                 }
             },
-            isEnabled = scrollState.value == 0,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
