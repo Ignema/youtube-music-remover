@@ -829,6 +829,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun showTransientError(msg: String) {
         snackJob?.cancel()
         _ui.value = _ui.value.copy(snackError = msg)
+        // Also show a Toast so it's visible even when scrolled
+        try {
+            val app = getApplication<Application>()
+            kotlinx.coroutines.MainScope().launch {
+                android.widget.Toast.makeText(app, msg, android.widget.Toast.LENGTH_SHORT).show()
+            }
+        } catch (_: Exception) {}
         snackJob = bgScope.launch {
             delay(4000)
             _ui.value = _ui.value.copy(snackError = null)
@@ -1101,6 +1108,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val chooser = android.content.Intent.createChooser(intent, "Share")
                 chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(chooser)
+                dismissInfoSheet()
             } catch (e: Exception) {
                 showTransientError("Share failed: ${e.message}")
             }

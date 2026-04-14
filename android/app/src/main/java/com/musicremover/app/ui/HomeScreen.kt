@@ -1694,7 +1694,6 @@ private fun SheetActions(item: HistoryItem, vm: MainViewModel, context: android.
         FilledTonalButton(
             onClick = {
                 vm.shareByJobId(context, item.jobId, item.filename)
-                vm.dismissInfoSheet()
             },
             enabled = !ui.sharing,
             shape = RoundedCornerShape(12.dp),
