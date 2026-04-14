@@ -142,6 +142,10 @@
     <string name="view_original">عرض الأصلي ↗</string>
     <string name="filter_history">بحث…</string>
     <string name="no_results">ما لقينا شي</string>
+    <string name="expires_in">باقي %d أيام</string>
+    <string name="expired">منتهي</string>
+    <string name="server_expiry_note">النتيجة متاحة على السيرفر لمدة %d أيام. احفظها عندك.</string>
+    <string name="server_expired_note">يمكن النتيجة ما عادت متاحة على السيرفر. احفظ نسخة عندك.</string>
 
     <!-- Help -->
     <string name="how_to_use">طريقة الاستخدام</string>

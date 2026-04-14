@@ -63,7 +63,7 @@ MODELS = [
     "model_bs_roformer_ep_317_sdr_12.9755.ckpt",
 ]
 BITRATES = ["128k", "192k", "320k"]
-JOB_TTL_HOURS = 24  # Auto-cleanup jobs older than this
+JOB_TTL_HOURS = 168  # Auto-cleanup jobs older than 7 days
 
 # --- SQLite Job Store ---
 

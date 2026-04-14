@@ -146,6 +146,10 @@
     <string name="view_original">View original ↗</string>
     <string name="filter_history">Filter…</string>
     <string name="no_results">No matches found</string>
+    <string name="expires_in">%d days left</string>
+    <string name="expired">Expired</string>
+    <string name="server_expiry_note">Result available on server for %d more days. Save to keep it.</string>
+    <string name="server_expired_note">Result may no longer be available on server. Save a copy to keep it.</string>
 
     <!-- Help -->
     <string name="how_to_use">How to Use</string>

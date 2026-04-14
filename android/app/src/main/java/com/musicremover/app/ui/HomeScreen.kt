@@ -1135,6 +1135,25 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     InfoChip(dateStr)
                     InfoChip(item.model.removeSuffix(".onnx").removeSuffix(".ckpt"))
+                    val ageMs = System.currentTimeMillis() - item.timestamp
+                    val ageDays = ageMs / (1000 * 60 * 60 * 24)
+                    if (ageDays >= 5) {
+                        val daysLeft = (7 - ageDays).coerceAtLeast(0)
+                        Card(
+                            shape = RoundedCornerShape(8.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f),
+                            ),
+                        ) {
+                            Text(
+                                if (daysLeft <= 0) stringResource(R.string.expired)
+                                else stringResource(R.string.expires_in, daysLeft),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            )
+                        }
+                    }
                 }
             }
             IconButton(onClick = {
@@ -1416,6 +1435,18 @@ private fun ItemInfoSheet(item: HistoryItem, ui: MainUiState) {
                 },
             )
         }
+
+        // Expiry notice
+        val ageMs = System.currentTimeMillis() - item.timestamp
+        val ageDays = ageMs / (1000 * 60 * 60 * 24)
+        val daysLeft = (7 - ageDays).coerceAtLeast(0)
+        Spacer(Modifier.height(8.dp))
+        Text(
+            if (daysLeft <= 0) stringResource(R.string.server_expired_note)
+            else stringResource(R.string.server_expiry_note, daysLeft),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.outline,
+        )
     }
 }
 
