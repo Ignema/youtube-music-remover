@@ -291,29 +291,26 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Input mode chips
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        // Input mode selector
+        val tabLabels = listOf(
+            stringResource(R.string.tab_url),
+            stringResource(R.string.tab_file),
+            stringResource(R.string.tab_batch),
+        )
+        androidx.compose.material3.SingleChoiceSegmentedButtonRow(
             modifier = Modifier.fillMaxWidth(),
         ) {
-            androidx.compose.material3.FilterChip(
-                selected = ui.inputTab == 0,
-                onClick = { vm.setInputTab(0) },
-                label = { Text(stringResource(R.string.tab_url)) },
-                shape = RoundedCornerShape(12.dp),
-            )
-            androidx.compose.material3.FilterChip(
-                selected = ui.inputTab == 1,
-                onClick = { vm.setInputTab(1) },
-                label = { Text(stringResource(R.string.tab_file)) },
-                shape = RoundedCornerShape(12.dp),
-            )
-            androidx.compose.material3.FilterChip(
-                selected = ui.inputTab == 2,
-                onClick = { vm.setInputTab(2) },
-                label = { Text(stringResource(R.string.tab_batch)) },
-                shape = RoundedCornerShape(12.dp),
-            )
+            tabLabels.forEachIndexed { index, label ->
+                androidx.compose.material3.SegmentedButton(
+                    selected = ui.inputTab == index,
+                    onClick = { vm.setInputTab(index) },
+                    shape = androidx.compose.material3.SegmentedButtonDefaults.itemShape(
+                        index = index, count = tabLabels.size,
+                    ),
+                ) {
+                    Text(label)
+                }
+            }
         }
 
         Spacer(Modifier.height(16.dp))
