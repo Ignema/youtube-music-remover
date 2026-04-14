@@ -943,9 +943,7 @@ private fun DoneContent(ui: MainUiState, vm: MainViewModel, context: android.con
 private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay: (String, String) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { vm.refresh() },
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -958,11 +956,13 @@ private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.recent), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Icon(
-                Icons.Outlined.Refresh, stringResource(R.string.hold_for_info),
-                tint = MaterialTheme.colorScheme.outline,
-                modifier = Modifier.size(18.dp),
-            )
+            IconButton(onClick = { vm.refresh() }) {
+                Icon(
+                    Icons.Outlined.Refresh, "Refresh",
+                    tint = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
         }
 
         Spacer(Modifier.height(10.dp))
@@ -1030,7 +1030,7 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                 if (hasUrl) vm.onUrlChange(item.url)
                 else vm.reprocessFromHistory(item)
             }) {
-                Icon(Icons.Outlined.Refresh, "Reprocess", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.outline)
+                Icon(Icons.Outlined.Redo, "Reprocess", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.outline)
             }
         }
     }
