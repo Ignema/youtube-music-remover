@@ -86,6 +86,7 @@ def init_db():
                 error TEXT,
                 output_path TEXT,
                 filename TEXT,
+                metadata TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -95,7 +96,7 @@ def init_db():
 
 def db_set(job_id: str, **kwargs):
     """Update job fields. Keys are hardcoded by callers — never from user input."""
-    allowed_keys = {"status", "progress", "error", "output_path", "filename"}
+    allowed_keys = {"status", "progress", "error", "output_path", "filename", "metadata"}
     for k in kwargs:
         if k not in allowed_keys:
             raise ValueError(f"Invalid job field: {k}")
@@ -414,6 +415,26 @@ def process_video(job_id: str, url: str, model: str, batch_size: int,
 
         ok, title, _ = run_cmd("yt-dlp", "--print", "title", yt_url)
         title = title.strip() if ok and title else video_id
+
+        # Fetch full metadata and store it
+        ok_meta, meta_json, _ = run_cmd("yt-dlp", "--dump-json", "--no-download", yt_url, timeout=15)
+        yt_meta = {}
+        if ok_meta and meta_json:
+            try:
+                data = json.loads(meta_json)
+                title = data.get("title", title)
+                yt_meta = {
+                    "title": data.get("title", ""),
+                    "channel": data.get("channel", data.get("uploader", "")),
+                    "duration": data.get("duration", 0),
+                    "thumbnail": data.get("thumbnail", ""),
+                    "view_count": data.get("view_count", 0),
+                    "upload_date": data.get("upload_date", ""),
+                    "description": (data.get("description", "") or "")[:300],
+                }
+                db_set(job_id, metadata=json.dumps(yt_meta))
+            except Exception:
+                pass
 
         separate_and_merge(job_id, video_file, audio_files[0], model, batch_size,
                            title, temp_dir, output_dir, audio_only, bitrate)

@@ -194,13 +194,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     // --- Basic state ---
     fun onUrlChange(url: String) {
-        _ui.value = _ui.value.copy(url = url, urlPreview = null, loadingPreview = false)
-        previewJob?.cancel()
-        // Auto-fetch preview for YouTube URLs
-        if (url.length > 10 && (url.contains("youtu") || url.contains("youtube"))) {
-            fetchUrlPreview(url)
-        } else if (url.matches(Regex("^[a-zA-Z0-9_-]{11}$"))) {
-            fetchUrlPreview(url)
+        val videoId = extractVideoId(url)
+        if (videoId != null) {
+            _ui.value = _ui.value.copy(url = url)
+            fetchUrlPreview(videoId)
+        } else {
+            previewJob?.cancel()
+            _ui.value = _ui.value.copy(url = url, urlPreview = null, loadingPreview = false)
         }
     }
 
@@ -290,50 +290,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // --- URL preview ---
     private var previewJob: kotlinx.coroutines.Job? = null
 
-    private fun fetchUrlPreview(url: String) {
+    private fun fetchUrlPreview(videoId: String) {
         previewJob?.cancel()
+        // Show thumbnail immediately (static CDN image, no API)
+        val thumbnail = "https://img.youtube.com/vi/$videoId/hqdefault.jpg"
+        _ui.value = _ui.value.copy(
+            urlPreview = VideoInfo(thumbnail = thumbnail),
+            loadingPreview = true,
+        )
+        // Try own server for title/channel in background
         previewJob = bgScope.launch {
-            delay(500) // Debounce
-            _ui.value = _ui.value.copy(loadingPreview = true)
+            delay(300)
             try {
-                val info = fetchYouTubeInfoDirect(url)
-                if (info != null && _ui.value.url.isNotEmpty()) {
-                    _ui.value = _ui.value.copy(urlPreview = info, loadingPreview = false)
-                } else {
-                    _ui.value = _ui.value.copy(loadingPreview = false)
+                val info = kotlinx.coroutines.withTimeout(8_000) {
+                    api().info(_ui.value.url)
+                }
+                if (_ui.value.url.isNotEmpty()) {
+                    _ui.value = _ui.value.copy(
+                        urlPreview = info.copy(thumbnail = thumbnail),
+                        loadingPreview = false,
+                    )
                 }
             } catch (_: Exception) {
                 _ui.value = _ui.value.copy(loadingPreview = false)
             }
         }
-    }
-
-    /**
-     * Fetch YouTube video info directly via oEmbed + thumbnail URL.
-     * No server dependency — works even when Termux is busy.
-     */
-    private fun fetchYouTubeInfoDirect(url: String): VideoInfo? {
-        val videoId = extractVideoId(url) ?: return null
-        val ytUrl = "https://www.youtube.com/watch?v=$videoId"
-        val oembedUrl = "https://www.youtube.com/oembed?url=$ytUrl&format=json"
-
-        val client = okhttp3.OkHttpClient.Builder()
-            .connectTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
-            .readTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
-            .build()
-
-        val request = okhttp3.Request.Builder().url(oembedUrl).build()
-        val response = client.newCall(request).execute()
-        if (!response.isSuccessful) return null
-
-        val body = response.body?.string() ?: return null
-        val data = com.google.gson.JsonParser.parseString(body).asJsonObject
-
-        return VideoInfo(
-            title = data.get("title")?.asString ?: "",
-            channel = data.get("author_name")?.asString ?: "",
-            thumbnail = "https://img.youtube.com/vi/$videoId/hqdefault.jpg",
-        )
     }
 
     private fun extractVideoId(input: String): String? {
@@ -476,14 +457,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (needsFetch) {
             bgScope.launch {
                 try {
-                    val directInfo = fetchYouTubeInfoDirect(item.url)
-                    if (directInfo != null) {
-                        _ui.value = _ui.value.copy(videoInfo = directInfo, loadingInfo = false)
-                    } else {
-                        _ui.value = _ui.value.copy(loadingInfo = false)
-                    }
+                    val info = kotlinx.coroutines.withTimeout(10_000) { api().info(item.url) }
+                    _ui.value = _ui.value.copy(videoInfo = info, loadingInfo = false)
                 } catch (_: Exception) {
-                    _ui.value = _ui.value.copy(loadingInfo = false, videoInfoError = true)
+                    // Show thumbnail-only fallback
+                    val videoId = extractVideoId(item.url)
+                    if (videoId != null) {
+                        _ui.value = _ui.value.copy(
+                            videoInfo = VideoInfo(thumbnail = "https://img.youtube.com/vi/$videoId/hqdefault.jpg"),
+                            loadingInfo = false,
+                        )
+                    } else {
+                        _ui.value = _ui.value.copy(loadingInfo = false, videoInfoError = true)
+                    }
                 }
             }
         } else if (isYt && cachedInfo != null && cachedInfo.duration == 0) {
@@ -818,34 +804,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun processUrl(url: String) {
-        val preview = _ui.value.urlPreview
         activeJobMeta = JobMeta(
             url = url, model = _ui.value.selectedModel,
             isFileUpload = false,
             sourceFileName = null, sourceFileSize = null,
-            ytTitle = preview?.title,
-            ytChannel = preview?.channel,
-            ytThumbnail = preview?.thumbnail,
-            ytDuration = preview?.duration ?: 0,
-            ytViewCount = preview?.view_count ?: 0,
-            ytUploadDate = preview?.upload_date,
-            ytDescription = preview?.description,
         )
         pollingJob = bgScope.launch {
-            // Try to enrich metadata with server API in background (for views, duration, etc.)
-            if (preview != null && preview.duration == 0) {
-                launch {
-                    try {
-                        val rich = kotlinx.coroutines.withTimeout(15_000) { api().info(url) }
-                        activeJobMeta = activeJobMeta?.copy(
-                            ytDuration = rich.duration,
-                            ytViewCount = rich.view_count,
-                            ytUploadDate = rich.upload_date,
-                            ytDescription = rich.description,
-                        )
-                    } catch (_: Exception) { /* keep oEmbed data */ }
-                }
-            }
             _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.starting))
             ProcessingService.start(getApplication(), str(R.string.starting), 0)
             try {
@@ -901,6 +865,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         // Cache result on-device
                         cache.cacheResult(serverUrl, jobId, filename)
                         val meta = activeJobMeta
+                        // Parse YouTube metadata from server (yt-dlp data)
+                        val ytMeta = status.metadata?.let { raw ->
+                            try {
+                                gson.fromJson(raw, VideoInfo::class.java)
+                            } catch (_: Exception) { null }
+                        }
                         historyStore.add(HistoryItem(
                             filename = filename,
                             url = meta?.url ?: "",
@@ -910,13 +880,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             sourceFileName = meta?.sourceFileName,
                             sourceFileSize = meta?.sourceFileSize,
                             sourceFilePath = meta?.sourceFilePath,
-                            ytTitle = meta?.ytTitle,
-                            ytChannel = meta?.ytChannel,
-                            ytThumbnail = meta?.ytThumbnail,
-                            ytDuration = meta?.ytDuration ?: 0,
-                            ytViewCount = meta?.ytViewCount ?: 0,
-                            ytUploadDate = meta?.ytUploadDate,
-                            ytDescription = meta?.ytDescription,
+                            ytTitle = ytMeta?.title ?: meta?.ytTitle,
+                            ytChannel = ytMeta?.channel ?: meta?.ytChannel,
+                            ytThumbnail = ytMeta?.thumbnail ?: meta?.ytThumbnail,
+                            ytDuration = ytMeta?.duration ?: meta?.ytDuration ?: 0,
+                            ytViewCount = ytMeta?.view_count ?: meta?.ytViewCount ?: 0,
+                            ytUploadDate = ytMeta?.upload_date ?: meta?.ytUploadDate,
+                            ytDescription = ytMeta?.description ?: meta?.ytDescription,
                         ))
                         _ui.value = _ui.value.copy(history = historyStore.getAll())
                         prefs.edit().remove("active_job_id").apply()

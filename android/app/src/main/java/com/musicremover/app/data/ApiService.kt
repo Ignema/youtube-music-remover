@@ -24,6 +24,7 @@ data class StatusResponse(
     val progress: Int = 0,
     val error: String? = null,
     val filename: String? = null,
+    val metadata: String? = null,
 )
 
 data class ModelsResponse(val models: List<String>)
