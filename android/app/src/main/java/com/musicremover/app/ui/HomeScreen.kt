@@ -291,46 +291,11 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Tab content first (URL is default, most common)
+        // Tab content (URL is default)
         when (ui.inputTab) {
             0 -> UrlInputTab(ui, vm)
             1 -> FileInputTab(ui, vm, filePicker)
             2 -> BatchInputTab(ui, vm, urlFilePicker)
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        // Input mode selector — in thumb zone, below content
-        val tabLabels = listOf(
-            stringResource(R.string.tab_url),
-            stringResource(R.string.tab_file),
-            stringResource(R.string.tab_batch),
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(0.dp),
-        ) {
-            tabLabels.forEachIndexed { index, label ->
-                val isSelected = ui.inputTab == index
-                val shape = when (index) {
-                    0 -> RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)
-                    tabLabels.lastIndex -> RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp)
-                    else -> RoundedCornerShape(0.dp)
-                }
-                if (isSelected) {
-                    Button(
-                        onClick = {},
-                        shape = shape,
-                        modifier = Modifier.weight(1f).height(48.dp),
-                    ) { Text(label) }
-                } else {
-                    OutlinedButton(
-                        onClick = { vm.setInputTab(index) },
-                        shape = shape,
-                        modifier = Modifier.weight(1f).height(48.dp),
-                    ) { Text(label) }
-                }
-            }
         }
 
         Spacer(Modifier.height(16.dp))
@@ -504,20 +469,38 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
             }
         }
 
-        // CTA
+        // CTA row with mode switcher
         val isQueueMode = ui.state == UiState.Processing && ui.processingMinimized
-        Button(
-            onClick = vm::process,
-            shape = RoundedCornerShape(16.dp),
+        val modeIcon = when (ui.inputTab) {
+            1 -> Icons.Outlined.VideoFile
+            2 -> Icons.Outlined.ContentPaste
+            else -> Icons.Outlined.MusicOff
+        }
+        Row(
             modifier = Modifier.fillMaxWidth().height(56.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Icon(Icons.Outlined.MusicOff, null, Modifier.size(20.dp))
-            Spacer(Modifier.width(10.dp))
-            Text(
-                if (isQueueMode) stringResource(R.string.add_to_queue)
-                else stringResource(R.string.remove_music),
-                style = MaterialTheme.typography.titleMedium,
-            )
+            // Mode switcher — cycles through tabs
+            OutlinedButton(
+                onClick = { vm.setInputTab((ui.inputTab + 1) % 3) },
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.size(56.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+            ) {
+                Icon(modeIcon, stringResource(R.string.tab_url), Modifier.size(22.dp))
+            }
+            // Main CTA
+            Button(
+                onClick = vm::process,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.weight(1f).height(56.dp),
+            ) {
+                Text(
+                    if (isQueueMode) stringResource(R.string.add_to_queue)
+                    else stringResource(R.string.remove_music),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
         }
     }
 }
