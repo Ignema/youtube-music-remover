@@ -50,6 +50,7 @@ import androidx.compose.material.icons.outlined.Merge
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.SaveAlt
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Tune
@@ -995,21 +996,55 @@ private fun DoneContent(ui: MainUiState, vm: MainViewModel, context: android.con
 @Composable
 private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay: (String, String) -> Unit) {
     var filterText by remember { mutableStateOf("") }
+    var searchExpanded by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Outlined.History, null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp),
+            if (searchExpanded) {
+                // Expanded search field
+                OutlinedTextField(
+                    value = filterText,
+                    onValueChange = { filterText = it },
+                    placeholder = { Text(stringResource(R.string.filter_history), style = MaterialTheme.typography.bodySmall) },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    textStyle = MaterialTheme.typography.bodySmall,
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            filterText = ""
+                            searchExpanded = false
+                        }) {
+                            Icon(Icons.Outlined.Close, "Close", Modifier.size(16.dp))
+                        }
+                    },
                 )
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.recent), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                // Normal header
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Icon(
+                        Icons.Outlined.History, null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.recent), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (history.size > 3) {
+                    IconButton(onClick = { searchExpanded = true }) {
+                        Icon(
+                            Icons.Outlined.Search, "Search",
+                            tint = MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                }
             }
             IconButton(onClick = { vm.refresh() }) {
                 Icon(
@@ -1020,26 +1055,6 @@ private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay
             }
         }
 
-        if (history.size > 3) {
-            OutlinedTextField(
-                value = filterText,
-                onValueChange = { filterText = it },
-                placeholder = { Text(stringResource(R.string.filter_history), style = MaterialTheme.typography.bodySmall) },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                textStyle = MaterialTheme.typography.bodySmall,
-                trailingIcon = {
-                    if (filterText.isNotEmpty()) {
-                        IconButton(onClick = { filterText = "" }) {
-                            Icon(Icons.Outlined.Close, "Clear", Modifier.size(16.dp))
-                        }
-                    }
-                },
-            )
-            Spacer(Modifier.height(8.dp))
-        }
-
         val filtered = if (filterText.isBlank()) history else history.filter {
             it.filename.contains(filterText, ignoreCase = true) ||
             it.model.contains(filterText, ignoreCase = true) ||
@@ -1048,7 +1063,7 @@ private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay
             (it.ytChannel ?: "").contains(filterText, ignoreCase = true)
         }
 
-        Spacer(Modifier.height(2.dp))
+        Spacer(Modifier.height(10.dp))
 
         filtered.forEach { item ->
             key(item.jobId) {
