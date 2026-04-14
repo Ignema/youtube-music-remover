@@ -436,6 +436,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Pending play from notification action
     var pendingPlayUrl: String? = null
     var pendingPlayTitle: String? = null
+    var pendingNavigation: String? = null
 
     fun dismissInfoSheet() {
         shareJob?.cancel()

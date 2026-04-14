@@ -73,6 +73,14 @@ class MainActivity : AppCompatActivity() {
                                 navController.navigate("player/${java.net.URLEncoder.encode(url, "UTF-8")}/${java.net.URLEncoder.encode(title, "UTF-8")}")
                             }
                         }
+                        // Handle pending navigation from widget
+                        androidx.compose.runtime.LaunchedEffect(vm.pendingNavigation) {
+                            val nav = vm.pendingNavigation
+                            if (nav != null) {
+                                vm.pendingNavigation = null
+                                navController.navigate(nav)
+                            }
+                        }
                         HomeScreen(
                             vm = vm,
                             onSettingsClick = { navController.navigate("settings") },
@@ -157,12 +165,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleWidgetPaste(intent: Intent?) {
-        if (intent?.action != MuremWidget.ACTION_PASTE_PROCESS) return
-        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-        val clip = clipboard.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
-        if (clip.isNotEmpty()) {
-            vm.onUrlChange(clip)
-            vm.process()
+        if (intent?.action == MuremWidget.ACTION_PASTE_PROCESS) {
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            val clip = clipboard.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
+            if (clip.isNotEmpty()) {
+                vm.onUrlChange(clip)
+                vm.process()
+            }
+        } else if (intent?.action == MuremWidget.ACTION_FILE) {
+            vm.setInputTab(1)
+        } else if (intent?.action == MuremWidget.ACTION_BATCH) {
+            vm.setInputTab(2)
+        } else if (intent?.action == MuremWidget.ACTION_SETTINGS) {
+            vm.pendingNavigation = "settings"
         }
     }
 }

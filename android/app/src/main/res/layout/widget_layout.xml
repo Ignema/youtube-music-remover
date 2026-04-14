@@ -2,47 +2,72 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="12dp"
+    android:orientation="horizontal"
+    android:padding="8dp"
     android:background="@drawable/widget_background"
-    android:gravity="center">
+    android:gravity="center_vertical">
 
-    <TextView
-        android:id="@+id/widget_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/app_name"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:textColor="?android:attr/textColorPrimary" />
+    <!-- Logo -->
+    <ImageView
+        android:id="@+id/widget_logo"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:src="@drawable/ic_launcher_foreground"
+        android:scaleType="centerInside"
+        android:contentDescription="@string/app_name" />
 
+    <!-- Buttons row -->
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
         android:orientation="horizontal"
-        android:layout_marginTop="8dp"
+        android:layout_marginStart="4dp"
         android:gravity="center">
 
-        <Button
+        <ImageButton
             android:id="@+id/widget_paste_process"
             android:layout_width="0dp"
-            android:layout_height="44dp"
+            android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="@string/widget_paste_process"
-            android:textSize="12sp"
-            android:textAllCaps="false" />
+            android:src="@android:drawable/ic_menu_edit"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:scaleType="centerInside"
+            android:contentDescription="@string/widget_paste_process"
+            android:tooltipText="@string/widget_paste_process" />
 
-        <Button
-            android:id="@+id/widget_open"
+        <ImageButton
+            android:id="@+id/widget_file"
             android:layout_width="0dp"
-            android:layout_height="44dp"
+            android:layout_height="40dp"
             android:layout_weight="1"
-            android:layout_marginStart="6dp"
-            android:text="@string/widget_open"
-            android:textSize="12sp"
-            android:textAllCaps="false"
-            android:backgroundTint="@android:color/transparent"
-            android:textColor="?android:attr/textColorPrimary" />
+            android:src="@android:drawable/ic_menu_upload"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:scaleType="centerInside"
+            android:contentDescription="@string/widget_file"
+            android:tooltipText="@string/widget_file" />
+
+        <ImageButton
+            android:id="@+id/widget_batch"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_menu_sort_by_size"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:scaleType="centerInside"
+            android:contentDescription="@string/widget_batch"
+            android:tooltipText="@string/widget_batch" />
+
+        <ImageButton
+            android:id="@+id/widget_settings"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:src="@android:drawable/ic_menu_preferences"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:scaleType="centerInside"
+            android:contentDescription="@string/settings"
+            android:tooltipText="@string/settings" />
 
     </LinearLayout>
 

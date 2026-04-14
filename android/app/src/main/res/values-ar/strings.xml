@@ -148,7 +148,9 @@
     <string name="server_expired_note">يمكن النتيجة ما عادت متاحة على السيرفر. احفظ نسخة عندك.</string>
     <string name="widget_paste_process">لصق ومعالجة</string>
     <string name="widget_open">فتح Murem</string>
-    <string name="widget_desc">وصول سريع للصق رابط ومعالجته</string>
+    <string name="widget_file">رفع فيديو</string>
+    <string name="widget_batch">دفعة</string>
+    <string name="widget_desc">وصول سريع للصق أو رفع أو معالجة دفعة أو الإعدادات</string>
 
     <!-- Help -->
     <string name="how_to_use">طريقة الاستخدام</string>

@@ -152,7 +152,9 @@
     <string name="server_expired_note">Result may no longer be available on server. Save a copy to keep it.</string>
     <string name="widget_paste_process">Paste \&amp; Process</string>
     <string name="widget_open">Open Murem</string>
-    <string name="widget_desc">Quick access to paste a URL and process it</string>
+    <string name="widget_file">Video Upload</string>
+    <string name="widget_batch">Batch</string>
+    <string name="widget_desc">Quick access to paste, upload, batch process, or open settings</string>
 
     <!-- Help -->
     <string name="how_to_use">How to Use</string>
