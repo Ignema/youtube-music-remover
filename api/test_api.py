@@ -96,5 +96,5 @@ class TestHealthEndpoint:
         assert resp.status_code == 200
         data = resp.json()
         assert "models" in data
-        assert len(data["models"]) == 3
+        assert len(data["models"]) == 5
         assert "bitrates" in data

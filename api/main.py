@@ -27,7 +27,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator
 
-from api.utils import extract_video_id, normalize_url, is_valid_url, run_cmd, YT_ID_RE
+from api.utils import normalize_url, is_valid_url, run_cmd
 
 try:
     from slowapi import Limiter
@@ -93,7 +93,9 @@ def init_db():
             )
         """)
         # Migrate: add columns if missing
-        existing = {row[1] for row in conn.execute("PRAGMA table_info(jobs)").fetchall()}
+        existing = {
+            row[1] for row in conn.execute("PRAGMA table_info(jobs)").fetchall()
+        }
         if "metadata" not in existing:
             conn.execute("ALTER TABLE jobs ADD COLUMN metadata TEXT")
         conn.commit()
@@ -102,7 +104,10 @@ def init_db():
 
 def db_set(job_id: str, **kwargs):
     """Update job fields. Keys are hardcoded by callers — never from user input."""
-    allowed_keys = {"status", "progress", "error", "output_path", "filename", "metadata"}
+    allowed_keys = {
+        "status", "progress", "error",
+        "output_path", "filename", "metadata",
+    }
     for k in kwargs:
         if k not in allowed_keys:
             raise ValueError(f"Invalid job field: {k}")
@@ -247,10 +252,15 @@ async def lifespan(app: FastAPI):
             properties={"version": "2.0.0"},
         )
         zc = Zeroconf()
-        await asyncio.get_event_loop().run_in_executor(None, zc.register_service, zc_info)
+        await asyncio.get_event_loop().run_in_executor(
+            None, zc.register_service, zc_info
+        )
         logger.info(f"mDNS registered: {local_ip}:8000")
     except ImportError:
-        logger.info("Zeroconf not installed — mDNS discovery disabled. pip install zeroconf to enable.")
+        logger.info(
+            "Zeroconf not installed — mDNS disabled. "
+            "pip install zeroconf to enable."
+        )
     except Exception as e:
         logger.warning(f"mDNS registration failed: {type(e).__name__}: {e}")
 
@@ -320,7 +330,8 @@ class ProcessRequest(BaseModel):
     @field_validator("model")
     @classmethod
     def validate_model(cls, v: str) -> str:
-        # Allow known models and any custom model filename (audio-separator validates it)
+        # Allow custom model filenames
+        # (audio-separator validates it)
         if not v or not v.strip():
             raise ValueError("Model name is required")
         return v.strip()
@@ -443,7 +454,11 @@ def separate_and_merge(job_id: str, video_file: Path, audio_file: Path,
     logger.info(f"Job {job_id[:8]} complete: {final_output.name}")
 
     # Generate waveform data in background
-    threading.Thread(target=generate_waveform, args=(job_id, str(final_output)), daemon=True).start()
+    threading.Thread(
+        target=generate_waveform,
+        args=(job_id, str(final_output)),
+        daemon=True,
+    ).start()
 
     return True
 
@@ -557,7 +572,9 @@ def process_video(job_id: str, url: str, model: str, batch_size: int,
 
         audio_files = [
             f for f in temp_dir.iterdir()
-            if f != video_file and f.suffix in (".opus", ".m4a", ".webm", ".mp3", ".wav")
+            if f != video_file and f.suffix in (
+            ".opus", ".m4a", ".webm", ".mp3", ".wav"
+        )
         ]
         if not audio_files:
             # Single muxed file (TikTok, Twitter, etc.) — extract audio
@@ -569,7 +586,10 @@ def process_video(job_id: str, url: str, model: str, batch_size: int,
                 "-y", str(extracted_audio),
             )
             if not ok_ext or not extracted_audio.exists():
-                update_job(job_id, status="error", error=f"Audio extraction failed: {err_ext}")
+                update_job(
+                job_id, status="error",
+                error=f"Audio extraction failed: {err_ext}",
+            )
                 return
             audio_files = [extracted_audio]
 
@@ -640,7 +660,11 @@ async def video_info(request: Request, url: str):
     import asyncio
     loop = asyncio.get_event_loop()
     ok, stdout, err = await loop.run_in_executor(
-        None, lambda: run_cmd("yt-dlp", "--dump-json", "--no-download", dl_url, timeout=15)
+        None,
+        lambda: run_cmd(
+            "yt-dlp", "--dump-json", "--no-download",
+            dl_url, timeout=15,
+        ),
     )
     if not ok:
         raise HTTPException(400, f"Failed to fetch info: {err}")

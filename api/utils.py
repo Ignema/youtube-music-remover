@@ -32,7 +32,7 @@ def extract_video_id(input_str: str) -> str:
 
 def normalize_url(input_str: str) -> str:
     """Normalize input to a URL that yt-dlp can handle.
-    
+
     Accepts: YouTube video IDs, YouTube URLs, or any yt-dlp supported URL.
     """
     input_str = input_str.strip()

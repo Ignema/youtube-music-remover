@@ -28,6 +28,7 @@ class HistoryStore(context: Context) {
     private val prefs = context.getSharedPreferences("history", Context.MODE_PRIVATE)
     private val gson = Gson()
     private val key = "items"
+    private val savedJobIds = mutableSetOf<String>()
 
     fun getAll(): List<HistoryItem> {
         val json = prefs.getString(key, null) ?: return emptyList()
@@ -35,10 +36,16 @@ class HistoryStore(context: Context) {
         return gson.fromJson(json, type)
     }
 
+    @Synchronized
     fun add(item: HistoryItem) {
+        if (item.jobId in savedJobIds) return
         val list = getAll().toMutableList()
+        if (list.any { it.jobId == item.jobId }) {
+            savedJobIds.add(item.jobId)
+            return
+        }
         list.add(0, item)
-        // Keep last 50
+        savedJobIds.add(item.jobId)
         val trimmed = list.take(50)
         prefs.edit().putString(key, gson.toJson(trimmed)).apply()
     }

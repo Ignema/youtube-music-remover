@@ -1,0 +1,18 @@
+Murem v3.0 — Major Update
+
+• Multi-site support: YouTube, TikTok, Instagram, Twitter, Vimeo & more
+• 5 AI models including Mel-Band RoFormer (state-of-the-art)
+• Custom model input for any audio-separator model
+• Waveform player with streaming visualization
+• Swipeable input modes (URL / File / Batch)
+• Processing queue with persistence across crashes
+• Home screen widget with 4 themes
+• mDNS server auto-discovery
+• History search, export, and expiry indicators
+• Notification play/share actions
+• Server-side job cancellation
+• File upload redo via persistable URI
+• Confirmation dialogs for cancel/skip
+• 7-day server retention with user-visible expiry
+• Volume control, loop, fullscreen with landscape rotation
+• Dozens of UX polish and bug fixes

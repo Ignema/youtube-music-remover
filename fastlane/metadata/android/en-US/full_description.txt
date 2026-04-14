@@ -1,17 +1,33 @@
-Murem removes background music from YouTube videos while keeping vocals and dialogue intact, using AI-powered audio separation.
+Murem removes background music from any video while keeping vocals and dialogue intact, using AI-powered audio separation.
 
 Features:
-• Paste a YouTube URL or pick a local video file
-• Share directly from the YouTube app
-• Choose between 3 AI models for vocal separation
+• Paste a URL from YouTube, TikTok, Instagram, Twitter, Vimeo & 1000+ sites
+• Pick a local video file or import a batch of URLs from a text file
+• Share directly from any app to start processing
+• 5 AI models: Kim Vocal 2, MDX-NET HQ3, Karaoke, Mel-Band RoFormer, BS-RoFormer
+• Custom model support — use any audio-separator model
 • Audio-only mode: export just the vocals as MP3
 • Adjustable audio bitrate (128k / 192k / 320k)
-• In-app video player for results
-• Processing history with metadata preview
-• Progress notifications with percentage
-• Thumbnail preview when pasting YouTube URLs
-• On-device result caching for offline playback
-• Share processed files to any app
+• Processing queue with skip, cancel, and persistence across crashes
+• Server-side job cancellation stops processing immediately
+
+Waveform Player:
+• Built-in video player with audio waveform visualization
+• Tap to play/pause, drag waveform to scrub
+• Rewind/forward 10s, loop, volume control
+• Fullscreen with landscape rotation for wide videos
+• Open in external player (VLC, MX Player, etc.)
+
+History & Discovery:
+• Processing history with search/filter
+• Long-press for video metadata (thumbnail, title, channel, views)
+• Expiry indicators — save results before they're cleaned up
+• Export all results at once
+• mDNS auto-discovery — finds your server on the local network
+
+Home Screen Widget:
+• 4x1 widget with URL paste, file upload, batch, and settings buttons
+• 4 widget themes: Orange, Light, Dark, Transparent
 
 On-Device Processing:
 • Run the entire AI pipeline locally on your phone via Termux
@@ -22,10 +38,11 @@ Remote Server:
 • Connect to a self-hosted server on your PC for GPU-accelerated processing
 • Docker support for easy setup
 • Custom server URL configuration
+• Auto-discovery via mDNS (Zeroconf)
 
 Appearance:
 • Light, Dark, Black (OLED), and System themes
 • Material You dynamic colors (Android 12+)
-• 15 languages: English, Arabic, French, Spanish, German, Turkish, Indonesian, Malay, Portuguese, Italian, Russian, Japanese, Korean, Chinese, Hindi, Urdu
+• 16 languages: English, Arabic, French, Spanish, German, Turkish, Indonesian, Malay, Portuguese, Italian, Russian, Japanese, Korean, Chinese, Hindi, Urdu
 
 Murem is fully open source and self-hosted. No data is sent to third parties. All processing happens on your own server or device.

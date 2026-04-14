@@ -424,7 +424,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
             val aboutContext = androidx.compose.ui.platform.LocalContext.current
 
             Text(
-                "Murem v1.0",
+                "Murem v3.0",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.clickable {

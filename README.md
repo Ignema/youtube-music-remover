@@ -1,25 +1,45 @@
-# Murem — YouTube Music Remover
+# Murem — Video Music Remover
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ignema/youtube-music-remover/blob/master/vocals.ipynb)
 [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/melnema/youtube-music-remover)
 
-Remove background music from YouTube videos while keeping the vocals and dialogue intact.
+Remove background music from any video while keeping the vocals and dialogue intact.
 
-Uses AI-powered audio separation to isolate vocal tracks. Available as a Jupyter notebook, web UI, API server, and Android app.
+Uses AI-powered audio separation to isolate vocal tracks. Supports YouTube, TikTok, Instagram, Twitter, Vimeo, and 1000+ sites via yt-dlp. Available as a Jupyter notebook, web UI, API server, and Android app.
 
 ## Android App (Murem)
 
 Download the latest APK from [Releases](https://github.com/Ignema/youtube-music-remover/releases).
 
-Features:
-- Paste a YouTube URL or pick a local video file
-- Share directly from the YouTube app
-- Choose between 3 AI models and audio quality settings
-- Audio-only mode (exports MP3 vocals)
-- On-device processing via Termux (no server needed)
-- Remote server support for GPU-accelerated processing
-- In-app video player, history, notifications
-- Material You dynamic theming
+**Input:**
+- Paste a URL from any supported site or pick a local video file
+- Batch processing — import multiple URLs from a text file
+- Share directly from any app
+
+**AI Models:**
+- Kim Vocal 2 (default) — best MDX-Net quality
+- UVR-MDX-NET HQ3 — fast and lightweight
+- UVR Karaoke — keeps backing vocals
+- Mel-Band RoFormer — state-of-the-art (GPU recommended)
+- BS-RoFormer — premium quality
+- Custom model support — use any audio-separator model
+
+**Player:**
+- Built-in waveform player with streaming visualization
+- Tap to play/pause, drag waveform to scrub
+- Rewind/forward 10s, loop, volume control
+- Fullscreen with landscape rotation for wide videos
+- Open in external player (VLC, MX Player, etc.)
+
+**Features:**
+- Processing queue with persistence across crashes
+- Server-side job cancellation
+- History with search, metadata preview, and expiry indicators
+- Export all results at once
+- Home screen widget (4 themes)
+- mDNS server auto-discovery
+- Notification actions (play/share from notification)
+- Material You dynamic theming, 16 languages
 
 ### Quick Start (Remote Server)
 
@@ -28,11 +48,11 @@ Features:
 ```bash
 git clone https://github.com/Ignema/youtube-music-remover.git
 cd youtube-music-remover
-uvx --with fastapi --with yt-dlp --with python-multipart --with "audio-separator[gpu]" uvicorn api.main:app --host 0.0.0.0 --port 8000
+uvx --with fastapi --with yt-dlp --with python-multipart --with "audio-separator[gpu]" --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000
 ```
 
-3. In the app, go to Settings → set your PC's IP as the server URL
-4. Paste a YouTube link and tap Remove Music
+3. In the app, go to Settings → Custom → tap "Auto-discover on network" (or enter your PC's IP)
+4. Paste a video link and tap Remove Music
 
 ### Quick Start (On-Device with Termux)
 
@@ -90,22 +110,28 @@ uvicorn api.main:app --host 0.0.0.0 --port 8000
 
 | Method | Path | Description |
 |--------|------|-------------|
+| GET | `/health` | Health check (includes GPU status) |
 | GET | `/api/models` | List available models and bitrates |
-| GET | `/api/info?url=` | Get YouTube video metadata |
-| POST | `/api/process` | Start processing a YouTube URL |
+| GET | `/api/info?url=` | Get video metadata (any yt-dlp URL) |
+| POST | `/api/process` | Start processing a URL |
 | POST | `/api/upload` | Upload and process a local file |
 | POST | `/api/batch` | Queue multiple URLs |
-| GET | `/api/status/{job_id}` | Get job status and progress |
+| GET | `/api/status/{job_id}` | Get job status, progress, and metadata |
+| POST | `/api/cancel/{job_id}` | Cancel a running job |
 | GET | `/api/download/{job_id}` | Download the result |
+| GET | `/api/waveform/{job_id}` | Get pre-computed waveform data |
 | WS | `/ws/{job_id}` | WebSocket for real-time progress |
 
 ## Available Models
 
-| Model | Description |
-|-------|-------------|
-| `UVR-MDX-NET-Inst_HQ_3.onnx` | Default. Balanced quality and speed |
-| `Kim_Vocal_2.onnx` | Higher quality vocal extraction |
-| `UVR_MDXNET_KARA_2.onnx` | Karaoke-style separation |
+| Model | Type | Description |
+|-------|------|-------------|
+| `Kim_Vocal_2.onnx` | MDX-Net | Default. Best MDX-Net quality |
+| `UVR-MDX-NET-Inst_HQ_3.onnx` | MDX-Net | Fast and lightweight |
+| `UVR_MDXNET_KARA_2.onnx` | MDX-Net | Karaoke-style separation |
+| `vocals_mel_band_roformer.ckpt` | Roformer | State-of-the-art. GPU recommended |
+| `model_bs_roformer_ep_317_sdr_12.9755.ckpt` | Roformer | Premium quality |
+| Any `audio-separator` model | Various | Custom model support |
 
 ## License
 
@@ -113,4 +139,4 @@ MIT License. See [LICENSE](LICENSE) for details.
 
 ## Disclaimer
 
-This tool is for educational and personal use only. You are responsible for complying with YouTube's Terms of Service, copyright laws, and obtaining necessary permissions before processing content you don't own.
+This tool is for educational and personal use only. You are responsible for complying with the terms of service of video platforms, copyright laws, and obtaining necessary permissions before processing content you don't own.
