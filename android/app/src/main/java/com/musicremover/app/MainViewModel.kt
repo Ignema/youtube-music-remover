@@ -1108,19 +1108,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _ui.value = _ui.value.copy(checkingPlay = true)
         bgScope.launch {
             try {
-                val conn = java.net.URL(url).openConnection() as java.net.HttpURLConnection
-                conn.requestMethod = "HEAD"
-                conn.connectTimeout = 5000
-                conn.connect()
-                val code = conn.responseCode
-                conn.disconnect()
+                // Extract job ID from URL and check status
+                val jobId = url.substringAfterLast("/")
+                val status = api().status(jobId)
                 _ui.value = _ui.value.copy(checkingPlay = false)
-                if (code == 200) {
+                if (status.status == "done") {
                     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                         onSuccess(url, title)
                     }
                 } else {
-                    showTransientError("File no longer available on server")
+                    showTransientError("File not ready or no longer available")
                 }
             } catch (_: Exception) {
                 _ui.value = _ui.value.copy(checkingPlay = false)
