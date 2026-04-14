@@ -415,26 +415,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun showFileInfo(item: HistoryItem) {
         currentInfoItem = item
-        _ui.value = _ui.value.copy(showInfoSheet = true, fileInfoItem = item, videoInfoError = false, loadingInfo = false, videoInfo = null)
+        _ui.value = _ui.value.copy(showInfoSheet = true, fileInfoItem = null, videoInfoError = false, loadingInfo = false, videoInfo = null)
     }
 
-    /** Show video info sheet for YouTube history items — fetches oEmbed data */
+    /** Show info sheet for any history item — fetches YouTube data if URL is a YouTube URL */
     fun showVideoInfoSheet(item: HistoryItem) {
         currentInfoItem = item
+        val isYt = item.url.isNotEmpty() && (item.url.contains("youtu") || item.url.matches(Regex("^[a-zA-Z0-9_-]{11}$")))
         _ui.value = _ui.value.copy(
             showInfoSheet = true, fileInfoItem = null,
-            loadingInfo = true, videoInfo = null, videoInfoError = false,
+            loadingInfo = isYt, videoInfo = null, videoInfoError = false,
         )
-        bgScope.launch {
-            try {
-                val directInfo = fetchYouTubeInfoDirect(item.url)
-                if (directInfo != null) {
-                    _ui.value = _ui.value.copy(videoInfo = directInfo, loadingInfo = false)
-                } else {
+        if (isYt) {
+            bgScope.launch {
+                try {
+                    val directInfo = fetchYouTubeInfoDirect(item.url)
+                    if (directInfo != null) {
+                        _ui.value = _ui.value.copy(videoInfo = directInfo, loadingInfo = false)
+                    } else {
+                        _ui.value = _ui.value.copy(loadingInfo = false)
+                    }
+                } catch (_: Exception) {
                     _ui.value = _ui.value.copy(loadingInfo = false, videoInfoError = true)
                 }
-            } catch (_: Exception) {
-                _ui.value = _ui.value.copy(loadingInfo = false, videoInfoError = true)
             }
         }
     }

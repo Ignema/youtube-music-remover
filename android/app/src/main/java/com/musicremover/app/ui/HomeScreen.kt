@@ -208,16 +208,10 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
         androidx.compose.material3.ModalBottomSheet(
             onDismissRequest = vm::dismissInfoSheet,
         ) {
-            val fileItem = ui.fileInfoItem
-            if (fileItem != null) {
-                FileInfoSheet(fileItem)
-                SheetActions(item = fileItem, vm = vm, context = context)
-            } else {
-                VideoInfoSheet(ui)
-                val infoItem = vm.currentInfoItem
-                if (infoItem != null) {
-                    SheetActions(item = infoItem, vm = vm, context = context)
-                }
+            val item = vm.currentInfoItem
+            if (item != null) {
+                ItemInfoSheet(item, ui)
+                SheetActions(item = item, vm = vm, context = context)
             }
         }
     }
@@ -937,11 +931,7 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                     },
                     onLongClick = {
                         vm.hapticTick()
-                        if (isYouTube) {
-                            vm.showVideoInfoSheet(item)
-                        } else {
-                            vm.showFileInfo(item)
-                        }
+                        vm.showVideoInfoSheet(item)
                     },
                 )
                 .padding(horizontal = 16.dp, vertical = 14.dp),
@@ -1102,6 +1092,95 @@ private fun InfoChip(text: String) {
     }
 }
 
+
+@Composable
+private fun ItemInfoSheet(item: HistoryItem, ui: MainUiState) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 16.dp),
+    ) {
+        // YouTube preview (thumbnail + title) if loading or loaded
+        if (ui.loadingInfo) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                androidx.compose.material3.CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp,
+                )
+            }
+        } else if (ui.videoInfo != null) {
+            val info = ui.videoInfo
+            if (info.thumbnail.isNotEmpty()) {
+                coil.compose.AsyncImage(
+                    model = info.thumbnail,
+                    contentDescription = "Thumbnail",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                )
+                Spacer(Modifier.height(12.dp))
+            }
+            if (info.title.isNotEmpty()) {
+                Text(info.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.height(4.dp))
+            }
+            if (info.channel.isNotEmpty()) {
+                Text(info.channel, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(4.dp))
+            }
+            // Stats
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (info.duration > 0) {
+                    val mins = info.duration / 60
+                    val secs = info.duration % 60
+                    InfoChip("${mins}:${"%02d".format(secs)}")
+                }
+                if (info.view_count > 0) {
+                    val views = when {
+                        info.view_count >= 1_000_000 -> "${info.view_count / 1_000_000}M"
+                        info.view_count >= 1_000 -> "${info.view_count / 1_000}K"
+                        else -> "${info.view_count}"
+                    }
+                    InfoChip("$views views")
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Spacer(Modifier.height(12.dp))
+        } else if (ui.videoInfoError) {
+            // Error fetching — just skip, show item info below
+        }
+
+        // Always show item's own metadata
+        InfoRow("Output", item.filename)
+        Spacer(Modifier.height(8.dp))
+        InfoRow("Model", item.model.removeSuffix(".onnx"))
+        Spacer(Modifier.height(8.dp))
+        val dateFormat = SimpleDateFormat("MMM d, yyyy · h:mm a", Locale.getDefault())
+        InfoRow("Processed", dateFormat.format(Date(item.timestamp)))
+
+        if (item.sourceFileName != null) {
+            Spacer(Modifier.height(8.dp))
+            InfoRow("Source", item.sourceFileName)
+        }
+        if (item.sourceFileSize != null && item.sourceFileSize > 0) {
+            Spacer(Modifier.height(8.dp))
+            val sizeStr = when {
+                item.sourceFileSize >= 1_073_741_824 -> "%.1f GB".format(item.sourceFileSize / 1_073_741_824.0)
+                item.sourceFileSize >= 1_048_576 -> "%.1f MB".format(item.sourceFileSize / 1_048_576.0)
+                item.sourceFileSize >= 1024 -> "%.1f KB".format(item.sourceFileSize / 1024.0)
+                else -> "${item.sourceFileSize} B"
+            }
+            InfoRow("Size", sizeStr)
+        }
+    }
+}
 
 @Composable
 private fun FileInfoSheet(item: HistoryItem) {
