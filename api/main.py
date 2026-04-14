@@ -247,7 +247,7 @@ async def lifespan(app: FastAPI):
             properties={"version": "2.0.0"},
         )
         zc = Zeroconf()
-        zc.register_service(zc_info)
+        await asyncio.get_event_loop().run_in_executor(None, zc.register_service, zc_info)
         logger.info(f"mDNS registered: {local_ip}:8000")
     except ImportError:
         logger.info("Zeroconf not installed — mDNS discovery disabled. pip install zeroconf to enable.")
