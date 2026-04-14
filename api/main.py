@@ -382,13 +382,39 @@ def process_video(job_id: str, url: str, model: str, batch_size: int,
         update_job(job_id, status="downloading", progress=10)
         dl_url = normalize_url(url)
 
-        ok, _, err = run_cmd(
-            "yt-dlp", "-f", "bv*,ba",
+        # Use --print-json to get metadata during download (same auth session)
+        ok, dl_stdout, err = run_cmd(
+            "yt-dlp", "-f", "bv*,ba", "--print-json",
             "-o", f"{temp_dir}/%(format_id)s.%(ext)s", dl_url,
         )
         if not ok:
             update_job(job_id, status="error", error=f"Download failed: {err}")
             return
+
+        # Parse metadata from download output
+        title = url
+        if dl_stdout:
+            try:
+                # --print-json may output multiple JSON objects for multiple formats
+                # Take the last complete one
+                for line in reversed(dl_stdout.strip().split("\n")):
+                    line = line.strip()
+                    if line.startswith("{"):
+                        data = json.loads(line)
+                        title = data.get("title", title)
+                        meta = {
+                            "title": data.get("title", ""),
+                            "channel": data.get("channel", data.get("uploader", "")),
+                            "duration": data.get("duration", 0),
+                            "thumbnail": data.get("thumbnail", ""),
+                            "view_count": data.get("view_count", 0),
+                            "upload_date": data.get("upload_date", ""),
+                            "description": (data.get("description", "") or "")[:300],
+                        }
+                        db_set(job_id, metadata=json.dumps(meta))
+                        break
+            except Exception:
+                pass
 
         if is_cancelled(job_id):
             shutil.rmtree(temp_dir, ignore_errors=True)
@@ -410,26 +436,6 @@ def process_video(job_id: str, url: str, model: str, batch_size: int,
         if not audio_files:
             update_job(job_id, status="error", error="No audio file found")
             return
-
-        # Fetch metadata (title, thumbnail, etc.) — works for any yt-dlp supported site
-        title = url
-        ok_meta, meta_json, _ = run_cmd("yt-dlp", "--dump-json", "--no-download", dl_url, timeout=15)
-        if ok_meta and meta_json:
-            try:
-                data = json.loads(meta_json)
-                title = data.get("title", title)
-                meta = {
-                    "title": data.get("title", ""),
-                    "channel": data.get("channel", data.get("uploader", "")),
-                    "duration": data.get("duration", 0),
-                    "thumbnail": data.get("thumbnail", ""),
-                    "view_count": data.get("view_count", 0),
-                    "upload_date": data.get("upload_date", ""),
-                    "description": (data.get("description", "") or "")[:300],
-                }
-                db_set(job_id, metadata=json.dumps(meta))
-            except Exception:
-                pass
 
         separate_and_merge(job_id, video_file, audio_files[0], model, batch_size,
                            title, temp_dir, output_dir, audio_only, bitrate)
