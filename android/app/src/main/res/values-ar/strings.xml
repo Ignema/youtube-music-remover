@@ -45,6 +45,7 @@
 
     <!-- Options -->
     <string name="audio_only">صوت فقط</string>
+    <string name="bitrate">جودة الصوت</string>
     <string name="ai_model">نموذج الذكاء الاصطناعي</string>
     <string name="choose_model">اختر النموذج لفصل الأصوات</string>
     <string name="model_default_name">UVR-MDX-NET HQ3</string>

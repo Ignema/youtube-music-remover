@@ -389,50 +389,59 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
 
         Spacer(Modifier.height(16.dp))
 
-        // Options — single scrollable chip row
+        // Options — centered chip row
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Model chip — opens bottom sheet
-            androidx.compose.material3.FilterChip(
-                selected = true,
-                onClick = vm::toggleModelPicker,
-                label = { Text(modelShortName(ui.selectedModel), maxLines = 1) },
-                leadingIcon = { Icon(Icons.Outlined.Tune, null, Modifier.size(16.dp)) },
-                shape = RoundedCornerShape(12.dp),
-            )
-            // Audio only
-            androidx.compose.material3.FilterChip(
-                selected = ui.audioOnly,
-                onClick = { vm.setAudioOnly(!ui.audioOnly) },
-                label = { Text(stringResource(R.string.audio_only)) },
-                shape = RoundedCornerShape(12.dp),
-            )
-            // Bitrate — tap for dropdown
-            var showBitrateMenu by remember { mutableStateOf(false) }
-            Box {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Model chip — opens bottom sheet
                 androidx.compose.material3.FilterChip(
                     selected = true,
-                    onClick = { showBitrateMenu = true },
-                    label = { Text(ui.bitrate) },
+                    onClick = vm::toggleModelPicker,
+                    label = { Text(modelShortName(ui.selectedModel), maxLines = 1) },
+                    leadingIcon = { Icon(Icons.Outlined.Tune, null, Modifier.size(16.dp)) },
                     shape = RoundedCornerShape(12.dp),
                 )
-                androidx.compose.material3.DropdownMenu(
-                    expanded = showBitrateMenu,
-                    onDismissRequest = { showBitrateMenu = false },
-                ) {
-                    listOf("128k", "192k", "320k").forEach { br ->
-                        androidx.compose.material3.DropdownMenuItem(
-                            text = { Text(br) },
-                            onClick = { vm.setBitrate(br); showBitrateMenu = false },
-                            trailingIcon = {
-                                if (ui.bitrate == br) Icon(Icons.Outlined.CheckCircle, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
-                            },
+                // Audio only
+                androidx.compose.material3.FilterChip(
+                    selected = ui.audioOnly,
+                    onClick = { vm.setAudioOnly(!ui.audioOnly) },
+                    label = { Text(stringResource(R.string.audio_only)) },
+                    shape = RoundedCornerShape(12.dp),
+                )
+                // Bitrate — tap for dropdown
+                var showBitrateMenu by remember { mutableStateOf(false) }
+                Box {
+                    androidx.compose.material3.FilterChip(
+                        selected = true,
+                        onClick = { showBitrateMenu = true },
+                        label = { Text(ui.bitrate) },
+                        shape = RoundedCornerShape(12.dp),
+                    )
+                    androidx.compose.material3.DropdownMenu(
+                        expanded = showBitrateMenu,
+                        onDismissRequest = { showBitrateMenu = false },
+                    ) {
+                        Text(
+                            stringResource(R.string.bitrate),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                         )
+                        listOf("128k", "192k", "320k").forEach { br ->
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(br) },
+                                onClick = { vm.setBitrate(br); showBitrateMenu = false },
+                                trailingIcon = {
+                                    if (ui.bitrate == br) Icon(Icons.Outlined.CheckCircle, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                                },
+                            )
+                        }
                     }
                 }
             }

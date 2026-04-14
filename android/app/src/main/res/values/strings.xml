@@ -45,6 +45,7 @@
 
     <!-- Options -->
     <string name="audio_only">Audio only</string>
+    <string name="bitrate">Bitrate</string>
     <string name="ai_model">AI Model</string>
     <string name="choose_model">Choose the model for vocal separation</string>
     <string name="model_default_name">UVR-MDX-NET HQ3</string>
