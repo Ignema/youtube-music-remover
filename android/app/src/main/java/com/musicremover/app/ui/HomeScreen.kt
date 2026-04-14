@@ -1107,7 +1107,7 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                 .combinedClickable(
                     onClick = {
                         val url = "$serverUrl/api/download/${item.jobId}"
-                        onPlay(url, item.filename.removeSuffix(".mp4"))
+                        vm.checkAndPlay(url, item.filename.removeSuffix(".mp4"), onPlay)
                     },
                     onLongClick = {
                         vm.hapticTick()
@@ -1686,6 +1686,7 @@ private fun BatchInputTab(ui: MainUiState, vm: MainViewModel, urlFilePicker: and
 
 @Composable
 private fun SheetActions(item: HistoryItem, vm: MainViewModel, context: android.content.Context) {
+    val ui by vm.ui.collectAsState()
     Column(modifier = Modifier.padding(horizontal = 24.dp)) {
         Spacer(Modifier.height(16.dp))
 
@@ -1695,12 +1696,17 @@ private fun SheetActions(item: HistoryItem, vm: MainViewModel, context: android.
                 vm.shareByJobId(context, item.jobId, item.filename)
                 vm.dismissInfoSheet()
             },
+            enabled = !ui.sharing,
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Icon(Icons.Outlined.Share, null, Modifier.size(18.dp))
+            if (ui.sharing) {
+                androidx.compose.material3.CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+            } else {
+                Icon(Icons.Outlined.Share, null, Modifier.size(18.dp))
+            }
             Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.share))
+            Text(if (ui.sharing) stringResource(R.string.sharing) else stringResource(R.string.share))
         }
 
         Spacer(Modifier.height(8.dp))

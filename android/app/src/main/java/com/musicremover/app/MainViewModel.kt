@@ -78,6 +78,8 @@ data class MainUiState(
     val showModelPicker: Boolean = false,
     val showModeDialog: Boolean = false,
     val downloading: Boolean = false,
+    val sharing: Boolean = false,
+    val checkingPlay: Boolean = false,
     val history: List<HistoryItem> = emptyList(),
     val serverUrl: String = "",
     val termuxInstalled: Boolean = false,
@@ -1027,6 +1029,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // --- Results ---
+    /** Check if a download URL is valid before playing */
+    fun checkAndPlay(url: String, title: String, onSuccess: (String, String) -> Unit) {
+        _ui.value = _ui.value.copy(checkingPlay = true)
+        bgScope.launch {
+            try {
+                val conn = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                conn.requestMethod = "HEAD"
+                conn.connectTimeout = 5000
+                conn.connect()
+                val code = conn.responseCode
+                conn.disconnect()
+                _ui.value = _ui.value.copy(checkingPlay = false)
+                if (code == 200) {
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        onSuccess(url, title)
+                    }
+                } else {
+                    showTransientError("File no longer available on server")
+                }
+            } catch (_: Exception) {
+                _ui.value = _ui.value.copy(checkingPlay = false)
+                showTransientError("Server not reachable")
+            }
+        }
+    }
+
     fun getStreamUrl(): String? {
         val jobId = _ui.value.jobId ?: return null
         return "${serverUrl}/api/download/$jobId"
@@ -1040,6 +1068,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun shareByJobId(context: Context, jobId: String, filename: String) {
+        _ui.value = _ui.value.copy(sharing = true)
         bgScope.launch {
             try {
                 val cacheDir = java.io.File(context.cacheDir, "shared")
@@ -1049,39 +1078,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val url = java.net.URL("${serverUrl}/api/download/$jobId")
                 val conn = url.openConnection() as java.net.HttpURLConnection
                 conn.connect()
-                conn.inputStream.use { input ->
-                    file.outputStream().use { output -> input.copyTo(output) }
+                if (conn.responseCode == 404) {
+                    conn.disconnect()
+                    _ui.value = _ui.value.copy(sharing = false)
+                    showTransientError("File no longer available on server")
+                    return@launch
                 }
-                conn.disconnect()
-
-                val uri = androidx.core.content.FileProvider.getUriForFile(
-                    context, "${context.packageName}.fileprovider", file
-                )
-                val mime = if (filename.endsWith(".mp3")) "audio/mpeg" else "video/mp4"
-                val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                    type = mime
-                    putExtra(android.content.Intent.EXTRA_STREAM, uri)
-                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                }
-                val chooser = android.content.Intent.createChooser(intent, "Share")
-                chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                context.startActivity(chooser)
-            } catch (e: Exception) {
-                _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = "Share failed: ${e.message}")
-            }
-        }
-    }
-
-    fun shareByJobUrl(context: Context, downloadUrl: String, filename: String) {
-        bgScope.launch {
-            try {
-                val cacheDir = java.io.File(context.cacheDir, "shared")
-                cacheDir.mkdirs()
-                val file = java.io.File(cacheDir, filename)
-
-                val url = java.net.URL(downloadUrl)
-                val conn = url.openConnection() as java.net.HttpURLConnection
-                conn.connect()
                 conn.inputStream.use { input ->
                     file.outputStream().use { output -> input.copyTo(output) }
                 }
@@ -1102,6 +1104,48 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 showTransientError("Share failed: ${e.message}")
             }
+            _ui.value = _ui.value.copy(sharing = false)
+        }
+    }
+
+    fun shareByJobUrl(context: Context, downloadUrl: String, filename: String) {
+        _ui.value = _ui.value.copy(sharing = true)
+        bgScope.launch {
+            try {
+                val cacheDir = java.io.File(context.cacheDir, "shared")
+                cacheDir.mkdirs()
+                val file = java.io.File(cacheDir, filename)
+
+                val url = java.net.URL(downloadUrl)
+                val conn = url.openConnection() as java.net.HttpURLConnection
+                conn.connect()
+                if (conn.responseCode == 404) {
+                    conn.disconnect()
+                    _ui.value = _ui.value.copy(sharing = false)
+                    showTransientError("File no longer available on server")
+                    return@launch
+                }
+                conn.inputStream.use { input ->
+                    file.outputStream().use { output -> input.copyTo(output) }
+                }
+                conn.disconnect()
+
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    context, "${context.packageName}.fileprovider", file
+                )
+                val mime = if (filename.endsWith(".mp3")) "audio/mpeg" else "video/mp4"
+                val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                    type = mime
+                    putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                val chooser = android.content.Intent.createChooser(intent, "Share")
+                chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(chooser)
+            } catch (e: Exception) {
+                showTransientError("Share failed: ${e.message}")
+            }
+            _ui.value = _ui.value.copy(sharing = false)
         }
     }
 
