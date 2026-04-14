@@ -93,6 +93,21 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
         amplitudes.addAll(waveform)
     }
 
+    // Track video aspect ratio
+    var videoAspectRatio by remember { mutableFloatStateOf(16f / 9f) }
+
+    LaunchedEffect(player) {
+        // Wait for video to load and get actual dimensions
+        while (true) {
+            val format = player.videoFormat
+            if (format != null && format.width > 0 && format.height > 0) {
+                videoAspectRatio = format.width.toFloat() / format.height.toFloat()
+                break
+            }
+            delay(200)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -102,7 +117,7 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(16f / 9f)
+                .aspectRatio(videoAspectRatio.coerceIn(0.4f, 2.5f))
                 .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant),
         ) {
@@ -159,6 +174,7 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 24.dp),
