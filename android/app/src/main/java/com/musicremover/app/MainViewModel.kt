@@ -427,7 +427,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     var pendingPlayTitle: String? = null
 
     fun dismissInfoSheet() {
-        _ui.value = _ui.value.copy(showInfoSheet = false, videoInfo = null, videoInfoError = false, fileInfoItem = null)
+        shareJob?.cancel()
+        _ui.value = _ui.value.copy(showInfoSheet = false, videoInfo = null, videoInfoError = false, fileInfoItem = null, sharing = false)
         currentInfoItem = null
     }
 
@@ -825,6 +826,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun str(id: Int): String = getApplication<Application>().getString(id)
 
     private var snackJob: kotlinx.coroutines.Job? = null
+    private var shareJob: kotlinx.coroutines.Job? = null
 
     fun showTransientError(msg: String) {
         snackJob?.cancel()
@@ -1075,42 +1077,45 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun shareByJobId(context: Context, jobId: String, filename: String) {
+        shareJob?.cancel()
         _ui.value = _ui.value.copy(sharing = true)
-        bgScope.launch {
+        shareJob = bgScope.launch {
             try {
-                val cacheDir = java.io.File(context.cacheDir, "shared")
-                cacheDir.mkdirs()
-                val file = java.io.File(cacheDir, filename)
+                kotlinx.coroutines.withTimeout(60_000) {
+                    val cacheDir = java.io.File(context.cacheDir, "shared")
+                    cacheDir.mkdirs()
+                    val file = java.io.File(cacheDir, filename)
 
-                val url = java.net.URL("${serverUrl}/api/download/$jobId")
-                val conn = url.openConnection() as java.net.HttpURLConnection
-                conn.connect()
-                if (conn.responseCode == 404) {
+                    val url = java.net.URL("${serverUrl}/api/download/$jobId")
+                    val conn = url.openConnection() as java.net.HttpURLConnection
+                    conn.connect()
+                    if (conn.responseCode == 404) {
+                        conn.disconnect()
+                        throw Exception("File no longer available on server")
+                    }
+                    conn.inputStream.use { input ->
+                        file.outputStream().use { output -> input.copyTo(output) }
+                    }
                     conn.disconnect()
-                    _ui.value = _ui.value.copy(sharing = false)
-                    showTransientError("File no longer available on server")
-                    return@launch
-                }
-                conn.inputStream.use { input ->
-                    file.outputStream().use { output -> input.copyTo(output) }
-                }
-                conn.disconnect()
 
-                val uri = androidx.core.content.FileProvider.getUriForFile(
-                    context, "${context.packageName}.fileprovider", file
-                )
-                val mime = if (filename.endsWith(".mp3")) "audio/mpeg" else "video/mp4"
-                val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                    type = mime
-                    putExtra(android.content.Intent.EXTRA_STREAM, uri)
-                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    val uri = androidx.core.content.FileProvider.getUriForFile(
+                        context, "${context.packageName}.fileprovider", file
+                    )
+                    val mime = if (filename.endsWith(".mp3")) "audio/mpeg" else "video/mp4"
+                    val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                        type = mime
+                        putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                        addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    val chooser = android.content.Intent.createChooser(intent, "Share")
+                    chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(chooser)
+                    dismissInfoSheet()
                 }
-                val chooser = android.content.Intent.createChooser(intent, "Share")
-                chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                context.startActivity(chooser)
-                dismissInfoSheet()
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                showTransientError("Share timed out")
             } catch (e: Exception) {
-                showTransientError("Share failed: ${e.message}")
+                showTransientError(e.message ?: "Share failed")
             }
             _ui.value = _ui.value.copy(sharing = false)
         }
