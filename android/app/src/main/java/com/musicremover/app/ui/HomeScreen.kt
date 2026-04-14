@@ -480,15 +480,6 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
             modifier = Modifier.fillMaxWidth().height(56.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // Mode switcher — cycles through tabs
-            OutlinedButton(
-                onClick = { vm.setInputTab((ui.inputTab + 1) % 3) },
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.size(56.dp),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
-            ) {
-                Icon(modeIcon, stringResource(R.string.tab_url), Modifier.size(22.dp))
-            }
             // Main CTA
             Button(
                 onClick = vm::process,
@@ -500,6 +491,15 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                     else stringResource(R.string.remove_music),
                     style = MaterialTheme.typography.titleMedium,
                 )
+            }
+            // Mode switcher — cycles through tabs
+            OutlinedButton(
+                onClick = { vm.setInputTab((ui.inputTab + 1) % 3) },
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.size(56.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+            ) {
+                Icon(modeIcon, stringResource(R.string.tab_url), Modifier.size(22.dp))
             }
         }
     }
