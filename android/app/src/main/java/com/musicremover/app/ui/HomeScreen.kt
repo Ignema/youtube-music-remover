@@ -1039,23 +1039,12 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Thumbnail for entries with cached image, play icon otherwise
-            if (item.ytThumbnail != null) {
-                coil.compose.AsyncImage(
-                    model = item.ytThumbnail,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(width = 48.dp, height = 34.dp)
-                        .clip(RoundedCornerShape(6.dp)),
-                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                )
-            } else {
-                Icon(
-                    Icons.Outlined.PlayArrow, null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp),
-                )
-            }
+            // Play icon
+            Icon(
+                Icons.Outlined.PlayArrow, null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(22.dp),
+            )
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
