@@ -144,6 +144,8 @@
     <string name="view_original">عرض الأصلي ↗</string>
     <string name="filter_history">بحث…</string>
     <string name="no_results">ما لقينا شي</string>
+    <string name="empty_history_title">ما في فيديوهات معالجة بعد</string>
+    <string name="empty_history_desc">الصق رابط أو اختر ملف عشان تبدأ</string>
     <string name="expires_in">باقي %d أيام</string>
     <string name="expired">منتهي</string>
     <string name="server_expiry_note">النتيجة متاحة على السيرفر لمدة %d أيام. احفظها عندك.</string>

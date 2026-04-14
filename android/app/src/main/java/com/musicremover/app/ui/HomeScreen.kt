@@ -207,8 +207,12 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
             Spacer(Modifier.height(32.dp))
 
             if ((ui.state == UiState.Idle ||
-                (ui.state == UiState.Processing && ui.processingMinimized)) && ui.history.isNotEmpty()) {
-                HistorySection(ui.history, vm, onPlay)
+                (ui.state == UiState.Processing && ui.processingMinimized))) {
+                if (ui.history.isNotEmpty()) {
+                    HistorySection(ui.history, vm, onPlay)
+                } else {
+                    EmptyHistoryState()
+                }
             }
         }
     }
@@ -576,7 +580,7 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
         // CTA
         val isQueueMode = ui.state == UiState.Processing && ui.processingMinimized
         Button(
-            onClick = vm::process,
+            onClick = { vm.hapticTick(); vm.process() },
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth().height(56.dp),
         ) {
@@ -1273,6 +1277,34 @@ private fun VideoInfoSheet(ui: MainUiState) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun EmptyHistoryState() {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        // Stylized equalizer icon (matches app logo vibe)
+        Icon(
+            Icons.Outlined.GraphicEq, null,
+            modifier = Modifier.size(48.dp).alpha(0.3f),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            stringResource(R.string.empty_history_title),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            stringResource(R.string.empty_history_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.outline,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
