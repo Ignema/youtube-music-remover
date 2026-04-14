@@ -127,6 +127,12 @@ def init_db():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        # Migrate: add columns if missing
+        existing = {row[1] for row in conn.execute("PRAGMA table_info(jobs)").fetchall()}
+        if "metadata" not in existing:
+            conn.execute("ALTER TABLE jobs ADD COLUMN metadata TEXT")
+        if "eta_seconds" not in existing:
+            conn.execute("ALTER TABLE jobs ADD COLUMN eta_seconds INTEGER DEFAULT 0")
         conn.commit()
         conn.close()
 

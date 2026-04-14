@@ -28,6 +28,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         handleShareIntent(intent)
+        handlePlayIntent(intent)
         setContent {
             val ui by vm.ui.collectAsState()
             MusicRemoverTheme(
@@ -49,6 +50,16 @@ class MainActivity : AppCompatActivity() {
                     popExitTransition = { slideOutHorizontally { it } },
                 ) {
                     composable("home") {
+                        // Handle pending play from notification
+                        androidx.compose.runtime.LaunchedEffect(vm.pendingPlayUrl) {
+                            val url = vm.pendingPlayUrl
+                            val title = vm.pendingPlayTitle
+                            if (url != null && title != null) {
+                                vm.pendingPlayUrl = null
+                                vm.pendingPlayTitle = null
+                                navController.navigate("player/${java.net.URLEncoder.encode(url, "UTF-8")}/${java.net.URLEncoder.encode(title, "UTF-8")}")
+                            }
+                        }
                         HomeScreen(
                             vm = vm,
                             onSettingsClick = { navController.navigate("settings") },
@@ -104,15 +115,23 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleShareIntent(intent)
+        handlePlayIntent(intent)
     }
 
     private fun handleShareIntent(intent: Intent?) {
         if (intent?.action == Intent.ACTION_SEND && intent.type == "text/plain") {
             intent.getStringExtra(Intent.EXTRA_TEXT)?.let { shared ->
-                val urlPattern = Regex("https?://(?:www\\.)?(?:youtube\\.com|youtu\\.be)/\\S+")
+                val urlPattern = Regex("https?://\\S+")
                 val match = urlPattern.find(shared)
                 vm.onUrlChange(match?.value ?: shared)
             }
         }
+    }
+
+    private fun handlePlayIntent(intent: Intent?) {
+        val url = intent?.getStringExtra("play_url") ?: return
+        val title = intent.getStringExtra("play_title") ?: "Result"
+        vm.pendingPlayUrl = url
+        vm.pendingPlayTitle = title
     }
 }

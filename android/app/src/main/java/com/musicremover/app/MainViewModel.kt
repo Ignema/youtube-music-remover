@@ -402,6 +402,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     var currentInfoItem: HistoryItem? = null
         private set
 
+    // Pending play from notification action
+    var pendingPlayUrl: String? = null
+    var pendingPlayTitle: String? = null
+
     fun dismissInfoSheet() {
         _ui.value = _ui.value.copy(showInfoSheet = false, videoInfo = null, videoInfoError = false, fileInfoItem = null)
         currentInfoItem = null
