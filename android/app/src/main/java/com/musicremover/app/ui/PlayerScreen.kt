@@ -49,6 +49,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -167,6 +168,25 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                     },
                 contentAlignment = Alignment.Center,
             ) {
+                // Blurred background — scaled up video behind main
+                AndroidView(
+                    factory = { ctx ->
+                        PlayerView(ctx).apply {
+                            this.player = player
+                            useController = false
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            scaleX = 1.5f
+                            scaleY = 1.5f
+                            alpha = 0.4f
+                        }
+                        .blur(20.dp),
+                )
+
+                // Main video
                 AndroidView(
                     factory = { ctx ->
                         PlayerView(ctx).apply {
@@ -208,12 +228,15 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                     }
                 }
 
-                // Back button with shadow
+                // Back button — below status bar
                 IconButton(
                     onClick = onBack,
                     modifier = Modifier
                         .align(Alignment.TopStart)
-                        .padding(8.dp)
+                        .padding(
+                            start = 8.dp,
+                            top = 40.dp, // Clear status bar
+                        )
                         .size(40.dp)
                         .shadow(4.dp, CircleShape)
                         .clip(CircleShape)
@@ -383,22 +406,18 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                                     onDismissRequest = { showVolume = false },
                                 ) {
                                     Column(
-                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).width(48.dp),
+                                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                     ) {
-                                        Text("${(volume * 100).toInt()}%", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
-                                        Spacer(Modifier.height(4.dp))
-                                        // Vertical slider via rotated horizontal
+                                        Text("${(volume * 100).toInt()}%", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
+                                        Spacer(Modifier.height(8.dp))
                                         Slider(
                                             value = volume,
                                             onValueChange = {
                                                 volume = it
                                                 player.volume = it
                                             },
-                                            modifier = Modifier
-                                                .height(200.dp)
-                                                .width(36.dp)
-                                                .graphicsLayer { rotationZ = -90f },
+                                            modifier = Modifier.width(180.dp),
                                             colors = SliderDefaults.colors(
                                                 thumbColor = MaterialTheme.colorScheme.primary,
                                                 activeTrackColor = MaterialTheme.colorScheme.primary,
