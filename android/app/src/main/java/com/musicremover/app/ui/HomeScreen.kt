@@ -18,6 +18,8 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Arrangement
@@ -907,11 +909,13 @@ private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, String) -> Unit) {
     val dateFormat = SimpleDateFormat("MMM d, h:mm a", Locale.getDefault())
     val dateStr = dateFormat.format(Date(item.timestamp))
     val serverUrl = vm.ui.collectAsState().value.serverUrl
+    val isYouTube = !item.isFileUpload && item.url.isNotEmpty() && (item.url.contains("youtu") || item.url.matches(Regex("^[a-zA-Z0-9_-]{11}$")))
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -926,26 +930,26 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                 .padding(vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Tappable / long-pressable area (everything except the redo button)
             Row(
                 modifier = Modifier
                     .weight(1f)
-                    .pointerInput(item.jobId) {
-                        detectTapGestures(
-                            onTap = {
-                                val url = "$serverUrl/api/download/${item.jobId}"
-                                onPlay(url, item.filename.removeSuffix(".mp4"))
-                            },
-                            onLongPress = {
-                                vm.hapticTick()
-                                if (item.isFileUpload) {
-                                    vm.showFileInfo(item)
-                                } else if (item.url.isNotEmpty()) {
-                                    vm.fetchVideoInfo(item.url, item)
-                                }
-                            },
-                        )
-                    }
+                    .combinedClickable(
+                        onClick = {
+                            val url = "$serverUrl/api/download/${item.jobId}"
+                            onPlay(url, item.filename.removeSuffix(".mp4"))
+                        },
+                        onLongClick = {
+                            vm.hapticTick()
+                            if (item.isFileUpload) {
+                                vm.showFileInfo(item)
+                            } else if (isYouTube) {
+                                vm.fetchVideoInfo(item.url, item)
+                            } else {
+                                // Non-YouTube, non-file item — show file info as fallback
+                                vm.showFileInfo(item)
+                            }
+                        },
+                    )
                     .padding(start = 16.dp, top = 10.dp, bottom = 10.dp, end = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -969,8 +973,7 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                     )
                 }
             }
-            // Redo button — outside pointerInput so it gets its own clicks
-            if (!item.isFileUpload && item.url.isNotEmpty()) {
+            if (isYouTube) {
                 IconButton(onClick = { vm.onUrlChange(item.url) }) {
                     Icon(Icons.Outlined.Refresh, "Reprocess", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.outline)
                 }
