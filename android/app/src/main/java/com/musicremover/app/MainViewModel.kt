@@ -266,11 +266,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             delay(500) // Debounce
             _ui.value = _ui.value.copy(loadingPreview = true)
             try {
-                val info = kotlinx.coroutines.withTimeout(10_000) {
-                    api().info(url)
-                }
-                // Only update if URL field still has a YouTube URL
-                if (_ui.value.url.isNotEmpty()) {
+                val info = fetchYouTubeInfoDirect(url)
+                if (info != null && _ui.value.url.isNotEmpty()) {
                     _ui.value = _ui.value.copy(urlPreview = info, loadingPreview = false)
                 } else {
                     _ui.value = _ui.value.copy(loadingPreview = false)
@@ -279,6 +276,49 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _ui.value = _ui.value.copy(loadingPreview = false)
             }
         }
+    }
+
+    /**
+     * Fetch YouTube video info directly via oEmbed + thumbnail URL.
+     * No server dependency — works even when Termux is busy.
+     */
+    private fun fetchYouTubeInfoDirect(url: String): VideoInfo? {
+        val videoId = extractVideoId(url) ?: return null
+        val ytUrl = "https://www.youtube.com/watch?v=$videoId"
+        val oembedUrl = "https://www.youtube.com/oembed?url=$ytUrl&format=json"
+
+        val client = okhttp3.OkHttpClient.Builder()
+            .connectTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
+
+        val request = okhttp3.Request.Builder().url(oembedUrl).build()
+        val response = client.newCall(request).execute()
+        if (!response.isSuccessful) return null
+
+        val body = response.body?.string() ?: return null
+        val data = com.google.gson.JsonParser.parseString(body).asJsonObject
+
+        return VideoInfo(
+            title = data.get("title")?.asString ?: "",
+            channel = data.get("author_name")?.asString ?: "",
+            thumbnail = "https://img.youtube.com/vi/$videoId/hqdefault.jpg",
+        )
+    }
+
+    private fun extractVideoId(input: String): String? {
+        val trimmed = input.trim()
+        if (trimmed.matches(Regex("^[a-zA-Z0-9_-]{11}$"))) return trimmed
+        val patterns = listOf(
+            Regex("(?:https?://)?(?:www\\.)?youtu\\.be/([a-zA-Z0-9_-]{11})"),
+            Regex("(?:https?://)?(?:www\\.)?youtube\\.com/watch\\?v=([a-zA-Z0-9_-]{11})"),
+            Regex("(?:https?://)?(?:www\\.)?youtube\\.com/shorts/([a-zA-Z0-9_-]{11})"),
+        )
+        for (p in patterns) {
+            val match = p.find(trimmed)
+            if (match != null) return match.groupValues[1]
+        }
+        return null
     }
 
     // --- History ---
@@ -341,12 +381,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             loadingInfo = true, showInfoSheet = true, videoInfo = null, videoInfoError = false,
             fileInfoItem = if (item?.isFileUpload == true) item else null,
         )
-        // Store the item for delete button (YouTube items too)
         currentInfoItem = item
         bgScope.launch {
             try {
-                val info = api().info(url)
-                _ui.value = _ui.value.copy(videoInfo = info, loadingInfo = false)
+                // Try direct oEmbed first (fast, no server needed)
+                val directInfo = fetchYouTubeInfoDirect(url)
+                if (directInfo != null) {
+                    _ui.value = _ui.value.copy(videoInfo = directInfo, loadingInfo = false)
+                    // Try server API in background for richer data (duration, views, etc.)
+                    try {
+                        val richInfo = kotlinx.coroutines.withTimeout(8_000) { api().info(url) }
+                        _ui.value = _ui.value.copy(videoInfo = richInfo)
+                    } catch (_: Exception) { /* keep oEmbed data */ }
+                } else {
+                    // Fallback to server API
+                    val info = kotlinx.coroutines.withTimeout(10_000) { api().info(url) }
+                    _ui.value = _ui.value.copy(videoInfo = info, loadingInfo = false)
+                }
             } catch (_: Exception) {
                 _ui.value = _ui.value.copy(loadingInfo = false, videoInfoError = true)
             }
