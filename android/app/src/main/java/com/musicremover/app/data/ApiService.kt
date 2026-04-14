@@ -11,7 +11,7 @@ import retrofit2.http.Path
 
 data class ProcessRequest(
     val url: String,
-    val model: String = "UVR-MDX-NET-Inst_HQ_3.onnx",
+    val model: String = "Kim_Vocal_2.onnx",
     val batch_size: Int = 4,
     val audio_only: Boolean = false,
     val bitrate: String = "192k",

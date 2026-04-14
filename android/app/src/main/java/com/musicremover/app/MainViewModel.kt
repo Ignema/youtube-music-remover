@@ -47,7 +47,7 @@ data class QueueItem(
     companion object {
         fun fromJsonMap(m: Map<String, Any?>): QueueItem = QueueItem(
             url = m["url"] as? String ?: "",
-            model = m["model"] as? String ?: "UVR-MDX-NET-Inst_HQ_3.onnx",
+            model = m["model"] as? String ?: "Kim_Vocal_2.onnx",
             audioOnly = m["audioOnly"] as? Boolean ?: false,
             bitrate = m["bitrate"] as? String ?: "192k",
             fileUri = (m["fileUri"] as? String)?.let { android.net.Uri.parse(it) },
@@ -60,7 +60,7 @@ data class QueueItem(
 data class MainUiState(
     val state: UiState = UiState.Idle,
     val url: String = "",
-    val selectedModel: String = "UVR-MDX-NET-Inst_HQ_3.onnx",
+    val selectedModel: String = "Kim_Vocal_2.onnx",
     val models: List<String> = listOf(
         "UVR-MDX-NET-Inst_HQ_3.onnx",
         "Kim_Vocal_2.onnx",

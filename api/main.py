@@ -261,7 +261,7 @@ app.add_middleware(
 
 class ProcessRequest(BaseModel):
     url: str
-    model: str = "UVR-MDX-NET-Inst_HQ_3.onnx"
+    model: str = "Kim_Vocal_2.onnx"
     batch_size: int = 4
     audio_only: bool = False
     bitrate: str = "192k"
@@ -558,7 +558,7 @@ def start_processing(request: Request, req: ProcessRequest):
 def batch_processing(
     request: Request,
     urls: list[str],
-    model: str = "UVR-MDX-NET-Inst_HQ_3.onnx",
+    model: str = "Kim_Vocal_2.onnx",
     batch_size: int = 4,
     audio_only: bool = False,
     bitrate: str = "192k",
@@ -590,7 +590,7 @@ def batch_processing(
 async def upload_processing(
     request: Request,
     file: UploadFile = File(...),
-    model: str = Form("UVR-MDX-NET-Inst_HQ_3.onnx"),
+    model: str = Form("Kim_Vocal_2.onnx"),
     batch_size: int = Form(4),
     audio_only: bool = Form(False),
     bitrate: str = Form("192k"),
