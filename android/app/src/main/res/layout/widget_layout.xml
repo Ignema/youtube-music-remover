@@ -30,8 +30,7 @@
             android:layout_weight="1"
             android:text="@string/widget_paste_process"
             android:textSize="12sp"
-            android:textAllCaps="false"
-            style="@style/Widget.Material3.Button.TonalButton" />
+            android:textAllCaps="false" />
 
         <Button
             android:id="@+id/widget_open"
@@ -42,7 +41,8 @@
             android:text="@string/widget_open"
             android:textSize="12sp"
             android:textAllCaps="false"
-            style="@style/Widget.Material3.Button.OutlinedButton" />
+            android:backgroundTint="@android:color/transparent"
+            android:textColor="?android:attr/textColorPrimary" />
 
     </LinearLayout>
 
