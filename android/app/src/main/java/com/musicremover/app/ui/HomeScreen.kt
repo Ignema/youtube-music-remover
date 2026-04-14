@@ -225,7 +225,7 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
 private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
     val context = LocalContext.current
     val filePicker = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
+        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent(),
     ) { uri ->
         if (uri != null) {
             // Take persistable permission so we can re-read this file later
@@ -400,7 +400,7 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
             }
         } else {
             OutlinedButton(
-                onClick = { filePicker.launch(arrayOf("video/*")) },
+                onClick = { filePicker.launch("video/*") },
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth().height(52.dp),
             ) {
