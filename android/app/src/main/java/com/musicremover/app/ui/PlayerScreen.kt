@@ -181,18 +181,31 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
 
                     Spacer(Modifier.height(12.dp))
 
-                    // Waveform
-                    WaveformView(
-                        amplitudes = amplitudes,
-                        progress = animatedProgress,
-                        onSeek = { seekPos ->
-                            player.seekTo((seekPos * player.duration).toLong())
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        playedColor = MaterialTheme.colorScheme.primary,
-                        unplayedColor = MaterialTheme.colorScheme.surfaceVariant,
-                        cursorColor = MaterialTheme.colorScheme.primary,
-                    )
+                    // Waveform or loading spinner
+                    if (amplitudes.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().height(80.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            androidx.compose.material3.CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.outline,
+                            )
+                        }
+                    } else {
+                        WaveformView(
+                            amplitudes = amplitudes,
+                            progress = animatedProgress,
+                            onSeek = { seekPos ->
+                                player.seekTo((seekPos * player.duration).toLong())
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            playedColor = MaterialTheme.colorScheme.primary,
+                            unplayedColor = MaterialTheme.colorScheme.surfaceVariant,
+                            cursorColor = MaterialTheme.colorScheme.primary,
+                        )
+                    }
 
                     Spacer(Modifier.height(12.dp))
 
