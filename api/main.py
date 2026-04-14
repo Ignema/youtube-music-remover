@@ -405,7 +405,7 @@ def process_video(job_id: str, url: str, model: str, batch_size: int,
                         meta = {
                             "title": data.get("title", ""),
                             "channel": data.get("channel", data.get("uploader", "")),
-                            "duration": data.get("duration", 0),
+                            "duration": int(data.get("duration", 0) or 0),
                             "thumbnail": data.get("thumbnail", ""),
                             "view_count": data.get("view_count", 0),
                             "upload_date": data.get("upload_date", ""),
@@ -516,7 +516,7 @@ async def video_info(request: Request, url: str):
     return {
         "title": data.get("title", ""),
         "channel": data.get("channel", data.get("uploader", "")),
-        "duration": data.get("duration", 0),
+        "duration": int(data.get("duration", 0) or 0),
         "thumbnail": data.get("thumbnail", ""),
         "view_count": data.get("view_count", 0),
         "upload_date": data.get("upload_date", ""),

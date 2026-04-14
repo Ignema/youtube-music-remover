@@ -87,6 +87,7 @@ data class MainUiState(
     val loadingInfo: Boolean = false,
     val videoInfoError: Boolean = false,
     val fileInfoItem: HistoryItem? = null,
+    val currentInfoItem: HistoryItem? = null,
     // New options
     val audioOnly: Boolean = false,
     val bitrate: String = "192k",
