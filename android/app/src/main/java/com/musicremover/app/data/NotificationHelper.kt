@@ -68,7 +68,34 @@ class NotificationHelper(private val context: Context) {
     fun showDone(filename: String) {
         // Dismiss the progress notification
         manager.cancel(NOTIFICATION_ID)
-        // Show a new one on the audible channel
+
+        // Build action intents
+        val serverUrl = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+            .getString("server_url", "") ?: ""
+        val jobId = context.getSharedPreferences("app", Context.MODE_PRIVATE)
+            .getString("last_done_job_id", "") ?: ""
+        val streamUrl = "$serverUrl/api/download/$jobId"
+
+        val playIntent = PendingIntent.getBroadcast(
+            context, 10,
+            Intent(context, com.musicremover.app.NotificationActionReceiver::class.java).apply {
+                action = com.musicremover.app.NotificationActionReceiver.ACTION_PLAY
+                putExtra(com.musicremover.app.NotificationActionReceiver.EXTRA_URL, streamUrl)
+                putExtra(com.musicremover.app.NotificationActionReceiver.EXTRA_FILENAME, filename)
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val shareIntent = PendingIntent.getBroadcast(
+            context, 11,
+            Intent(context, com.musicremover.app.NotificationActionReceiver::class.java).apply {
+                action = com.musicremover.app.NotificationActionReceiver.ACTION_SHARE
+                putExtra(com.musicremover.app.NotificationActionReceiver.EXTRA_URL, streamUrl)
+                putExtra(com.musicremover.app.NotificationActionReceiver.EXTRA_FILENAME, filename)
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
         manager.notify(DONE_NOTIFICATION_ID, NotificationCompat.Builder(context, CHANNEL_DONE)
             .setSmallIcon(android.R.drawable.ic_media_play)
             .setContentTitle(context.getString(R.string.app_name))
@@ -76,6 +103,8 @@ class NotificationHelper(private val context: Context) {
             .setOngoing(false)
             .setAutoCancel(true)
             .setContentIntent(tapIntent)
+            .addAction(android.R.drawable.ic_media_play, context.getString(R.string.play), playIntent)
+            .addAction(android.R.drawable.ic_menu_share, context.getString(R.string.share), shareIntent)
             .build())
     }
 

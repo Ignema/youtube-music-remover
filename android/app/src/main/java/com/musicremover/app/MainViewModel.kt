@@ -859,7 +859,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             ytDescription = ytMeta?.description ?: meta?.ytDescription,
                         ))
                         _ui.value = _ui.value.copy(history = historyStore.getAll())
-                        prefs.edit().remove("active_job_id").apply()
+                        prefs.edit().remove("active_job_id").putString("last_done_job_id", jobId).apply()
                         ProcessingService.stop(getApplication())
                         notif.showDone(filename)
                         hapticTick()
