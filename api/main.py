@@ -252,7 +252,7 @@ async def lifespan(app: FastAPI):
     except ImportError:
         logger.info("Zeroconf not installed — mDNS discovery disabled. pip install zeroconf to enable.")
     except Exception as e:
-        logger.warning(f"mDNS registration failed: {e}")
+        logger.warning(f"mDNS registration failed: {type(e).__name__}: {e}")
 
     yield
 
