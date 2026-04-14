@@ -114,6 +114,7 @@ data class MainUiState(
     val themeMode: String = "system",
     val dynamicColor: Boolean = true,
     val language: String = "",
+    val widgetTheme: String = "orange",
 )
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -152,6 +153,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             themeMode = settingsStore.themeMode,
             dynamicColor = settingsStore.dynamicColor,
             language = settingsStore.language,
+            widgetTheme = settingsStore.widgetTheme,
         )
         // Resume polling if app was killed mid-processing
         val savedJobId = prefs.getString("active_job_id", null)
@@ -286,6 +288,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             androidx.core.os.LocaleListCompat.forLanguageTags(code)
         }
         androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(locales)
+    }
+
+    fun setWidgetTheme(theme: String) {
+        _ui.value = _ui.value.copy(widgetTheme = theme)
+        settingsStore.widgetTheme = theme
+        // Update all widgets
+        val app = getApplication<Application>()
+        val mgr = android.appwidget.AppWidgetManager.getInstance(app)
+        val ids = mgr.getAppWidgetIds(android.content.ComponentName(app, MuremWidget::class.java))
+        for (id in ids) MuremWidget.updateWidget(app, mgr, id)
     }
 
     fun reset() {

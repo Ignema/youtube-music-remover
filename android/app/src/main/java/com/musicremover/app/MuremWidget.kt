@@ -24,6 +24,21 @@ class MuremWidget : AppWidgetProvider() {
         fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, widgetId: Int) {
             val views = RemoteViews(context.packageName, R.layout.widget_layout)
 
+            // Apply widget theme
+            val theme = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+                .getString("widget_theme", "orange") ?: "orange"
+            val bgRes = when (theme) {
+                "light" -> R.drawable.widget_bg_light
+                "dark" -> R.drawable.widget_bg_dark
+                "transparent" -> R.drawable.widget_bg_transparent
+                else -> R.drawable.widget_background
+            }
+            views.setInt(R.id.widget_root, "setBackgroundResource", bgRes)
+
+            // Text color based on theme
+            val textColor = if (theme == "light") 0xFF333333.toInt() else 0xFFFFFFFF.toInt()
+            val iconAlpha = if (theme == "light") 200 else 255
+
             // Paste & Process — reads clipboard and starts processing
             views.setOnClickPendingIntent(
                 R.id.widget_paste_process,

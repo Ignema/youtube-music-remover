@@ -24,4 +24,9 @@ class SettingsStore(context: Context) {
     var language: String
         get() = prefs.getString("language", "") ?: ""
         set(value) = prefs.edit().putString("language", value).apply()
+
+    /** Widget theme: "orange", "light", "dark", "transparent" */
+    var widgetTheme: String
+        get() = prefs.getString("widget_theme", "orange") ?: "orange"
+        set(value) = prefs.edit().putString("widget_theme", value).apply()
 }

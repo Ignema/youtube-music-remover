@@ -210,6 +210,46 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
                 }
             }
 
+            Spacer(Modifier.height(8.dp))
+
+            // Widget theme
+            var showWidgetThemePicker by remember { mutableStateOf(false) }
+            val widgetThemeLabel = when (ui.widgetTheme) {
+                "light" -> stringResource(R.string.light)
+                "dark" -> stringResource(R.string.dark)
+                "transparent" -> stringResource(R.string.widget_transparent)
+                else -> "Orange"
+            }
+            SettingsRow(
+                label = stringResource(R.string.widget_theme),
+                value = widgetThemeLabel,
+                onClick = { showWidgetThemePicker = true },
+            )
+
+            if (showWidgetThemePicker) {
+                androidx.compose.material3.ModalBottomSheet(
+                    onDismissRequest = { showWidgetThemePicker = false },
+                ) {
+                    Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp)) {
+                        Text(stringResource(R.string.widget_theme), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.height(16.dp))
+                        listOf(
+                            "orange" to "Orange",
+                            "light" to stringResource(R.string.light),
+                            "dark" to stringResource(R.string.dark),
+                            "transparent" to stringResource(R.string.widget_transparent),
+                        ).forEach { (value, label) ->
+                            PickerOption(
+                                label = label,
+                                selected = ui.widgetTheme == value,
+                                onClick = { vm.setWidgetTheme(value); showWidgetThemePicker = false },
+                            )
+                            Spacer(Modifier.height(4.dp))
+                        }
+                    }
+                }
+            }
+
             Spacer(Modifier.height(24.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(Modifier.height(24.dp))

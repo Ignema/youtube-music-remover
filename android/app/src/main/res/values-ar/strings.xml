@@ -106,6 +106,8 @@
     <string name="light">فاتح</string>
     <string name="dark">داكن</string>
     <string name="black_oled">أسود (OLED)</string>
+    <string name="widget_theme">مظهر الويدجت</string>
+    <string name="widget_transparent">شفاف</string>
     <string name="system">النظام</string>
     <string name="file_details">تفاصيل الملف</string>
     <string name="about_desc">شيل الموسيقى الخلفية من فيديوهات YouTube باستخدام فصل الأصوات بالذكاء الاصطناعي.</string>

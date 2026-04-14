@@ -110,6 +110,8 @@
     <string name="light">Light</string>
     <string name="dark">Dark</string>
     <string name="black_oled">Black (OLED)</string>
+    <string name="widget_theme">Widget Theme</string>
+    <string name="widget_transparent">Transparent</string>
     <string name="system">System</string>
     <string name="file_details">File Details</string>
     <string name="about_desc">Strip background music from YouTube videos using AI-powered vocal separation.</string>
