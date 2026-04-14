@@ -69,6 +69,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
     val context = LocalContext.current
+    val activity = context as? android.app.Activity
     val player = remember {
         ExoPlayer.Builder(context).build().apply {
             setMediaItem(MediaItem.fromUri(Uri.parse(url)))
@@ -78,7 +79,10 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
     }
 
     DisposableEffect(Unit) {
-        onDispose { player.release() }
+        onDispose {
+            player.release()
+            activity?.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
     }
 
     var progress by remember { mutableFloatStateOf(0f) }
@@ -90,6 +94,15 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
     var isSeeking by remember { mutableStateOf(false) }
     var seekPreviewTime by remember { mutableStateOf("") }
     var isFullscreen by remember { mutableStateOf(false) }
+
+    // Handle orientation for fullscreen
+    LaunchedEffect(isFullscreen, videoAspectRatio) {
+        if (isFullscreen && videoAspectRatio > 1.2f) {
+            activity?.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        } else {
+            activity?.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
 
     // Tap-to-toggle overlay
     var showOverlay by remember { mutableStateOf(false) }
@@ -232,15 +245,12 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                     )
                 }
 
-                // Fullscreen toggle — top right
+                // Fullscreen toggle — bottom right (ergonomic)
                 IconButton(
                     onClick = { isFullscreen = !isFullscreen },
                     modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(
-                            end = 8.dp,
-                            top = 40.dp,
-                        )
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp)
                         .size(40.dp)
                         .shadow(4.dp, CircleShape)
                         .clip(CircleShape)
