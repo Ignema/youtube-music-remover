@@ -27,6 +27,7 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Forward10
 import androidx.compose.material.icons.outlined.Fullscreen
 import androidx.compose.material.icons.outlined.FullscreenExit
+import androidx.compose.material.icons.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Replay10
@@ -97,12 +98,10 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
     var videoAspectRatio by remember { mutableFloatStateOf(16f / 9f) }
 
     // Handle orientation for fullscreen
-    LaunchedEffect(isFullscreen, videoAspectRatio) {
-        if (isFullscreen && videoAspectRatio > 1.2f) {
-            activity?.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-        } else {
-            activity?.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        }
+    if (isFullscreen && videoAspectRatio > 1.2f) {
+        activity?.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+    } else if (!isFullscreen) {
+        activity?.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     }
 
     // Tap-to-toggle overlay
@@ -250,12 +249,12 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                     )
                 }
 
-                // Fullscreen toggle — bottom right (ergonomic)
+                // Fullscreen toggle — bottom right
                 IconButton(
                     onClick = { isFullscreen = !isFullscreen },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(8.dp)
+                        .padding(end = 8.dp, bottom = 36.dp)
                         .size(40.dp)
                         .shadow(4.dp, CircleShape)
                         .clip(CircleShape)
@@ -266,6 +265,30 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                         "Fullscreen",
                         tint = Color.White,
                         modifier = Modifier.size(22.dp),
+                    )
+                }
+
+                // Open in external player — bottom left
+                IconButton(
+                    onClick = {
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                            setDataAndType(Uri.parse(url), "video/*")
+                            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(start = 8.dp, bottom = 36.dp)
+                        .size(40.dp)
+                        .shadow(4.dp, CircleShape)
+                        .clip(CircleShape)
+                        .background(Color.Black.copy(alpha = 0.4f)),
+                ) {
+                    Icon(
+                        Icons.Outlined.OpenInNew, "External player",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp),
                     )
                 }
 
