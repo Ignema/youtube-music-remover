@@ -63,6 +63,40 @@ MODELS = [
     "model_bs_roformer_ep_317_sdr_12.9755.ckpt",
 ]
 BITRATES = ["128k", "192k", "320k"]
+
+# --- GPU Detection ---
+def has_gpu() -> bool:
+    """Check if CUDA GPU is available for onnxruntime."""
+    try:
+        import onnxruntime
+        return "CUDAExecutionProvider" in onnxruntime.get_available_providers()
+    except Exception:
+        return False
+
+HAS_GPU = has_gpu()
+
+# Time estimate multipliers (seconds of processing per second of audio)
+# Based on empirical measurements
+TIME_MULTIPLIERS = {
+    # MDX-Net models (ONNX) — fast
+    "onnx_gpu": 0.3,
+    "onnx_cpu": 2.0,
+    # Roformer models (CKPT) — slower but better quality
+    "ckpt_gpu": 0.8,
+    "ckpt_cpu": 6.0,
+}
+
+def estimate_time(duration_seconds: float, model: str) -> int:
+    """Estimate processing time in seconds based on video duration and model."""
+    if duration_seconds <= 0:
+        return 0
+    is_roformer = model.endswith(".ckpt")
+    if is_roformer:
+        mult = TIME_MULTIPLIERS["ckpt_gpu"] if HAS_GPU else TIME_MULTIPLIERS["ckpt_cpu"]
+    else:
+        mult = TIME_MULTIPLIERS["onnx_gpu"] if HAS_GPU else TIME_MULTIPLIERS["onnx_cpu"]
+    # Add ~10s overhead for download/merge
+    return int(duration_seconds * mult) + 10
 JOB_TTL_HOURS = 24  # Auto-cleanup jobs older than this
 
 # --- SQLite Job Store ---
@@ -89,6 +123,7 @@ def init_db():
                 output_path TEXT,
                 filename TEXT,
                 metadata TEXT,
+                eta_seconds INTEGER DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -98,7 +133,7 @@ def init_db():
 
 def db_set(job_id: str, **kwargs):
     """Update job fields. Keys are hardcoded by callers — never from user input."""
-    allowed_keys = {"status", "progress", "error", "output_path", "filename", "metadata"}
+    allowed_keys = {"status", "progress", "error", "output_path", "filename", "metadata", "eta_seconds"}
     for k in kwargs:
         if k not in allowed_keys:
             raise ValueError(f"Invalid job field: {k}")
@@ -443,7 +478,8 @@ def process_video(job_id: str, url: str, model: str, batch_size: int,
                             "upload_date": data.get("upload_date", ""),
                             "description": (data.get("description", "") or "")[:300],
                         }
-                        db_set(job_id, metadata=json.dumps(meta))
+                        db_set(job_id, metadata=json.dumps(meta),
+                               eta_seconds=estimate_time(data.get("duration", 0) or 0, model))
                         break
             except Exception:
                 pass
@@ -526,7 +562,7 @@ def process_upload(job_id: str, file_path: Path, original_name: str,
 @app.get("/health")
 def health_check():
     """Health check endpoint for monitoring."""
-    return {"status": "ok", "version": "2.0.0"}
+    return {"status": "ok", "version": "2.0.0", "gpu": HAS_GPU}
 
 
 @app.get("/api/models")
