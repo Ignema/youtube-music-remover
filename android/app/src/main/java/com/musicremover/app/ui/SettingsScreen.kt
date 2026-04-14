@@ -292,15 +292,24 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
             Spacer(Modifier.height(16.dp))
 
             AnimatedVisibility(visible = isCustom) {
-                OutlinedTextField(
-                    value = ui.serverUrl,
-                    onValueChange = vm::onServerUrlChange,
-                    label = { Text(stringResource(R.string.server_url)) },
-                    placeholder = { Text("http://192.168.1.100:8000") },
-                    singleLine = true,
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                Column {
+                    OutlinedTextField(
+                        value = ui.serverUrl,
+                        onValueChange = vm::onServerUrlChange,
+                        label = { Text(stringResource(R.string.server_url)) },
+                        placeholder = { Text("http://192.168.1.100:8000") },
+                        singleLine = true,
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = vm::discoverServer,
+                        shape = RoundedCornerShape(12.dp),
+                    ) {
+                        Text(stringResource(R.string.discover_server))
+                    }
+                }
             }
 
             Spacer(Modifier.height(24.dp))

@@ -77,6 +77,7 @@
     <string name="local_termux">محلي (Termux)</string>
     <string name="custom">مخصص</string>
     <string name="server_url">رابط السيرفر</string>
+    <string name="discover_server">بحث تلقائي على الشبكة</string>
     <string name="on_device_processing">المعالجة على الجهاز</string>
     <string name="on_device_desc">شغّل السيرفر محلياً على تلفونك باستخدام Termux + Ubuntu (proot).</string>
     <string name="termux_detected">تم اكتشاف Termux</string>

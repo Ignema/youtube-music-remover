@@ -514,6 +514,47 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         settingsStore.serverUrl = url
     }
 
+    /** Discover Murem server on local network via mDNS/NSD */
+    fun discoverServer() {
+        val app = getApplication<Application>()
+        val nsdManager = app.getSystemService(android.content.Context.NSD_SERVICE) as android.net.nsd.NsdManager
+        showTransientError("Searching for server…")
+
+        val listener = object : android.net.nsd.NsdManager.DiscoveryListener {
+            override fun onDiscoveryStarted(serviceType: String) {}
+            override fun onDiscoveryStopped(serviceType: String) {}
+            override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
+                showTransientError("Discovery failed")
+            }
+            override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {}
+            override fun onServiceFound(serviceInfo: android.net.nsd.NsdServiceInfo) {
+                nsdManager.resolveService(serviceInfo, object : android.net.nsd.NsdManager.ResolveListener {
+                    override fun onResolveFailed(si: android.net.nsd.NsdServiceInfo, errorCode: Int) {}
+                    override fun onServiceResolved(si: android.net.nsd.NsdServiceInfo) {
+                        val host = si.host?.hostAddress ?: return
+                        val port = si.port
+                        val url = "http://$host:$port"
+                        onServerUrlChange(url)
+                        showTransientError("Found server at $url")
+                        try { nsdManager.stopServiceDiscovery(this@object) } catch (_: Exception) {}
+                    }
+                })
+            }
+            override fun onServiceLost(serviceInfo: android.net.nsd.NsdServiceInfo) {}
+        }
+
+        try {
+            nsdManager.discoverServices("_murem._tcp", android.net.nsd.NsdManager.PROTOCOL_DNS_SD, listener)
+            // Auto-stop after 10 seconds
+            bgScope.launch {
+                delay(10000)
+                try { nsdManager.stopServiceDiscovery(listener) } catch (_: Exception) {}
+            }
+        } catch (e: Exception) {
+            showTransientError("Discovery error: ${e.message}")
+        }
+    }
+
     fun installTermuxServer() {
         val error = TermuxHelper.installServer(getApplication())
         if (error != null) {

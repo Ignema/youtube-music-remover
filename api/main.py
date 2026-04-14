@@ -225,7 +225,39 @@ async def lifespan(app: FastAPI):
             prune_dead_ws_clients()
 
     cleanup_task = asyncio.create_task(periodic_cleanup())
+
+    # Register mDNS/Zeroconf service for auto-discovery
+    zc = None
+    zc_info = None
+    try:
+        from zeroconf import Zeroconf, ServiceInfo
+        import socket
+        hostname = socket.gethostname()
+        local_ip = socket.gethostbyname(hostname)
+        zc_info = ServiceInfo(
+            "_murem._tcp.local.",
+            f"Murem Server._murem._tcp.local.",
+            addresses=[socket.inet_aton(local_ip)],
+            port=8000,
+            properties={"version": "2.0.0"},
+        )
+        zc = Zeroconf()
+        zc.register_service(zc_info)
+        logger.info(f"mDNS registered: {local_ip}:8000")
+    except ImportError:
+        logger.info("Zeroconf not installed — mDNS discovery disabled. pip install zeroconf to enable.")
+    except Exception as e:
+        logger.warning(f"mDNS registration failed: {e}")
+
     yield
+
+    # Cleanup
+    if zc and zc_info:
+        try:
+            zc.unregister_service(zc_info)
+            zc.close()
+        except Exception:
+            pass
     cleanup_task.cancel()
     logger.info("Murem API shutting down")
 

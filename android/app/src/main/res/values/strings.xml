@@ -81,6 +81,7 @@
     <string name="local_termux">Local (Termux)</string>
     <string name="custom">Custom</string>
     <string name="server_url">Server URL</string>
+    <string name="discover_server">Auto-discover on network</string>
     <string name="on_device_processing">On-Device Processing</string>
     <string name="on_device_desc">Run the server locally on your phone using Termux + Ubuntu (proot).</string>
     <string name="termux_detected">Termux detected</string>
