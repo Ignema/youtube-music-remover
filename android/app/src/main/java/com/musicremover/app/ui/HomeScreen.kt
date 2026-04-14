@@ -169,6 +169,7 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
     ) { padding ->
         var isRefreshing by remember { mutableStateOf(false) }
         val refreshScope = androidx.compose.runtime.rememberCoroutineScope()
+        val scrollState = rememberScrollState()
 
         androidx.compose.material3.pulltorefresh.PullToRefreshBox(
             isRefreshing = isRefreshing,
@@ -176,10 +177,11 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
                 isRefreshing = true
                 vm.refresh()
                 refreshScope.launch {
-                    kotlinx.coroutines.delay(1000)
+                    delay(1000)
                     isRefreshing = false
                 }
             },
+            isEnabled = scrollState.value == 0,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
@@ -188,7 +190,7 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .imePadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
