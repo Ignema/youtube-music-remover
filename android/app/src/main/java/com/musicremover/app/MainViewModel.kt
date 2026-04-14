@@ -1123,10 +1123,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     context.startActivity(chooser)
                     dismissInfoSheet()
                 }
-            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            } catch (_: kotlinx.coroutines.TimeoutCancellationException) {
                 showTransientError("Share timed out")
             } catch (e: Exception) {
-                showTransientError(e.message ?: "Share failed")
+                val msg = e.message ?: ""
+                if (!msg.contains("cancel", ignoreCase = true) && !msg.contains("routine", ignoreCase = true)) {
+                    showTransientError(msg.ifEmpty { "Share failed" })
+                }
             }
             _ui.value = _ui.value.copy(sharing = false)
         }
