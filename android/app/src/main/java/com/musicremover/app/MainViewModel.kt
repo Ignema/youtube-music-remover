@@ -386,35 +386,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun fetchVideoInfo(url: String, item: HistoryItem? = null) {
-        if (url.isEmpty()) return
-        _ui.value = _ui.value.copy(
-            loadingInfo = true, showInfoSheet = true, videoInfo = null, videoInfoError = false,
-            fileInfoItem = if (item?.isFileUpload == true) item else null,
-        )
-        currentInfoItem = item
-        bgScope.launch {
-            try {
-                // Try direct oEmbed first (fast, no server needed)
-                val directInfo = fetchYouTubeInfoDirect(url)
-                if (directInfo != null) {
-                    _ui.value = _ui.value.copy(videoInfo = directInfo, loadingInfo = false)
-                    // Try server API in background for richer data (duration, views, etc.)
-                    try {
-                        val richInfo = kotlinx.coroutines.withTimeout(8_000) { api().info(url) }
-                        _ui.value = _ui.value.copy(videoInfo = richInfo)
-                    } catch (_: Exception) { /* keep oEmbed data */ }
-                } else {
-                    // Fallback to server API
-                    val info = kotlinx.coroutines.withTimeout(10_000) { api().info(url) }
-                    _ui.value = _ui.value.copy(videoInfo = info, loadingInfo = false)
-                }
-            } catch (_: Exception) {
-                _ui.value = _ui.value.copy(loadingInfo = false, videoInfoError = true)
-            }
-        }
-    }
-
     // Track which history item is being viewed (for delete)
     var currentInfoItem: HistoryItem? = null
         private set
