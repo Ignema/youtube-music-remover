@@ -62,8 +62,8 @@ data class MainUiState(
     val url: String = "",
     val selectedModel: String = "Kim_Vocal_2.onnx",
     val models: List<String> = listOf(
-        "UVR-MDX-NET-Inst_HQ_3.onnx",
         "Kim_Vocal_2.onnx",
+        "UVR-MDX-NET-Inst_HQ_3.onnx",
         "UVR_MDXNET_KARA_2.onnx",
         "vocals_mel_band_roformer.ckpt",
         "model_bs_roformer_ep_317_sdr_12.9755.ckpt",

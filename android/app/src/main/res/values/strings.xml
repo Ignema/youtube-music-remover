@@ -38,12 +38,13 @@
     <string name="ai_model">AI Model</string>
     <string name="choose_model">Choose the model for vocal separation</string>
     <string name="model_default_name">UVR-MDX-NET HQ3</string>
-    <string name="model_default_desc">Balanced quality and speed. Best for most videos.</string>
+    <string name="model_default_desc">Fast and lightweight. Good enough for most videos.</string>
     <string name="model_quality_name">Kim Vocal 2</string>
-    <string name="model_quality_desc">Higher quality extraction. Slower but better for music-heavy content.</string>
+    <string name="model_quality_desc">Best MDX-Net model. Great balance of quality and speed.</string>
     <string name="model_karaoke_name">UVR KARA 2</string>
     <string name="model_karaoke_desc">Karaoke-style separation. Best for isolating singing from instrumentals.</string>
     <string name="tag_default">Default</string>
+    <string name="tag_fast">Fast</string>
     <string name="tag_quality">Quality</string>
     <string name="tag_karaoke">Karaoke</string>
     <string name="tag_best">Best</string>

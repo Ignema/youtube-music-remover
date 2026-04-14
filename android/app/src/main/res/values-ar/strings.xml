@@ -38,12 +38,13 @@
     <string name="ai_model">نموذج الذكاء الاصطناعي</string>
     <string name="choose_model">اختر النموذج لفصل الأصوات</string>
     <string name="model_default_name">UVR-MDX-NET HQ3</string>
-    <string name="model_default_desc">توازن بين الجودة والسرعة. الأفضل لأغلب الفيديوهات.</string>
+    <string name="model_default_desc">سريع وخفيف. كافي لأغلب الفيديوهات.</string>
     <string name="model_quality_name">Kim Vocal 2</string>
-    <string name="model_quality_desc">جودة استخراج أعلى. أبطأ بس أفضل للمحتوى اللي فيه موسيقى كثير.</string>
+    <string name="model_quality_desc">أفضل نموذج MDX-Net. توازن ممتاز بين الجودة والسرعة.</string>
     <string name="model_karaoke_name">UVR KARA 2</string>
     <string name="model_karaoke_desc">فصل بأسلوب كاريوكي. الأفضل لعزل الغناء عن الموسيقى.</string>
     <string name="tag_default">افتراضي</string>
+    <string name="tag_fast">سريع</string>
     <string name="tag_quality">جودة</string>
     <string name="tag_karaoke">كاريوكي</string>
     <string name="tag_best">الأفضل</string>

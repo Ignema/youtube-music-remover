@@ -455,19 +455,19 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                     Spacer(Modifier.height(16.dp))
 
                     ModelOption(
-                        name = stringResource(R.string.model_default_name),
-                        description = stringResource(R.string.model_default_desc),
+                        name = stringResource(R.string.model_quality_name),
+                        description = stringResource(R.string.model_quality_desc),
                         tag = stringResource(R.string.tag_default),
-                        selected = ui.selectedModel == "UVR-MDX-NET-Inst_HQ_3.onnx",
-                        onClick = { vm.onModelSelect("UVR-MDX-NET-Inst_HQ_3.onnx") },
+                        selected = ui.selectedModel == "Kim_Vocal_2.onnx",
+                        onClick = { vm.onModelSelect("Kim_Vocal_2.onnx") },
                     )
                     Spacer(Modifier.height(8.dp))
                     ModelOption(
-                        name = stringResource(R.string.model_quality_name),
-                        description = stringResource(R.string.model_quality_desc),
-                        tag = stringResource(R.string.tag_quality),
-                        selected = ui.selectedModel == "Kim_Vocal_2.onnx",
-                        onClick = { vm.onModelSelect("Kim_Vocal_2.onnx") },
+                        name = stringResource(R.string.model_default_name),
+                        description = stringResource(R.string.model_default_desc),
+                        tag = stringResource(R.string.tag_fast),
+                        selected = ui.selectedModel == "UVR-MDX-NET-Inst_HQ_3.onnx",
+                        onClick = { vm.onModelSelect("UVR-MDX-NET-Inst_HQ_3.onnx") },
                     )
                     Spacer(Modifier.height(8.dp))
                     ModelOption(
@@ -1410,8 +1410,8 @@ private fun InfoRow(label: String, value: String) {
 
 @Composable
 private fun modelDisplayName(model: String): String = when (model) {
-    "UVR-MDX-NET-Inst_HQ_3.onnx" -> "${stringResource(R.string.model_default_name)} · ${stringResource(R.string.tag_default)}"
-    "Kim_Vocal_2.onnx" -> "${stringResource(R.string.model_quality_name)} · ${stringResource(R.string.tag_quality)}"
+    "Kim_Vocal_2.onnx" -> "${stringResource(R.string.model_quality_name)} · ${stringResource(R.string.tag_default)}"
+    "UVR-MDX-NET-Inst_HQ_3.onnx" -> "${stringResource(R.string.model_default_name)} · ${stringResource(R.string.tag_fast)}"
     "UVR_MDXNET_KARA_2.onnx" -> "${stringResource(R.string.model_karaoke_name)} · ${stringResource(R.string.tag_karaoke)}"
     "vocals_mel_band_roformer.ckpt" -> "${stringResource(R.string.model_melband_name)} · ${stringResource(R.string.tag_best)}"
     "model_bs_roformer_ep_317_sdr_12.9755.ckpt" -> "${stringResource(R.string.model_bsroformer_name)} · ${stringResource(R.string.tag_premium)}"

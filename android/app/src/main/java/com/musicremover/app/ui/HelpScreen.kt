@@ -143,14 +143,20 @@ fun HelpScreen(onBack: () -> Unit) {
             SectionTitle(stringResource(R.string.help_ai_models))
             Spacer(Modifier.height(12.dp))
 
-            TipCard(Icons.Outlined.Tune, stringResource(R.string.model_default_name),
-                stringResource(R.string.model_default_desc))
-            Spacer(Modifier.height(8.dp))
             TipCard(Icons.Outlined.Tune, stringResource(R.string.model_quality_name),
                 stringResource(R.string.model_quality_desc))
             Spacer(Modifier.height(8.dp))
+            TipCard(Icons.Outlined.Tune, stringResource(R.string.model_default_name),
+                stringResource(R.string.model_default_desc))
+            Spacer(Modifier.height(8.dp))
             TipCard(Icons.Outlined.Tune, stringResource(R.string.model_karaoke_name),
                 stringResource(R.string.model_karaoke_desc))
+            Spacer(Modifier.height(8.dp))
+            TipCard(Icons.Outlined.Tune, stringResource(R.string.model_melband_name),
+                stringResource(R.string.model_melband_desc))
+            Spacer(Modifier.height(8.dp))
+            TipCard(Icons.Outlined.Tune, stringResource(R.string.model_bsroformer_name),
+                stringResource(R.string.model_bsroformer_desc))
 
             Spacer(Modifier.height(32.dp))
         }
