@@ -70,7 +70,6 @@ data class MainUiState(
     ),
     val customModel: String = "",
     val progress: Int = 0,
-    val etaSeconds: Int = 0,
     val statusText: String = "",
     val errorMessage: String = "",
     val jobId: String? = null,
@@ -834,7 +833,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     "error" -> status.error ?: "Error"
                     else -> status.status
                 }
-                _ui.value = _ui.value.copy(progress = status.progress, statusText = text, etaSeconds = status.eta_seconds)
+                _ui.value = _ui.value.copy(progress = status.progress, statusText = text)
                 ProcessingService.start(getApplication(), text, status.progress)
 
                 when (status.status) {

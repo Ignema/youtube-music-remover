@@ -724,22 +724,6 @@ private fun ProcessingContent(ui: MainUiState, vm: MainViewModel) {
 
         Spacer(Modifier.height(24.dp))
 
-        if (ui.etaSeconds > 0) {
-            val remaining = (ui.etaSeconds * (100 - ui.progress) / 100).coerceAtLeast(0)
-            val etaText = if (remaining >= 60) {
-                "${remaining / 60}m ${remaining % 60}s"
-            } else {
-                "${remaining}s"
-            }
-            Text(
-                text = "~$etaText ${stringResource(R.string.remaining)}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-            Spacer(Modifier.height(6.dp))
-        }
-
         Text(
             text = stringResource(R.string.leave_app_hint),
             style = MaterialTheme.typography.bodySmall,

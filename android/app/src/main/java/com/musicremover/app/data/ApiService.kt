@@ -25,7 +25,6 @@ data class StatusResponse(
     val error: String? = null,
     val filename: String? = null,
     val metadata: VideoInfo? = null,
-    val eta_seconds: Int = 0,
 )
 
 data class ModelsResponse(val models: List<String>)

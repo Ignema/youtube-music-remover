@@ -14,7 +14,6 @@
 
     <!-- Processing -->
     <string name="leave_app_hint">تقدر تطلع من التطبيق — بنرسلك إشعار لما يخلص.</string>
-    <string name="remaining">متبقي</string>
     <string name="downloading">جاري تحميل الفيديو…</string>
     <string name="downloading_model">جاري تحميل نموذج الذكاء الاصطناعي…</string>
     <string name="separating">جاري فصل الأصوات…</string>
