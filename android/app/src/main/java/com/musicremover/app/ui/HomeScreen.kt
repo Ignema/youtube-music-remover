@@ -74,6 +74,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -673,6 +676,8 @@ private fun ProcessingContent(ui: MainUiState, vm: MainViewModel) {
 
         Spacer(Modifier.height(16.dp))
 
+        var confirmAction by remember { mutableStateOf<String?>(null) }
+
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(
                 onClick = vm::minimizeProcessing,
@@ -682,13 +687,13 @@ private fun ProcessingContent(ui: MainUiState, vm: MainViewModel) {
             }
             if (ui.queue.isNotEmpty()) {
                 OutlinedButton(
-                    onClick = vm::cancelProcessing,
+                    onClick = { confirmAction = "skip" },
                     shape = RoundedCornerShape(12.dp),
                 ) {
                     Text(stringResource(R.string.skip), style = MaterialTheme.typography.labelMedium)
                 }
                 OutlinedButton(
-                    onClick = vm::cancelAll,
+                    onClick = { confirmAction = "cancelAll" },
                     shape = RoundedCornerShape(12.dp),
                     colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
                         contentColor = MaterialTheme.colorScheme.error,
@@ -698,7 +703,7 @@ private fun ProcessingContent(ui: MainUiState, vm: MainViewModel) {
                 }
             } else {
                 OutlinedButton(
-                    onClick = vm::cancelProcessing,
+                    onClick = { confirmAction = "cancel" },
                     shape = RoundedCornerShape(12.dp),
                     colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
                         contentColor = MaterialTheme.colorScheme.error,
@@ -707,6 +712,41 @@ private fun ProcessingContent(ui: MainUiState, vm: MainViewModel) {
                     Text(stringResource(R.string.cancel), style = MaterialTheme.typography.labelMedium)
                 }
             }
+        }
+
+        if (confirmAction != null) {
+            val message = when (confirmAction) {
+                "skip" -> stringResource(R.string.confirm_skip)
+                "cancelAll" -> stringResource(R.string.confirm_cancel_all)
+                else -> stringResource(R.string.confirm_cancel)
+            }
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { confirmAction = null },
+                title = { Text(stringResource(R.string.are_you_sure)) },
+                text = { Text(message) },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(onClick = {
+                        when (confirmAction) {
+                            "skip" -> vm.cancelProcessing()
+                            "cancelAll" -> vm.cancelAll()
+                            else -> vm.cancelProcessing()
+                        }
+                        confirmAction = null
+                    }) {
+                        Text(
+                            if (confirmAction == "cancelAll") stringResource(R.string.cancel_all)
+                            else if (confirmAction == "skip") stringResource(R.string.skip)
+                            else stringResource(R.string.cancel),
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                },
+                dismissButton = {
+                    androidx.compose.material3.TextButton(onClick = { confirmAction = null }) {
+                        Text(stringResource(R.string.nevermind))
+                    }
+                },
+            )
         }
 
         // Queue display

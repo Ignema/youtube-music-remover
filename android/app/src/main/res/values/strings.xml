@@ -101,6 +101,11 @@
     <string name="cancel">Cancel</string>
     <string name="cancel_all">Cancel All</string>
     <string name="skip">Skip</string>
+    <string name="are_you_sure">Are you sure?</string>
+    <string name="confirm_cancel">This will stop the current processing.</string>
+    <string name="confirm_skip">This will skip the current item and process the next one in the queue.</string>
+    <string name="confirm_cancel_all">This will stop processing and clear the entire queue.</string>
+    <string name="nevermind">Nevermind</string>
     <string name="minimize">Minimize</string>
     <string name="add_to_queue">Add to Queue</string>
     <string name="queue_count">%d in queue</string>

@@ -101,6 +101,11 @@
     <string name="cancel">إلغاء</string>
     <string name="cancel_all">إلغاء الكل</string>
     <string name="skip">تخطي</string>
+    <string name="are_you_sure">متأكد؟</string>
+    <string name="confirm_cancel">هذا سيوقف المعالجة الحالية.</string>
+    <string name="confirm_skip">هذا سيتخطى العنصر الحالي ويعالج اللي بعده.</string>
+    <string name="confirm_cancel_all">هذا سيوقف المعالجة ويمسح كل القائمة.</string>
+    <string name="nevermind">لا خلاص</string>
     <string name="minimize">تصغير</string>
     <string name="add_to_queue">أضف للقائمة</string>
     <string name="queue_count">%d في الانتظار</string>
