@@ -291,156 +291,37 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // URL input
-        OutlinedTextField(
-            value = ui.url,
-            onValueChange = {
-                vm.onUrlChange(it)
-                if (it.isNotEmpty()) vm.clearFile()
-            },
-            label = { Text(stringResource(R.string.url_label)) },
-            placeholder = { Text(stringResource(R.string.url_placeholder)) },
-            singleLine = true,
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth(),
-            enabled = ui.selectedFileUri == null,
-            trailingIcon = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (ui.loadingPreview) {
-                        androidx.compose.material3.CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            strokeWidth = 2.dp,
-                        )
-                        Spacer(Modifier.width(4.dp))
-                    }
-                    if (ui.url.isNotEmpty()) {
-                        IconButton(onClick = { vm.onUrlChange("") }) {
-                            Icon(Icons.Outlined.Close, "Clear", Modifier.size(18.dp))
-                        }
-                    } else {
-                        val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
-                        IconButton(onClick = {
-                            val clip = clipboardManager.getText()?.text ?: ""
-                            if (clip.isNotEmpty()) {
-                                vm.onUrlChange(clip)
-                            }
-                        }) {
-                            Icon(Icons.Outlined.ContentPaste, "Paste", Modifier.size(18.dp))
-                        }
-                    }
-                }
-            },
-        )
-
-        // Thumbnail preview
-        val preview = ui.urlPreview
-        if (preview != null && preview.thumbnail.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp))
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                ),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Row(
-                    modifier = Modifier.padding(10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    coil.compose.AsyncImage(
-                        model = preview.thumbnail,
-                        contentDescription = "Thumbnail",
-                        modifier = Modifier
-                            .size(width = 80.dp, height = 45.dp)
-                            .clip(RoundedCornerShape(8.dp)),
-                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            preview.title,
-                            style = MaterialTheme.typography.bodySmall,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        if (preview.channel.isNotEmpty()) {
-                            Text(
-                                preview.channel,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        // Divider
+        // Input mode chips
         Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
         ) {
-            HorizontalDivider(Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
-            Text(
-                stringResource(R.string.or_divider),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.outline,
+            androidx.compose.material3.FilterChip(
+                selected = ui.inputTab == 0,
+                onClick = { vm.setInputTab(0) },
+                label = { Text(stringResource(R.string.tab_url)) },
+                shape = RoundedCornerShape(12.dp),
             )
-            HorizontalDivider(Modifier.weight(1f), color = MaterialTheme.colorScheme.outlineVariant)
+            androidx.compose.material3.FilterChip(
+                selected = ui.inputTab == 1,
+                onClick = { vm.setInputTab(1) },
+                label = { Text(stringResource(R.string.tab_file)) },
+                shape = RoundedCornerShape(12.dp),
+            )
+            androidx.compose.material3.FilterChip(
+                selected = ui.inputTab == 2,
+                onClick = { vm.setInputTab(2) },
+                label = { Text(stringResource(R.string.tab_batch)) },
+                shape = RoundedCornerShape(12.dp),
+            )
         }
 
         Spacer(Modifier.height(16.dp))
 
-        // File picker
-        if (ui.selectedFileUri != null) {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                ),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(Icons.Outlined.VideoFile, null, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
-                    Spacer(Modifier.width(12.dp))
-                    Text(
-                        text = ui.selectedFileName ?: "Selected file",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    IconButton(onClick = vm::clearFile) {
-                        Icon(Icons.Outlined.Close, "Remove", Modifier.size(18.dp))
-                    }
-                }
-            }
-        } else {
-            OutlinedButton(
-                onClick = { filePicker.launch("video/*") },
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-            ) {
-                Icon(Icons.Outlined.VideoFile, null, Modifier.size(20.dp))
-                Spacer(Modifier.width(10.dp))
-                Text(stringResource(R.string.pick_video), style = MaterialTheme.typography.bodyLarge)
-            }
-        }
-
-        // Import URLs from file
-        androidx.compose.material3.TextButton(
-            onClick = { urlFilePicker.launch("text/*") },
-        ) {
-            Text(
-                stringResource(R.string.import_url_file),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.outline,
-            )
+        when (ui.inputTab) {
+            0 -> UrlInputTab(ui, vm)
+            1 -> FileInputTab(ui, vm, filePicker)
+            2 -> BatchInputTab(ui, vm, urlFilePicker)
         }
 
         Spacer(Modifier.height(16.dp))
@@ -1566,6 +1447,111 @@ private fun ModelOption(
     }
 }
 
+
+@Composable
+private fun UrlInputTab(ui: MainUiState, vm: MainViewModel) {
+    OutlinedTextField(
+        value = ui.url,
+        onValueChange = { vm.onUrlChange(it) },
+        label = { Text(stringResource(R.string.url_label)) },
+        placeholder = { Text(stringResource(R.string.url_placeholder)) },
+        singleLine = true,
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+        trailingIcon = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (ui.loadingPreview) {
+                    androidx.compose.material3.CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                    Spacer(Modifier.width(4.dp))
+                }
+                if (ui.url.isNotEmpty()) {
+                    IconButton(onClick = { vm.onUrlChange("") }) { Icon(Icons.Outlined.Close, "Clear", Modifier.size(18.dp)) }
+                } else {
+                    val clip = androidx.compose.ui.platform.LocalClipboardManager.current
+                    IconButton(onClick = { clip.getText()?.text?.let { if (it.isNotEmpty()) vm.onUrlChange(it) } }) {
+                        Icon(Icons.Outlined.ContentPaste, "Paste", Modifier.size(18.dp))
+                    }
+                }
+            }
+        },
+    )
+    val preview = ui.urlPreview
+    if (preview != null && preview.thumbnail.isNotEmpty()) {
+        Spacer(Modifier.height(12.dp))
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                coil.compose.AsyncImage(
+                    model = preview.thumbnail, contentDescription = "Thumbnail",
+                    modifier = Modifier.size(width = 80.dp, height = 45.dp).clip(RoundedCornerShape(8.dp)),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                )
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(preview.title, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    if (preview.channel.isNotEmpty()) {
+                        Text(preview.channel, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FileInputTab(ui: MainUiState, vm: MainViewModel, filePicker: androidx.activity.result.ActivityResultLauncher<String>) {
+    if (ui.selectedFileUri != null) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Outlined.VideoFile, null, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(12.dp))
+                Text(ui.selectedFileName ?: "Selected file", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                IconButton(onClick = vm::clearFile) { Icon(Icons.Outlined.Close, "Remove", Modifier.size(18.dp)) }
+            }
+        }
+    } else {
+        OutlinedButton(
+            onClick = { filePicker.launch("video/*") },
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth().height(52.dp),
+        ) {
+            Icon(Icons.Outlined.VideoFile, null, Modifier.size(20.dp))
+            Spacer(Modifier.width(10.dp))
+            Text(stringResource(R.string.pick_video), style = MaterialTheme.typography.bodyLarge)
+        }
+    }
+}
+
+@Composable
+private fun BatchInputTab(ui: MainUiState, vm: MainViewModel, urlFilePicker: androidx.activity.result.ActivityResultLauncher<String>) {
+    OutlinedTextField(
+        value = ui.batchText,
+        onValueChange = vm::onBatchTextChange,
+        label = { Text(stringResource(R.string.batch_label)) },
+        placeholder = { Text(stringResource(R.string.batch_placeholder)) },
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth().height(120.dp),
+        maxLines = 6,
+    )
+    Spacer(Modifier.height(8.dp))
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        val count = ui.batchText.lines().count { it.trim().isNotEmpty() }
+        Text(
+            if (count > 0) "$count URL${if (count > 1) "s" else ""}" else "",
+            style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline,
+        )
+        androidx.compose.material3.TextButton(onClick = { urlFilePicker.launch("text/*") }) {
+            Text(stringResource(R.string.import_url_file), style = MaterialTheme.typography.labelMedium)
+        }
+    }
+}
 
 @Composable
 private fun SheetActions(item: HistoryItem, vm: MainViewModel, context: android.content.Context) {

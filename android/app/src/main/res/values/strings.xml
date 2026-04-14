@@ -8,6 +8,11 @@
     <string name="or_divider">or</string>
     <string name="pick_video">Pick a video file</string>
     <string name="import_url_file">Import URLs from file</string>
+    <string name="tab_url">URL</string>
+    <string name="tab_file">File</string>
+    <string name="tab_batch">Batch</string>
+    <string name="batch_label">URLs (one per line)</string>
+    <string name="batch_placeholder">https://youtube.com/watch?v=…\nhttps://tiktok.com/…</string>
     <string name="remove_music">Remove Music</string>
     <string name="change">Change</string>
     <string name="recent">Recent</string>

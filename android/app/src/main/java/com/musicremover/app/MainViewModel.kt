@@ -59,6 +59,8 @@ data class QueueItem(
 
 data class MainUiState(
     val state: UiState = UiState.Idle,
+    val inputTab: Int = 0, // 0=URL, 1=File, 2=Batch
+    val batchText: String = "",
     val url: String = "",
     val selectedModel: String = "Kim_Vocal_2.onnx",
     val models: List<String> = listOf(
@@ -197,6 +199,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // --- Basic state ---
+    fun setInputTab(tab: Int) {
+        _ui.value = _ui.value.copy(inputTab = tab)
+    }
+
+    fun onBatchTextChange(text: String) {
+        _ui.value = _ui.value.copy(batchText = text)
+    }
+
     fun onUrlChange(url: String) {
         previewJob?.cancel()
         if (looksLikeUrl(url)) {
@@ -621,11 +631,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     // --- Processing ---
     fun process() {
+        // Handle batch mode
+        if (_ui.value.inputTab == 2) {
+            val urls = _ui.value.batchText.lines().map { it.trim() }.filter { it.isNotEmpty() }
+            if (urls.isEmpty()) {
+                showTransientError(str(R.string.enter_url_or_file))
+                return
+            }
+            queueUrls(urls)
+            _ui.value = _ui.value.copy(batchText = "")
+            return
+        }
+
         val fileUri = _ui.value.selectedFileUri
         val url = _ui.value.url.trim()
 
         if (fileUri == null && url.isEmpty()) {
-            // Don't clobber processing state — just show a transient error
             showTransientError(str(R.string.enter_url_or_file))
             return
         }

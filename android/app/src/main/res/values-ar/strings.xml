@@ -8,6 +8,11 @@
     <string name="or_divider">أو</string>
     <string name="pick_video">اختر ملف فيديو</string>
     <string name="import_url_file">استيراد روابط من ملف</string>
+    <string name="tab_url">رابط</string>
+    <string name="tab_file">ملف</string>
+    <string name="tab_batch">دفعة</string>
+    <string name="batch_label">روابط (واحد في كل سطر)</string>
+    <string name="batch_placeholder">https://youtube.com/watch?v=…\nhttps://tiktok.com/…</string>
     <string name="remove_music">شيل الموسيقى</string>
     <string name="change">تغيير</string>
     <string name="recent">الأخيرة</string>
