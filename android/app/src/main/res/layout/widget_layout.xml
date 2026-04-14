@@ -28,11 +28,13 @@
         android:layout_marginStart="6dp"
         android:layout_marginEnd="2dp">
         <ImageView
+            android:id="@+id/widget_icon_paste"
             android:layout_width="22dp"
             android:layout_height="22dp"
             android:src="@drawable/ic_widget_paste"
             android:scaleType="centerInside" />
         <TextView
+            android:id="@+id/widget_text_paste"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/tab_url"
@@ -50,11 +52,13 @@
         android:background="@drawable/widget_btn_bg"
         android:layout_marginHorizontal="2dp">
         <ImageView
+            android:id="@+id/widget_icon_file"
             android:layout_width="22dp"
             android:layout_height="22dp"
             android:src="@drawable/ic_widget_upload"
             android:scaleType="centerInside" />
         <TextView
+            android:id="@+id/widget_text_file"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/tab_file"
@@ -72,11 +76,13 @@
         android:background="@drawable/widget_btn_bg"
         android:layout_marginHorizontal="2dp">
         <ImageView
+            android:id="@+id/widget_icon_batch"
             android:layout_width="22dp"
             android:layout_height="22dp"
             android:src="@drawable/ic_widget_batch"
             android:scaleType="centerInside" />
         <TextView
+            android:id="@+id/widget_text_batch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/tab_batch"
@@ -94,11 +100,13 @@
         android:background="@drawable/widget_btn_bg"
         android:layout_marginStart="2dp">
         <ImageView
+            android:id="@+id/widget_icon_settings"
             android:layout_width="22dp"
             android:layout_height="22dp"
             android:src="@drawable/ic_widget_settings"
             android:scaleType="centerInside" />
         <TextView
+            android:id="@+id/widget_text_settings"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/settings"

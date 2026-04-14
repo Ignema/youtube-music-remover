@@ -37,7 +37,19 @@ class MuremWidget : AppWidgetProvider() {
 
             // Text color based on theme
             val textColor = if (theme == "light") 0xFF333333.toInt() else 0xFFFFFFFF.toInt()
-            val iconAlpha = if (theme == "light") 200 else 255
+
+            // Apply text colors
+            views.setTextColor(R.id.widget_text_paste, textColor)
+            views.setTextColor(R.id.widget_text_file, textColor)
+            views.setTextColor(R.id.widget_text_batch, textColor)
+            views.setTextColor(R.id.widget_text_settings, textColor)
+
+            // Apply icon tint for light theme
+            val btnBgRes = if (theme == "light") R.drawable.widget_btn_bg_light else R.drawable.widget_btn_bg
+            views.setInt(R.id.widget_paste_process, "setBackgroundResource", btnBgRes)
+            views.setInt(R.id.widget_file, "setBackgroundResource", btnBgRes)
+            views.setInt(R.id.widget_batch, "setBackgroundResource", btnBgRes)
+            views.setInt(R.id.widget_settings, "setBackgroundResource", btnBgRes)
 
             // Paste & Process — reads clipboard and starts processing
             views.setOnClickPendingIntent(
