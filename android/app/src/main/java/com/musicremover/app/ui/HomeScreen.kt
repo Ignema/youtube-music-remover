@@ -412,15 +412,17 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                 label = { Text(stringResource(R.string.audio_only)) },
                 shape = RoundedCornerShape(12.dp),
             )
-            // Bitrate
-            listOf("128k", "192k", "320k").forEach { br ->
-                androidx.compose.material3.FilterChip(
-                    selected = ui.bitrate == br,
-                    onClick = { vm.setBitrate(br) },
-                    label = { Text(br) },
-                    shape = RoundedCornerShape(12.dp),
-                )
-            }
+            // Bitrate — tap to cycle
+            val bitrates = listOf("128k", "192k", "320k")
+            androidx.compose.material3.FilterChip(
+                selected = true,
+                onClick = {
+                    val next = bitrates[(bitrates.indexOf(ui.bitrate) + 1) % bitrates.size]
+                    vm.setBitrate(next)
+                },
+                label = { Text(ui.bitrate) },
+                shape = RoundedCornerShape(12.dp),
+            )
         }
 
         // Model picker bottom sheet (unchanged)
