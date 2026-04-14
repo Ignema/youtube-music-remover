@@ -270,6 +270,23 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
         }
     }
 
+    // URL file picker (txt with URLs, one per line)
+    val urlFilePicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent(),
+    ) { uri ->
+        if (uri != null) {
+            try {
+                val text = context.contentResolver.openInputStream(uri)?.bufferedReader()?.readText() ?: ""
+                val urls = text.lines().map { it.trim() }.filter { it.isNotEmpty() }
+                if (urls.isNotEmpty()) {
+                    vm.queueUrls(urls)
+                }
+            } catch (_: Exception) {
+                vm.showTransientError("Failed to read URL file")
+            }
+        }
+    }
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -413,6 +430,17 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                 Spacer(Modifier.width(10.dp))
                 Text(stringResource(R.string.pick_video), style = MaterialTheme.typography.bodyLarge)
             }
+        }
+
+        // Import URLs from file
+        androidx.compose.material3.TextButton(
+            onClick = { urlFilePicker.launch("text/*") },
+        ) {
+            Text(
+                stringResource(R.string.import_url_file),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.outline,
+            )
         }
 
         Spacer(Modifier.height(16.dp))

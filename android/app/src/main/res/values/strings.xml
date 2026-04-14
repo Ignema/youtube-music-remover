@@ -7,6 +7,7 @@
     <string name="url_placeholder">Paste a link or share from any app</string>
     <string name="or_divider">or</string>
     <string name="pick_video">Pick a video file</string>
+    <string name="import_url_file">Import URLs from file</string>
     <string name="remove_music">Remove Music</string>
     <string name="change">Change</string>
     <string name="recent">Recent</string>

@@ -601,6 +601,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         hapticTick()
     }
 
+    /** Queue multiple URLs at once (from URL file import) */
+    fun queueUrls(urls: List<String>) {
+        val items = urls.map { url ->
+            QueueItem(
+                url = url,
+                model = _ui.value.selectedModel,
+                audioOnly = _ui.value.audioOnly,
+                bitrate = _ui.value.bitrate,
+            )
+        }
+        if (_ui.value.state == UiState.Processing) {
+            val updated = _ui.value.queue + items
+            _ui.value = _ui.value.copy(queue = updated)
+            saveQueue(updated)
+        } else {
+            // Start processing the first, queue the rest
+            val first = items.first()
+            val rest = items.drop(1)
+            _ui.value = _ui.value.copy(queue = rest, url = first.url)
+            saveQueue(rest)
+            processUrl(first.url)
+        }
+        showTransientError("${urls.size} URLs queued")
+        hapticTick()
+    }
+
     private fun addFileToQueue(uri: android.net.Uri) {
         val item = QueueItem(
             url = "",
