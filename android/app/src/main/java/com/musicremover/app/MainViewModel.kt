@@ -418,15 +418,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _ui.value = _ui.value.copy(showInfoSheet = true, fileInfoItem = null, videoInfoError = false, loadingInfo = false, videoInfo = null)
     }
 
-    /** Show info sheet for any history item — fetches YouTube data if URL is a YouTube URL */
+    /** Show info sheet for any history item — uses cached YT data if available */
     fun showVideoInfoSheet(item: HistoryItem) {
         currentInfoItem = item
+        // Use cached YouTube metadata if available
+        val cachedInfo = if (item.ytTitle != null || item.ytThumbnail != null) {
+            VideoInfo(
+                title = item.ytTitle ?: "",
+                channel = item.ytChannel ?: "",
+                thumbnail = item.ytThumbnail ?: "",
+                duration = item.ytDuration,
+                view_count = item.ytViewCount,
+                upload_date = item.ytUploadDate ?: "",
+                description = item.ytDescription ?: "",
+            )
+        } else null
+
         val isYt = item.url.isNotEmpty() && (item.url.contains("youtu") || item.url.matches(Regex("^[a-zA-Z0-9_-]{11}$")))
+        val needsFetch = isYt && cachedInfo == null
+
         _ui.value = _ui.value.copy(
             showInfoSheet = true, fileInfoItem = null,
-            loadingInfo = isYt, videoInfo = null, videoInfoError = false,
+            loadingInfo = needsFetch,
+            videoInfo = cachedInfo,
+            videoInfoError = false,
         )
-        if (isYt) {
+        if (needsFetch) {
             bgScope.launch {
                 try {
                     val directInfo = fetchYouTubeInfoDirect(item.url)
@@ -438,6 +455,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 } catch (_: Exception) {
                     _ui.value = _ui.value.copy(loadingInfo = false, videoInfoError = true)
                 }
+            }
+        } else if (isYt && cachedInfo != null && cachedInfo.duration == 0) {
+            // Have basic info but missing rich data — try server in background
+            bgScope.launch {
+                try {
+                    val rich = kotlinx.coroutines.withTimeout(8_000) { api().info(item.url) }
+                    if (_ui.value.showInfoSheet) {
+                        _ui.value = _ui.value.copy(videoInfo = rich)
+                    }
+                } catch (_: Exception) { /* keep cached data */ }
             }
         }
     }
@@ -682,6 +709,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val isFileUpload: Boolean,
         val sourceFileName: String?,
         val sourceFileSize: Long?,
+        val ytTitle: String? = null,
+        val ytChannel: String? = null,
+        val ytThumbnail: String? = null,
+        val ytDuration: Int = 0,
+        val ytViewCount: Long = 0,
+        val ytUploadDate: String? = null,
+        val ytDescription: String? = null,
     )
     private var activeJobMeta: JobMeta? = null
 
@@ -731,10 +765,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun processUrl(url: String) {
+        val preview = _ui.value.urlPreview
         activeJobMeta = JobMeta(
             url = url, model = _ui.value.selectedModel,
             isFileUpload = false,
             sourceFileName = null, sourceFileSize = null,
+            ytTitle = preview?.title,
+            ytChannel = preview?.channel,
+            ytThumbnail = preview?.thumbnail,
+            ytDuration = preview?.duration ?: 0,
+            ytViewCount = preview?.view_count ?: 0,
+            ytUploadDate = preview?.upload_date,
+            ytDescription = preview?.description,
         )
         pollingJob = bgScope.launch {
             _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.starting))
@@ -800,6 +842,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             isFileUpload = meta?.isFileUpload ?: false,
                             sourceFileName = meta?.sourceFileName,
                             sourceFileSize = meta?.sourceFileSize,
+                            ytTitle = meta?.ytTitle,
+                            ytChannel = meta?.ytChannel,
+                            ytThumbnail = meta?.ytThumbnail,
+                            ytDuration = meta?.ytDuration ?: 0,
+                            ytViewCount = meta?.ytViewCount ?: 0,
+                            ytUploadDate = meta?.ytUploadDate,
+                            ytDescription = meta?.ytDescription,
                         ))
                         _ui.value = _ui.value.copy(history = historyStore.getAll())
                         prefs.edit().remove("active_job_id").apply()

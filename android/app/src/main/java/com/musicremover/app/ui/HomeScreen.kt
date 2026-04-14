@@ -1149,6 +1149,20 @@ private fun ItemInfoSheet(item: HistoryItem, ui: MainUiState) {
                     }
                     InfoChip("$views views")
                 }
+                if (info.upload_date.length == 8) {
+                    val formatted = "${info.upload_date.substring(0, 4)}-${info.upload_date.substring(4, 6)}-${info.upload_date.substring(6, 8)}"
+                    InfoChip(formatted)
+                }
+            }
+            if (info.description.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    info.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
             Spacer(Modifier.height(12.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)

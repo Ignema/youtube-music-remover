@@ -13,6 +13,14 @@ data class HistoryItem(
     val isFileUpload: Boolean = false,
     val sourceFileName: String? = null,
     val sourceFileSize: Long? = null,
+    // Cached YouTube metadata
+    val ytTitle: String? = null,
+    val ytChannel: String? = null,
+    val ytThumbnail: String? = null,
+    val ytDuration: Int = 0,
+    val ytViewCount: Long = 0,
+    val ytUploadDate: String? = null,
+    val ytDescription: String? = null,
 )
 
 class HistoryStore(context: Context) {
