@@ -55,6 +55,9 @@ interface ApiService {
     @GET("/api/status/{jobId}")
     suspend fun status(@Path("jobId") jobId: String): StatusResponse
 
+    @POST("/api/cancel/{jobId}")
+    suspend fun cancel(@Path("jobId") jobId: String): StatusResponse
+
     @GET("/api/info")
     suspend fun info(@retrofit2.http.Query("url") url: String): VideoInfo
 

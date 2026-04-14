@@ -193,6 +193,12 @@ def update_job(job_id: str, **kwargs):
                     ws_clients[job_id].remove(ws)
 
 
+def is_cancelled(job_id: str) -> bool:
+    """Check if a job has been cancelled."""
+    job = db_get(job_id)
+    return job is not None and job["status"] == "cancelled"
+
+
 # --- Lifespan (replaces deprecated on_event) ---
 
 @asynccontextmanager
@@ -296,6 +302,9 @@ def separate_and_merge(job_id: str, video_file: Path, audio_file: Path,
                        temp_dir: Path, output_dir: Path,
                        audio_only: bool = False, bitrate: str = "192k") -> bool:
     """Shared logic: separate vocals → merge/export → output."""
+    if is_cancelled(job_id):
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        return False
     update_job(job_id, status="separating", progress=30)
 
     sep_proc = subprocess.Popen(
@@ -319,6 +328,10 @@ def separate_and_merge(job_id: str, video_file: Path, audio_file: Path,
     sep_proc.wait()
     if sep_proc.returncode != 0:
         update_job(job_id, status="error", error="Separation failed")
+        return False
+
+    if is_cancelled(job_id):
+        shutil.rmtree(temp_dir, ignore_errors=True)
         return False
 
     vocals = [
@@ -378,6 +391,10 @@ def process_video(job_id: str, url: str, model: str, batch_size: int,
             update_job(job_id, status="error", error=f"Download failed: {err}")
             return
 
+        if is_cancelled(job_id):
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            return
+
         video_files = [
             f for f in temp_dir.iterdir()
             if f.suffix in (".mp4", ".webm", ".mkv")
@@ -425,6 +442,10 @@ def process_upload(job_id: str, file_path: Path, original_name: str,
         )
         if not ok:
             update_job(job_id, status="error", error=f"Audio extraction failed: {err}")
+            return
+
+        if is_cancelled(job_id):
+            shutil.rmtree(temp_dir, ignore_errors=True)
             return
 
         separate_and_merge(job_id, file_path, audio_file, model, batch_size,
@@ -572,6 +593,19 @@ def get_status(job_id: str):
     if not job:
         raise HTTPException(404, "Job not found")
     return job
+
+
+@app.post("/api/cancel/{job_id}")
+def cancel_job(job_id: str):
+    """Cancel a running job. The processing thread will stop at the next checkpoint."""
+    job = db_get(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    if job["status"] in ("done", "error", "cancelled"):
+        return {"status": job["status"]}
+    db_set(job_id, status="cancelled")
+    logger.info(f"Job {job_id[:8]} cancelled")
+    return {"status": "cancelled"}
 
 
 @app.get("/api/download/{job_id}")

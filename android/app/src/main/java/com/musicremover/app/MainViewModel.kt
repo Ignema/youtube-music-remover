@@ -665,12 +665,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Cancel current item — processes next in queue if any */
     fun cancelProcessing() {
+        val jobId = _ui.value.jobId
         pollingJob?.cancel()
         pollingJob = null
         activeJobMeta = null
         prefs.edit().remove("active_job_id").apply()
         ProcessingService.stop(getApplication())
         notif.dismiss()
+        if (jobId != null) {
+            bgScope.launch { try { api().cancel(jobId) } catch (_: Exception) {} }
+        }
         if (_ui.value.queue.isNotEmpty()) {
             _ui.value = _ui.value.copy(progress = 0, statusText = "")
             processNextInQueue()
@@ -682,12 +686,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Cancel current item and clear entire queue */
     fun cancelAll() {
+        val jobId = _ui.value.jobId
         pollingJob?.cancel()
         pollingJob = null
         activeJobMeta = null
         prefs.edit().remove("active_job_id").remove("queue").apply()
         ProcessingService.stop(getApplication())
         notif.dismiss()
+        if (jobId != null) {
+            bgScope.launch { try { api().cancel(jobId) } catch (_: Exception) {} }
+        }
         _ui.value = _ui.value.copy(state = UiState.Idle, progress = 0, statusText = "", processingMinimized = false, queue = emptyList())
     }
 
@@ -879,7 +887,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         }
                         return
                     }
-                    "error" -> {
+                    "error", "cancelled" -> {
                         prefs.edit().remove("active_job_id").apply()
                         ProcessingService.stop(getApplication())
                         notif.showError(text)
