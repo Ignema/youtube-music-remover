@@ -76,6 +76,7 @@ data class MainUiState(
     val errorMessage: String = "",
     val jobId: String? = null,
     val showModelPicker: Boolean = false,
+    val showModeDialog: Boolean = false,
     val downloading: Boolean = false,
     val history: List<HistoryItem> = emptyList(),
     val serverUrl: String = "",
@@ -200,7 +201,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     // --- Basic state ---
     fun setInputTab(tab: Int) {
-        _ui.value = _ui.value.copy(inputTab = tab)
+        _ui.value = _ui.value.copy(inputTab = tab, showModeDialog = false)
+    }
+
+    fun showModeDialog() {
+        _ui.value = _ui.value.copy(showModeDialog = true)
+    }
+
+    fun dismissModeDialog() {
+        _ui.value = _ui.value.copy(showModeDialog = false)
     }
 
     fun onBatchTextChange(text: String) {

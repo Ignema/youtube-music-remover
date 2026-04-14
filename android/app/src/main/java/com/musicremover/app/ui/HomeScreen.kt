@@ -103,7 +103,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -> Unit, onPlay: (url: String, title: String) -> Unit = { _, _ -> }) {
     val ui by vm.ui.collectAsState()
@@ -180,9 +180,17 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
                     2 -> stringResource(R.string.tab_batch)
                     else -> stringResource(R.string.tab_url)
                 }
-                androidx.compose.material3.FloatingActionButton(
+                androidx.compose.material3.LargeFloatingActionButton(
                     onClick = { vm.setInputTab((ui.inputTab + 1) % 3) },
+                    shape = androidx.compose.foundation.shape.CircleShape,
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    modifier = Modifier.combinedClickable(
+                        onClick = { vm.setInputTab((ui.inputTab + 1) % 3) },
+                        onLongClick = {
+                            vm.hapticTick()
+                            vm.showModeDialog()
+                        },
+                    ),
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(modeIcon, modeLabel, Modifier.size(24.dp))
@@ -233,6 +241,40 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
                 HistorySection(ui.history, vm, onPlay)
             }
         }
+    }
+
+    // Mode picker dialog (long-press on FAB)
+    if (ui.showModeDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = vm::dismissModeDialog,
+            title = { Text(stringResource(R.string.input_mode)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    ModeDialogOption(
+                        icon = Icons.Outlined.MusicOff,
+                        title = stringResource(R.string.tab_url),
+                        desc = stringResource(R.string.mode_url_desc),
+                        selected = ui.inputTab == 0,
+                        onClick = { vm.setInputTab(0) },
+                    )
+                    ModeDialogOption(
+                        icon = Icons.Outlined.VideoFile,
+                        title = stringResource(R.string.tab_file),
+                        desc = stringResource(R.string.mode_file_desc),
+                        selected = ui.inputTab == 1,
+                        onClick = { vm.setInputTab(1) },
+                    )
+                    ModeDialogOption(
+                        icon = Icons.Outlined.ContentPaste,
+                        title = stringResource(R.string.tab_batch),
+                        desc = stringResource(R.string.mode_batch_desc),
+                        selected = ui.inputTab == 2,
+                        onClick = { vm.setInputTab(2) },
+                    )
+                }
+            },
+            confirmButton = {},
+        )
     }
 
     // Video info bottom sheet
