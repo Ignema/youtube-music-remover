@@ -1264,6 +1264,21 @@ private fun ItemInfoSheet(item: HistoryItem, ui: MainUiState) {
             }
             InfoRow("Size", sizeStr)
         }
+
+        // Original video link
+        if (item.url.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            val context = LocalContext.current
+            Text(
+                text = stringResource(R.string.view_original),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.clickable {
+                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(item.url))
+                    context.startActivity(intent)
+                },
+            )
+        }
     }
 }
 

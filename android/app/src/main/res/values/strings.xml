@@ -113,6 +113,7 @@
     <string name="lost_connection">Lost connection to server</string>
     <string name="video_info_unavailable">Couldn\'t load video info — server might be offline</string>
     <string name="remove_from_history">Remove from History</string>
+    <string name="view_original">View original ↗</string>
 
     <!-- Help -->
     <string name="how_to_use">How to Use</string>
