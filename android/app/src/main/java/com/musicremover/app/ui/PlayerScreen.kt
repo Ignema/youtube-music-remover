@@ -1,9 +1,14 @@
 package com.musicremover.app.ui
 
 import android.net.Uri
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,11 +28,14 @@ import androidx.compose.material.icons.outlined.Forward10
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Replay10
+import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -41,11 +49,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import kotlinx.coroutines.delay
@@ -68,13 +79,19 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
 
     var progress by remember { mutableFloatStateOf(0f) }
     var isPlaying by remember { mutableStateOf(true) }
+    var isBuffering by remember { mutableStateOf(true) }
     var durationMs by remember { mutableStateOf(0L) }
     var positionMs by remember { mutableStateOf(0L) }
-    var videoAspectRatio by remember { mutableFloatStateOf(16f / 9f) }
+    var looping by remember { mutableStateOf(false) }
+    var isSeeking by remember { mutableStateOf(false) }
+    var seekPreviewTime by remember { mutableStateOf("") }
+
+    // Tap-to-toggle overlay
+    var showOverlay by remember { mutableStateOf(false) }
 
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
-        animationSpec = tween(120),
+        animationSpec = tween(if (isSeeking) 0 else 120),
         label = "waveProgress",
     )
 
@@ -83,22 +100,31 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
             if (player.duration > 0) {
                 durationMs = player.duration
                 positionMs = player.currentPosition
-                progress = (player.currentPosition.toFloat() / player.duration).coerceIn(0f, 1f)
+                if (!isSeeking) {
+                    progress = (player.currentPosition.toFloat() / player.duration).coerceIn(0f, 1f)
+                }
             }
             isPlaying = player.isPlaying
-            val format = player.videoFormat
-            if (format != null && format.width > 0 && format.height > 0) {
-                videoAspectRatio = format.width.toFloat() / format.height.toFloat()
-            }
+            isBuffering = player.playbackState == Player.STATE_BUFFERING
             delay(80)
         }
     }
 
+    // Auto-hide overlay
+    LaunchedEffect(showOverlay) {
+        if (showOverlay) {
+            delay(3000)
+            showOverlay = false
+        }
+    }
+
+    // Streaming waveform
     val amplitudes = remember { mutableStateListOf<Float>() }
     LaunchedEffect(url) {
-        val waveform = extractWaveform(context, url, 150)
-        amplitudes.clear()
-        amplitudes.addAll(waveform)
+        streamWaveform(context, url, 150).collect { wave ->
+            amplitudes.clear()
+            amplitudes.addAll(wave)
+        }
     }
 
     Box(
@@ -106,15 +132,23 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface),
     ) {
-        // Video fills available space above the bottom panel
         Column(modifier = Modifier.fillMaxSize()) {
-            // Video
+            // Video area
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .clip(RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                    .background(Color.Black)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) {
+                        if (showOverlay) {
+                            if (player.isPlaying) player.pause() else player.play()
+                        }
+                        showOverlay = !showOverlay
+                    },
                 contentAlignment = Alignment.Center,
             ) {
                 AndroidView(
@@ -127,26 +161,71 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                     modifier = Modifier.fillMaxSize(),
                 )
 
-                // Back button
+                // Buffering spinner
+                if (isBuffering) {
+                    androidx.compose.material3.CircularProgressIndicator(
+                        modifier = Modifier.size(40.dp),
+                        color = Color.White.copy(alpha = 0.8f),
+                        strokeWidth = 3.dp,
+                    )
+                }
+
+                // Tap overlay — play/pause icon
+                AnimatedVisibility(
+                    visible = showOverlay && !isBuffering,
+                    enter = fadeIn(tween(200)),
+                    exit = fadeOut(tween(400)),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(alpha = 0.5f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            if (isPlaying) Icons.Outlined.Pause else Icons.Outlined.PlayArrow,
+                            "Play/Pause",
+                            tint = Color.White,
+                            modifier = Modifier.size(36.dp),
+                        )
+                    }
+                }
+
+                // Back button with shadow
                 IconButton(
                     onClick = onBack,
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(8.dp)
                         .size(40.dp)
+                        .shadow(4.dp, CircleShape)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)),
+                        .background(Color.Black.copy(alpha = 0.4f)),
                 ) {
                     Icon(
                         Icons.AutoMirrored.Outlined.ArrowBack, "Back",
+                        tint = Color.White,
                         modifier = Modifier.size(22.dp),
                     )
                 }
+
+                // Seek preview time (shown while dragging waveform)
+                if (isSeeking && seekPreviewTime.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 12.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.Black.copy(alpha = 0.7f))
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
+                    ) {
+                        Text(seekPreviewTime, color = Color.White, style = MaterialTheme.typography.labelMedium)
+                    }
+                }
             }
 
-            Spacer(Modifier.height(0.dp))
-
-            // Bottom panel — always visible
+            // Bottom panel
             Card(
                 shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
                 colors = CardDefaults.cardColors(
@@ -161,7 +240,7 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Top,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
                             text = title,
@@ -181,14 +260,15 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
 
                     Spacer(Modifier.height(12.dp))
 
-                    // Waveform or loading spinner
+                    // Waveform or loading
                     if (amplitudes.isEmpty()) {
+                        // Placeholder bars while loading
                         Box(
                             modifier = Modifier.fillMaxWidth().height(80.dp),
                             contentAlignment = Alignment.Center,
                         ) {
                             androidx.compose.material3.CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
+                                modifier = Modifier.size(20.dp),
                                 strokeWidth = 2.dp,
                                 color = MaterialTheme.colorScheme.outline,
                             )
@@ -198,7 +278,13 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                             amplitudes = amplitudes,
                             progress = animatedProgress,
                             onSeek = { seekPos ->
-                                player.seekTo((seekPos * player.duration).toLong())
+                                isSeeking = true
+                                progress = seekPos
+                                val seekMs = (seekPos * player.duration).toLong()
+                                seekPreviewTime = formatTime(seekMs)
+                                player.seekTo(seekMs)
+                                isSeeking = false
+                                seekPreviewTime = ""
                             },
                             modifier = Modifier.fillMaxWidth(),
                             playedColor = MaterialTheme.colorScheme.primary,
@@ -207,7 +293,31 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                         )
                     }
 
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(8.dp))
+
+                    // Volume slider
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text("🔊", style = MaterialTheme.typography.labelSmall)
+                        var volume by remember { mutableFloatStateOf(1f) }
+                        Slider(
+                            value = volume,
+                            onValueChange = {
+                                volume = it
+                                player.volume = it
+                            },
+                            modifier = Modifier.weight(1f).height(24.dp),
+                            colors = SliderDefaults.colors(
+                                thumbColor = MaterialTheme.colorScheme.primary,
+                                activeTrackColor = MaterialTheme.colorScheme.primary,
+                                inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                            ),
+                        )
+                    }
+
+                    Spacer(Modifier.height(4.dp))
 
                     // Controls
                     Row(
@@ -215,12 +325,26 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        // Loop
+                        IconButton(onClick = {
+                            looping = !looping
+                            player.repeatMode = if (looping) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
+                        }) {
+                            Icon(
+                                Icons.Outlined.Repeat, "Loop",
+                                Modifier.size(24.dp),
+                                tint = if (looping) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+
+                        Spacer(Modifier.width(8.dp))
+
                         // Rewind 10s
                         IconButton(onClick = { player.seekTo((player.currentPosition - 10000).coerceAtLeast(0)) }) {
                             Icon(Icons.Outlined.Replay10, "Rewind", Modifier.size(28.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
 
-                        Spacer(Modifier.width(16.dp))
+                        Spacer(Modifier.width(12.dp))
 
                         // Play/Pause
                         Box(
@@ -240,12 +364,17 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
                             }
                         }
 
-                        Spacer(Modifier.width(16.dp))
+                        Spacer(Modifier.width(12.dp))
 
                         // Forward 10s
                         IconButton(onClick = { player.seekTo((player.currentPosition + 10000).coerceAtMost(player.duration)) }) {
                             Icon(Icons.Outlined.Forward10, "Forward", Modifier.size(28.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
+
+                        Spacer(Modifier.width(8.dp))
+
+                        // Placeholder for symmetry
+                        Spacer(Modifier.size(48.dp))
                     }
 
                     Spacer(Modifier.height(8.dp))
