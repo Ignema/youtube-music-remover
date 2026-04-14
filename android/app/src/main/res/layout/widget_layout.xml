@@ -9,21 +9,21 @@
     android:gravity="center_vertical">
 
     <!-- Logo with circle backdrop -->
-    <FrameLayout
+    <LinearLayout
         android:id="@+id/widget_logo"
         android:layout_width="44dp"
         android:layout_height="44dp"
-        android:background="@drawable/widget_logo_bg">
+        android:background="@drawable/widget_logo_bg"
+        android:gravity="center">
         <ImageView
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:layout_gravity="center"
             android:src="@drawable/ic_launcher_foreground"
             android:scaleType="centerInside"
             android:contentDescription="@string/app_name" />
-    </FrameLayout>
+    </LinearLayout>
 
-    <!-- Divider line -->
+    <!-- Divider -->
     <View
         android:layout_width="1dp"
         android:layout_height="28dp"
@@ -52,8 +52,7 @@
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:src="@drawable/ic_widget_paste"
-                android:scaleType="centerInside"
-                android:importantForAccessibility="no" />
+                android:scaleType="centerInside" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -77,8 +76,7 @@
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:src="@drawable/ic_widget_upload"
-                android:scaleType="centerInside"
-                android:importantForAccessibility="no" />
+                android:scaleType="centerInside" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -102,8 +100,7 @@
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:src="@drawable/ic_widget_batch"
-                android:scaleType="centerInside"
-                android:importantForAccessibility="no" />
+                android:scaleType="centerInside" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -127,8 +124,7 @@
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:src="@drawable/ic_widget_settings"
-                android:scaleType="centerInside"
-                android:importantForAccessibility="no" />
+                android:scaleType="centerInside" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
