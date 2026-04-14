@@ -291,7 +291,16 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Input mode selector
+        // Tab content first (URL is default, most common)
+        when (ui.inputTab) {
+            0 -> UrlInputTab(ui, vm)
+            1 -> FileInputTab(ui, vm, filePicker)
+            2 -> BatchInputTab(ui, vm, urlFilePicker)
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        // Input mode selector — in thumb zone, below content
         val tabLabels = listOf(
             stringResource(R.string.tab_url),
             stringResource(R.string.tab_file),
@@ -322,14 +331,6 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                     ) { Text(label) }
                 }
             }
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        when (ui.inputTab) {
-            0 -> UrlInputTab(ui, vm)
-            1 -> FileInputTab(ui, vm, filePicker)
-            2 -> BatchInputTab(ui, vm, urlFilePicker)
         }
 
         Spacer(Modifier.height(16.dp))
