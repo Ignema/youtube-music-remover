@@ -130,7 +130,7 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
                         )
 
                         val dotColor = when {
-                            ui.serverChecking -> MaterialTheme.colorScheme.outline.copy(alpha = pulseAlpha)
+                            ui.serverChecking -> Color(0xFFBDBDBD).copy(alpha = pulseAlpha)
                             ui.serverConnected -> Color(0xFF4CAF50)
                             else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
                         }
