@@ -822,6 +822,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     "uploading" -> str(R.string.uploading)
                     "extracting" -> str(R.string.extracting)
                     "downloading" -> str(R.string.downloading)
+                    "downloading_model" -> str(R.string.downloading_model)
                     "separating" -> str(R.string.separating)
                     "merging" -> str(R.string.merging)
                     "done" -> str(R.string.vocals_extracted)

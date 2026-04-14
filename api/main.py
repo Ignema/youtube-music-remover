@@ -308,6 +308,13 @@ def separate_and_merge(job_id: str, video_file: Path, audio_file: Path,
     if is_cancelled(job_id):
         shutil.rmtree(temp_dir, ignore_errors=True)
         return False
+
+    # Check if model needs downloading (first-time use)
+    model_dir = Path.home() / "audio-separator-models"
+    model_path = model_dir / model
+    if not model_path.exists():
+        update_job(job_id, status="downloading_model", progress=25)
+
     update_job(job_id, status="separating", progress=30)
 
     sep_proc = subprocess.Popen(
@@ -321,10 +328,23 @@ def separate_and_merge(job_id: str, video_file: Path, audio_file: Path,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
     )
     pct_re = re.compile(r"(\d+)%\|")
+    download_re = re.compile(r"Downloading|downloading|model.*download", re.IGNORECASE)
     max_sep_pct = 0
+    model_downloaded = model_path.exists()
     for line in iter(sep_proc.stderr.readline, ""):
+        # Detect model download phase
+        if not model_downloaded and download_re.search(line):
+            update_job(job_id, status="downloading_model", progress=25)
+        elif not model_downloaded and max_sep_pct == 0:
+            # Check if model appeared (download finished)
+            if model_path.exists():
+                model_downloaded = True
+                update_job(job_id, status="separating", progress=30)
         m = pct_re.search(line)
         if m:
+            if not model_downloaded:
+                model_downloaded = True
+                update_job(job_id, status="separating", progress=30)
             sep_pct = int(m.group(1))
             max_sep_pct = max(max_sep_pct, sep_pct)
             update_job(job_id, progress=30 + int(max_sep_pct * 0.4))

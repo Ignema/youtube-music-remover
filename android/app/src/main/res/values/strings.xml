@@ -15,6 +15,7 @@
     <!-- Processing -->
     <string name="leave_app_hint">You can leave the app — we\'ll notify you when it\'s done.</string>
     <string name="downloading">Downloading video…</string>
+    <string name="downloading_model">Downloading AI model…</string>
     <string name="separating">Separating vocals…</string>
     <string name="merging">Merging audio…</string>
     <string name="extracting">Extracting audio…</string>
