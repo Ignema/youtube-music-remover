@@ -168,6 +168,29 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
                 ),
             )
         },
+        floatingActionButton = {
+            if (ui.state == UiState.Idle || (ui.state == UiState.Processing && ui.processingMinimized)) {
+                val modeIcon = when (ui.inputTab) {
+                    1 -> Icons.Outlined.VideoFile
+                    2 -> Icons.Outlined.ContentPaste
+                    else -> Icons.Outlined.MusicOff
+                }
+                val modeLabel = when (ui.inputTab) {
+                    1 -> stringResource(R.string.tab_file)
+                    2 -> stringResource(R.string.tab_batch)
+                    else -> stringResource(R.string.tab_url)
+                }
+                androidx.compose.material3.SmallFloatingActionButton(
+                    onClick = { vm.setInputTab((ui.inputTab + 1) % 3) },
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(modeIcon, modeLabel, Modifier.size(18.dp))
+                        Text(modeLabel, style = MaterialTheme.typography.labelSmall, fontSize = 9.sp)
+                    }
+                }
+            }
+        },
     ) { padding ->
         val scrollState = rememberScrollState()
 
@@ -470,89 +493,19 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
             }
         }
 
-        // CTA row with mode switcher
+        // CTA
         val isQueueMode = ui.state == UiState.Processing && ui.processingMinimized
-        val modeIcon = when (ui.inputTab) {
-            1 -> Icons.Outlined.VideoFile
-            2 -> Icons.Outlined.ContentPaste
-            else -> Icons.Outlined.MusicOff
-        }
-        val modeLabel = when (ui.inputTab) {
-            1 -> stringResource(R.string.tab_file)
-            2 -> stringResource(R.string.tab_batch)
-            else -> stringResource(R.string.tab_url)
-        }
-        var showModeDialog by remember { mutableStateOf(false) }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.Top,
+        Button(
+            onClick = vm::process,
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth().height(56.dp),
         ) {
-            // Main CTA
-            Button(
-                onClick = vm::process,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.weight(1f).height(56.dp),
-            ) {
-                Text(
-                    if (isQueueMode) stringResource(R.string.add_to_queue)
-                    else stringResource(R.string.remove_music),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-            }
-            // Mode switcher — tap to cycle, long-press for picker
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .combinedClickable(
-                        onClick = { vm.setInputTab((ui.inputTab + 1) % 3) },
-                        onLongClick = {
-                            vm.hapticTick()
-                            showModeDialog = true
-                        },
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(modeIcon, modeLabel, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(modeLabel, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 9.sp)
-                }
-            }
-        }
-
-        if (showModeDialog) {
-            androidx.compose.material3.AlertDialog(
-                onDismissRequest = { showModeDialog = false },
-                title = { Text(stringResource(R.string.input_mode)) },
-                text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        ModeDialogOption(
-                            icon = Icons.Outlined.MusicOff,
-                            title = stringResource(R.string.tab_url),
-                            desc = stringResource(R.string.mode_url_desc),
-                            selected = ui.inputTab == 0,
-                            onClick = { vm.setInputTab(0); showModeDialog = false },
-                        )
-                        ModeDialogOption(
-                            icon = Icons.Outlined.VideoFile,
-                            title = stringResource(R.string.tab_file),
-                            desc = stringResource(R.string.mode_file_desc),
-                            selected = ui.inputTab == 1,
-                            onClick = { vm.setInputTab(1); showModeDialog = false },
-                        )
-                        ModeDialogOption(
-                            icon = Icons.Outlined.ContentPaste,
-                            title = stringResource(R.string.tab_batch),
-                            desc = stringResource(R.string.mode_batch_desc),
-                            selected = ui.inputTab == 2,
-                            onClick = { vm.setInputTab(2); showModeDialog = false },
-                        )
-                    }
-                },
-                confirmButton = {},
+            Icon(Icons.Outlined.MusicOff, null, Modifier.size(20.dp))
+            Spacer(Modifier.width(10.dp))
+            Text(
+                if (isQueueMode) stringResource(R.string.add_to_queue)
+                else stringResource(R.string.remove_music),
+                style = MaterialTheme.typography.titleMedium,
             )
         }
     }
