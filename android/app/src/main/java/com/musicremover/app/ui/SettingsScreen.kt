@@ -251,35 +251,49 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
 
             Spacer(Modifier.height(16.dp))
 
-            OutlinedTextField(
-                value = ui.serverUrl,
-                onValueChange = vm::onServerUrlChange,
-                label = { Text(stringResource(R.string.server_url)) },
-                placeholder = { Text("http://192.168.1.100:8000") },
-                singleLine = true,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth(),
-            )
+            AnimatedVisibility(visible = isCustom) {
+                OutlinedTextField(
+                    value = ui.serverUrl,
+                    onValueChange = vm::onServerUrlChange,
+                    label = { Text(stringResource(R.string.server_url)) },
+                    placeholder = { Text("http://192.168.1.100:8000") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
 
             Spacer(Modifier.height(24.dp))
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(Modifier.height(24.dp))
 
             // --- Termux Section ---
-            SectionLabel(stringResource(R.string.on_device_processing))
-            Spacer(Modifier.height(4.dp))
-            Text(
-                stringResource(R.string.on_device_desc),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            var termuxExpanded by remember { mutableStateOf(false) }
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable { termuxExpanded = !termuxExpanded },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column {
+                    SectionLabel(stringResource(R.string.on_device_processing))
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        stringResource(R.string.on_device_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
 
-            Spacer(Modifier.height(16.dp))
-
-            if (ui.termuxInstalled) {
-                TermuxControls(vm)
-            } else {
-                TermuxNotInstalled()
+            AnimatedVisibility(visible = termuxExpanded) {
+                Column {
+                    Spacer(Modifier.height(16.dp))
+                    if (ui.termuxInstalled) {
+                        TermuxControls(vm)
+                    } else {
+                        TermuxNotInstalled()
+                    }
+                }
             }
 
             Spacer(Modifier.height(24.dp))

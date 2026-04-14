@@ -734,9 +734,25 @@ private fun ProcessingContent(ui: MainUiState, vm: MainViewModel) {
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(start = 12.dp, top = 6.dp, bottom = 6.dp, end = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        // Mini thumbnail for YouTube URLs
+                        val ytId = item.url.let { url ->
+                            Regex("[?&]v=([a-zA-Z0-9_-]{11})").find(url)?.groupValues?.get(1)
+                                ?: Regex("youtu\\.be/([a-zA-Z0-9_-]{11})").find(url)?.groupValues?.get(1)
+                        }
+                        if (ytId != null) {
+                            coil.compose.AsyncImage(
+                                model = "https://img.youtube.com/vi/$ytId/default.jpg",
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(width = 36.dp, height = 26.dp)
+                                    .clip(RoundedCornerShape(4.dp)),
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            )
+                            Spacer(Modifier.width(8.dp))
+                        }
                         Text(
                             text = if (item.fileUri != null) (item.fileName ?: "File") else item.url.takeLast(30),
                             style = MaterialTheme.typography.bodySmall,
@@ -1020,14 +1036,26 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                         vm.showVideoInfoSheet(item)
                     },
                 )
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                Icons.Outlined.PlayArrow, null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(22.dp),
-            )
+            // Thumbnail for entries with cached image, play icon otherwise
+            if (item.ytThumbnail != null) {
+                coil.compose.AsyncImage(
+                    model = item.ytThumbnail,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(width = 48.dp, height = 34.dp)
+                        .clip(RoundedCornerShape(6.dp)),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                )
+            } else {
+                Icon(
+                    Icons.Outlined.PlayArrow, null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -1036,11 +1064,11 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Text(
-                    text = "$dateStr · ${item.model.removeSuffix(".onnx")}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Spacer(Modifier.height(4.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    InfoChip(dateStr)
+                    InfoChip(item.model.removeSuffix(".onnx").removeSuffix(".ckpt"))
+                }
             }
             IconButton(onClick = {
                 if (hasUrl) vm.onUrlChange(item.url)
