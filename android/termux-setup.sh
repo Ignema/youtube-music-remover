@@ -41,7 +41,7 @@ proot-distro login ubuntu -- bash -c '
 
     # Clone the repo for the API code
     if [ -d ~/music-remover ]; then
-        cd ~/music-remover && git pull
+        cd ~/music-remover && git fetch && git reset --hard origin/master
     else
         git clone https://github.com/Ignema/youtube-music-remover.git ~/music-remover
     fi

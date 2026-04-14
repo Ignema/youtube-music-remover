@@ -57,7 +57,7 @@ object TermuxHelper {
             append("python3 -m venv ~/venv && ")
             append(". ~/venv/bin/activate && ")
             append("pip install fastapi uvicorn yt-dlp python-multipart \"audio-separator[cpu]\" && ")
-            append("if [ -d ~/music-remover ]; then cd ~/music-remover && git pull; ")
+            append("if [ -d ~/music-remover ]; then cd ~/music-remover && git fetch && git reset --hard origin/master; ")
             append("else git clone https://github.com/Ignema/youtube-music-remover.git ~/music-remover; fi && ")
             append("echo && ")
             append("echo ✅ Setup complete! You can now start the server from the app.")
@@ -92,7 +92,7 @@ object TermuxHelper {
         val script = buildString {
             append("proot-distro login ubuntu -- bash -c '")
             append(". ~/venv/bin/activate && ")
-            append("cd ~/music-remover && git pull && ")
+            append("cd ~/music-remover && git fetch && git reset --hard origin/master && ")
             append("pip install --upgrade fastapi uvicorn yt-dlp python-multipart \"audio-separator[cpu]\" && ")
             append("echo && ")
             append("echo ✅ Update complete! Restart the server to apply changes.")
