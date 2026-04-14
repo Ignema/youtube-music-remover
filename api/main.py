@@ -232,11 +232,16 @@ async def lifespan(app: FastAPI):
     try:
         from zeroconf import Zeroconf, ServiceInfo
         import socket
-        hostname = socket.gethostname()
-        local_ip = socket.gethostbyname(hostname)
+        # Get actual network IP (not localhost)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            s.connect(("8.8.8.8", 80))
+            local_ip = s.getsockname()[0]
+        finally:
+            s.close()
         zc_info = ServiceInfo(
             "_murem._tcp.local.",
-            f"Murem Server._murem._tcp.local.",
+            "Murem Server._murem._tcp.local.",
             addresses=[socket.inet_aton(local_ip)],
             port=8000,
             properties={"version": "2.0.0"},
