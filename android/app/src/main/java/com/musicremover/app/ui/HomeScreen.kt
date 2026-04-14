@@ -168,37 +168,6 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
                 ),
             )
         },
-        floatingActionButton = {
-            if (ui.state == UiState.Idle || (ui.state == UiState.Processing && ui.processingMinimized)) {
-                val modeIcon = when (ui.inputTab) {
-                    1 -> Icons.Outlined.VideoFile
-                    2 -> Icons.Outlined.ContentPaste
-                    else -> Icons.Outlined.MusicOff
-                }
-                val modeLabel = when (ui.inputTab) {
-                    1 -> stringResource(R.string.tab_file)
-                    2 -> stringResource(R.string.tab_batch)
-                    else -> stringResource(R.string.tab_url)
-                }
-                androidx.compose.material3.LargeFloatingActionButton(
-                    onClick = { vm.setInputTab((ui.inputTab + 1) % 3) },
-                    shape = androidx.compose.foundation.shape.CircleShape,
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    modifier = Modifier.combinedClickable(
-                        onClick = { vm.setInputTab((ui.inputTab + 1) % 3) },
-                        onLongClick = {
-                            vm.hapticTick()
-                            vm.showModeDialog()
-                        },
-                    ),
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(modeIcon, modeLabel, Modifier.size(24.dp))
-                        Text(modeLabel, style = MaterialTheme.typography.labelSmall)
-                    }
-                }
-            }
-        },
     ) { padding ->
         val scrollState = rememberScrollState()
 
@@ -357,11 +326,54 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Tab content (URL is default)
-        when (ui.inputTab) {
-            0 -> UrlInputTab(ui, vm)
-            1 -> FileInputTab(ui, vm, filePicker)
-            2 -> BatchInputTab(ui, vm, urlFilePicker)
+        // Swipeable input modes
+        val pagerState = androidx.compose.foundation.pager.rememberPagerState(
+            initialPage = ui.inputTab,
+            pageCount = { 3 },
+        )
+        // Sync pager with ViewModel
+        androidx.compose.runtime.LaunchedEffect(pagerState.currentPage) {
+            if (pagerState.currentPage != ui.inputTab) {
+                vm.setInputTab(pagerState.currentPage)
+            }
+        }
+        androidx.compose.runtime.LaunchedEffect(ui.inputTab) {
+            if (pagerState.currentPage != ui.inputTab) {
+                pagerState.animateScrollToPage(ui.inputTab)
+            }
+        }
+
+        androidx.compose.foundation.pager.HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top,
+        ) { page ->
+            Column(modifier = Modifier.fillMaxWidth()) {
+                when (page) {
+                    0 -> UrlInputTab(ui, vm)
+                    1 -> FileInputTab(ui, vm, filePicker)
+                    2 -> BatchInputTab(ui, vm, urlFilePicker)
+                }
+            }
+        }
+
+        // Dot indicator
+        Spacer(Modifier.height(8.dp))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+        ) {
+            repeat(3) { i ->
+                Box(
+                    modifier = Modifier
+                        .size(if (i == pagerState.currentPage) 8.dp else 6.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (i == pagerState.currentPage) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        ),
+                )
+            }
         }
 
         Spacer(Modifier.height(16.dp))
