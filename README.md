@@ -41,6 +41,32 @@ Download the latest APK from [Releases](https://github.com/Ignema/youtube-music-
 - Notification actions (play/share from notification)
 - Material You dynamic theming, 16 languages
 
+### Screenshots
+
+<p align="center">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg" width="180" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg" width="180" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.jpg" width="180" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4.jpg" width="180" />
+</p>
+<p align="center">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5.jpg" width="180" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6.jpg" width="180" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/7.jpg" width="180" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/8.jpg" width="180" />
+</p>
+<p align="center">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/9.jpg" width="180" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/10.jpg" width="180" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/11.jpg" width="180" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/12.jpg" width="180" />
+</p>
+<p align="center">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/13.jpg" width="180" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/14.jpg" width="180" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/15.jpg" width="180" />
+</p>
+
 ### Quick Start (Remote Server)
 
 1. Install the APK on your phone
