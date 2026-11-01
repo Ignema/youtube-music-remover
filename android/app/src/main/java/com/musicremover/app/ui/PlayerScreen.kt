@@ -68,7 +68,13 @@ import kotlinx.coroutines.delay
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
-fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
+fun PlayerScreen(
+    url: String,
+    title: String,
+    onBack: () -> Unit,
+    jobId: String? = null,
+    loadServerWaveform: suspend (String) -> List<Float>? = { null },
+) {
     val context = LocalContext.current
     val activity = context as? android.app.Activity
     val player = remember {
@@ -140,22 +146,18 @@ fun PlayerScreen(url: String, title: String, onBack: () -> Unit) {
         }
     }
 
-    // Waveform — try server pre-computed first, fall back to local streaming
+    // Waveform — try the server's pre-computed one for server jobs, else decode the media itself
+    // (local content:// file or server URL)
     val amplitudes = remember { mutableStateListOf<Float>() }
     LaunchedEffect(url) {
-        // Extract job ID from URL
-        val jobId = url.substringAfterLast("/")
-        // Try server waveform
-        try {
-            val serverUrl = url.substringBefore("/api/")
-            val service = com.musicremover.app.data.ApiClient.getService(serverUrl)
-            val response = service.waveform(jobId)
-            if (response.waveform.isNotEmpty()) {
+        if (jobId != null) {
+            val wave = loadServerWaveform(jobId)
+            if (!wave.isNullOrEmpty()) {
                 amplitudes.clear()
-                amplitudes.addAll(response.waveform)
+                amplitudes.addAll(wave)
                 return@LaunchedEffect
             }
-        } catch (_: Exception) { /* fall through to local */ }
+        }
         // Fall back to local streaming extraction
         streamWaveform(context, url, 150).collect { wave ->
             amplitudes.clear()

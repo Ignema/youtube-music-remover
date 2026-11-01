@@ -12,9 +12,11 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.musicremover.app.ui.HelpScreen
 import com.musicremover.app.ui.HomeScreen
 import com.musicremover.app.ui.PermissionsScreen
@@ -67,10 +69,12 @@ class MainActivity : AppCompatActivity() {
                         androidx.compose.runtime.LaunchedEffect(vm.pendingPlayUrl) {
                             val url = vm.pendingPlayUrl
                             val title = vm.pendingPlayTitle
+                            val jobId = vm.pendingPlayJobId
                             if (url != null && title != null) {
                                 vm.pendingPlayUrl = null
                                 vm.pendingPlayTitle = null
-                                navController.navigate("player/${java.net.URLEncoder.encode(url, "UTF-8")}/${java.net.URLEncoder.encode(title, "UTF-8")}")
+                                vm.pendingPlayJobId = null
+                                navController.navigate(playerRoute(url, title, jobId))
                             }
                         }
                         // Handle pending navigation from widget
@@ -85,8 +89,8 @@ class MainActivity : AppCompatActivity() {
                             vm = vm,
                             onSettingsClick = { navController.navigate("settings") },
                             onHelpClick = { navController.navigate("help") },
-                            onPlay = { url, title ->
-                                navController.navigate("player/${java.net.URLEncoder.encode(url, "UTF-8")}/${java.net.URLEncoder.encode(title, "UTF-8")}")
+                            onPlay = { url, title, jobId ->
+                                navController.navigate(playerRoute(url, title, jobId))
                             },
                         )
                     }
@@ -100,10 +104,24 @@ class MainActivity : AppCompatActivity() {
                     composable("help") {
                         HelpScreen(onBack = { navController.popBackStack() })
                     }
-                    composable("player/{url}/{title}") { backStackEntry ->
+                    composable(
+                        "player/{url}/{title}?jobId={jobId}",
+                        arguments = listOf(navArgument("jobId") {
+                            type = NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        }),
+                    ) { backStackEntry ->
                         val url = java.net.URLDecoder.decode(backStackEntry.arguments?.getString("url") ?: "", "UTF-8")
                         val title = java.net.URLDecoder.decode(backStackEntry.arguments?.getString("title") ?: "", "UTF-8")
-                        PlayerScreen(url = url, title = title, onBack = { navController.popBackStack() })
+                        val jobId = backStackEntry.arguments?.getString("jobId")?.let { java.net.URLDecoder.decode(it, "UTF-8") }
+                        PlayerScreen(
+                            url = url,
+                            title = title,
+                            onBack = { navController.popBackStack() },
+                            jobId = jobId,
+                            loadServerWaveform = { vm.serverWaveform(it) },
+                        )
                     }
                     composable("permissions") {
                         // Handle system back press on first run
@@ -156,12 +174,24 @@ class MainActivity : AppCompatActivity() {
         val title = intent.getStringExtra("play_title") ?: "Result"
         vm.pendingPlayUrl = url
         vm.pendingPlayTitle = title
+        vm.pendingPlayJobId = intent.getStringExtra("play_job_id")
     }
 
     private fun handleShareAction(intent: Intent?) {
+        val filename = intent?.getStringExtra("share_filename") ?: "result"
+        val jobId = intent?.getStringExtra("share_job_id")
+        if (jobId != null) {
+            vm.shareByJobId(this, jobId, filename)
+            return
+        }
+        // Legacy notifications posted by older versions carry a server URL
         val url = intent?.getStringExtra("share_url") ?: return
-        val filename = intent.getStringExtra("share_filename") ?: "result"
         vm.shareByJobUrl(this, url, filename)
+    }
+
+    private fun playerRoute(url: String, title: String, jobId: String?): String {
+        val route = "player/${java.net.URLEncoder.encode(url, "UTF-8")}/${java.net.URLEncoder.encode(title, "UTF-8")}"
+        return if (jobId != null) "$route?jobId=${java.net.URLEncoder.encode(jobId, "UTF-8")}" else route
     }
 
     private fun handleWidgetPaste(intent: Intent?) {

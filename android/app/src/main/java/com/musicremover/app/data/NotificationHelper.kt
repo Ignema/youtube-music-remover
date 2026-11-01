@@ -65,27 +65,23 @@ class NotificationHelper(private val context: Context) {
         manager.notify(NOTIFICATION_ID, buildProgress(status, progress))
     }
 
-    fun showDone(filename: String) {
+    /** [playUrl] is the cached content:// URI or the server download URL; null opens the app instead */
+    fun showDone(filename: String, jobId: String, playUrl: String?) {
         manager.cancel(NOTIFICATION_ID)
-
-        val serverUrl = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-            .getString("server_url", "") ?: ""
-        val jobId = context.getSharedPreferences("app", Context.MODE_PRIVATE)
-            .getString("last_done_job_id", "") ?: ""
-        val streamUrl = "$serverUrl/api/download/$jobId"
 
         val launchClass = try {
             Class.forName("com.musicremover.app.MainActivity")
         } catch (_: Exception) { null }
 
-        val playIntent = if (launchClass != null) {
+        val playIntent = if (launchClass != null && playUrl != null) {
             PendingIntent.getActivity(
                 context, 10,
                 Intent(context, launchClass).apply {
                     action = "com.musicremover.app.ACTION_PLAY"
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    putExtra("play_url", streamUrl)
+                    putExtra("play_url", playUrl)
                     putExtra("play_title", filename)
+                    putExtra("play_job_id", jobId)
                 },
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
@@ -97,7 +93,7 @@ class NotificationHelper(private val context: Context) {
                 Intent(context, launchClass).apply {
                     action = "com.musicremover.app.ACTION_SHARE"
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    putExtra("share_url", streamUrl)
+                    putExtra("share_job_id", jobId)
                     putExtra("share_filename", filename)
                 },
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,

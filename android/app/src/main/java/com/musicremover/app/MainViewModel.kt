@@ -7,16 +7,18 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.lifecycle.AndroidViewModel
-import com.musicremover.app.data.ApiClient
 import com.musicremover.app.R
 import com.musicremover.app.data.HistoryItem
 import com.musicremover.app.data.HistoryStore
 import com.musicremover.app.data.NotificationHelper
-import com.musicremover.app.data.ProcessRequest
 import com.musicremover.app.data.ResultCache
 import com.musicremover.app.data.SettingsStore
 import com.musicremover.app.data.TermuxHelper
 import com.musicremover.app.data.VideoInfo
+import com.musicremover.app.processing.BackendProvider
+import com.musicremover.app.processing.JobEvent
+import com.musicremover.app.processing.ProcessOptions
+import com.musicremover.app.processing.RemoteServerBackend
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -25,7 +27,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 
 enum class UiState { Idle, Processing, Done, Error }
 
@@ -63,13 +64,7 @@ data class MainUiState(
     val batchText: String = "",
     val url: String = "",
     val selectedModel: String = "Kim_Vocal_2.onnx",
-    val models: List<String> = listOf(
-        "Kim_Vocal_2.onnx",
-        "UVR-MDX-NET-Inst_HQ_3.onnx",
-        "UVR_MDXNET_KARA_2.onnx",
-        "vocals_mel_band_roformer.ckpt",
-        "model_bs_roformer_ep_317_sdr_12.9755.ckpt",
-    ),
+    val models: List<String> = RemoteServerBackend.SERVER_MODELS,
     val customModel: String = "",
     val progress: Int = 0,
     val statusText: String = "",
@@ -124,11 +119,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val settingsStore = SettingsStore(application)
     private val notif = NotificationHelper(application)
     private val cache = ResultCache(application)
+    private val backends = BackendProvider(application)
+    private fun backend() = backends.current()
     private val bgScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val prefs = application.getSharedPreferences("app", Context.MODE_PRIVATE)
+    private var pollingJob: kotlinx.coroutines.Job? = null
 
     private val serverUrl: String get() = _ui.value.serverUrl
-    private fun api() = ApiClient.getService(serverUrl)
     private val gson = com.google.gson.Gson()
 
     private fun saveQueue(queue: List<QueueItem>) {
@@ -164,7 +161,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 statusText = application.getString(R.string.resuming),
                 queue = savedQueue,
             )
-            bgScope.launch { pollStatus(savedJobId) }
+            pollingJob = bgScope.launch { runJob(savedJobId) }
         } else if (savedQueue.isNotEmpty()) {
             // No active job but queue was saved — clear stale queue
             prefs.edit().remove("queue").apply()
@@ -174,12 +171,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         bgScope.launch {
             while (true) {
                 if (appInForeground) {
-                    val connected = try {
-                        val conn = java.net.URL("${_ui.value.serverUrl}/health").openConnection()
-                        conn.connectTimeout = 5000
-                        conn.readTimeout = 5000
-                        conn.getInputStream().bufferedReader().readText().contains("ok")
-                    } catch (_: Exception) { false }
+                    val connected = backend().isReady()
                     _ui.value = _ui.value.copy(serverConnected = connected, serverChecking = false)
                     kotlinx.coroutines.delay(10000)
                     _ui.value = _ui.value.copy(serverChecking = true)
@@ -312,12 +304,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun refresh() {
         _ui.value = _ui.value.copy(history = historyStore.getAll(), serverChecking = true)
         bgScope.launch {
-            val connected = try {
-                val conn = java.net.URL("${_ui.value.serverUrl}/health").openConnection()
-                conn.connectTimeout = 5000
-                conn.readTimeout = 5000
-                conn.getInputStream().bufferedReader().readText().contains("ok")
-            } catch (_: Exception) { false }
+            val connected = backend().isReady()
             _ui.value = _ui.value.copy(serverConnected = connected, serverChecking = false)
         }
     }
@@ -368,7 +355,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             delay(600) // Debounce
             try {
                 val info = kotlinx.coroutines.withTimeout(10_000) {
-                    api().info(url)
+                    backend().info(url)
                 }
                 if (_ui.value.url.isNotEmpty()) {
                     _ui.value = _ui.value.copy(urlPreview = info, loadingPreview = false)
@@ -405,9 +392,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             // Try local cache first
             val cachedFile = cache.getCachedFile(item.jobId)
             if (cachedFile != null) {
-                val uri = androidx.core.content.FileProvider.getUriForFile(
-                    context, "${context.packageName}.fileprovider", cachedFile
-                )
+                val uri = cache.contentUri(cachedFile)
                 val mime = if (cachedFile.name.endsWith(".mp3")) "audio/mpeg" else "video/mp4"
                 val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
                     setDataAndType(uri, mime)
@@ -418,13 +403,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
             // Fall back to server, cache for next time
             try {
-                val status = api().status(item.jobId)
-                if (status.status == "done") {
-                    val file = cache.cacheResult(serverUrl, item.jobId, item.filename)
+                if (backend().isResultAvailable(item.jobId)) {
+                    val file = backend().fetchResult(item.jobId, item.filename)
                     if (file != null) {
-                        val uri = androidx.core.content.FileProvider.getUriForFile(
-                            context, "${context.packageName}.fileprovider", file
-                        )
+                        val uri = cache.contentUri(file)
                         val mime = if (file.name.endsWith(".mp3")) "audio/mpeg" else "video/mp4"
                         val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
                             setDataAndType(uri, mime)
@@ -448,6 +430,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Pending play from notification action
     var pendingPlayUrl: String? = null
     var pendingPlayTitle: String? = null
+    var pendingPlayJobId: String? = null
     var pendingNavigation: String? = null
 
     fun dismissInfoSheet() {
@@ -489,7 +472,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (needsFetch) {
             bgScope.launch {
                 try {
-                    val info = kotlinx.coroutines.withTimeout(10_000) { api().info(item.url) }
+                    val info = kotlinx.coroutines.withTimeout(10_000) { backend().info(item.url) }
                     _ui.value = _ui.value.copy(videoInfo = info, loadingInfo = false)
                 } catch (_: Exception) {
                     _ui.value = _ui.value.copy(loadingInfo = false, videoInfoError = true)
@@ -499,7 +482,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             // Have basic info but missing rich data — try server in background
             bgScope.launch {
                 try {
-                    val rich = kotlinx.coroutines.withTimeout(8_000) { api().info(item.url) }
+                    val rich = kotlinx.coroutines.withTimeout(8_000) { backend().info(item.url) }
                     if (_ui.value.showInfoSheet) {
                         _ui.value = _ui.value.copy(videoInfo = rich)
                     }
@@ -638,7 +621,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             exported++
                         } else {
                             // Download from server
-                            val url = java.net.URL("$serverUrl/api/download/${item.jobId}")
+                            val url = java.net.URL(backend().remoteResultUrl(item.jobId) ?: continue)
                             val conn = url.openConnection() as java.net.HttpURLConnection
                             conn.connectTimeout = 10000
                             conn.readTimeout = 30000
@@ -854,7 +837,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         ProcessingService.stop(getApplication())
         notif.dismiss()
         if (jobId != null) {
-            bgScope.launch { try { api().cancel(jobId) } catch (_: Exception) {} }
+            bgScope.launch { try { backend().cancel(jobId) } catch (_: Exception) {} }
         }
         if (_ui.value.queue.isNotEmpty()) {
             _ui.value = _ui.value.copy(progress = 0, statusText = "")
@@ -875,7 +858,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         ProcessingService.stop(getApplication())
         notif.dismiss()
         if (jobId != null) {
-            bgScope.launch { try { api().cancel(jobId) } catch (_: Exception) {} }
+            bgScope.launch { try { backend().cancel(jobId) } catch (_: Exception) {} }
         }
         _ui.value = _ui.value.copy(state = UiState.Idle, progress = 0, statusText = "", processingMinimized = false, queue = emptyList())
     }
@@ -914,8 +897,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _ui.value = _ui.value.copy(snackError = null)
     }
 
-    private var pollingJob: kotlinx.coroutines.Job? = null
-
     /** Metadata captured at job start — used when saving to history */
     private data class JobMeta(
         val url: String,
@@ -946,24 +927,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.uploading))
             ProcessingService.start(getApplication(), str(R.string.uploading), 0)
             try {
-                val context = getApplication<Application>()
                 val fileName = _ui.value.selectedFileName ?: "video.mp4"
-                val bytes = context.contentResolver.openInputStream(uri)?.readBytes()
-                    ?: throw Exception("Cannot read file")
-
-                val filePart = okhttp3.MultipartBody.Part.createFormData(
-                    "file", fileName,
-                    okhttp3.RequestBody.create("video/*".toMediaTypeOrNull(), bytes),
-                )
-                val model = okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), _ui.value.selectedModel)
-                val batch = okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), "4")
-                val audioOnly = okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), _ui.value.audioOnly.toString())
-                val bitrate = okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), _ui.value.bitrate)
-
-                val resp = api().upload(filePart, model, batch, audioOnly, bitrate)
-                _ui.value = _ui.value.copy(jobId = resp.job_id)
-                prefs.edit().putString("active_job_id", resp.job_id).apply()
-                pollStatus(resp.job_id)
+                val jobId = backend().startFile(uri, fileName, options())
+                _ui.value = _ui.value.copy(jobId = jobId)
+                prefs.edit().putString("active_job_id", jobId).apply()
+                runJob(jobId)
             } catch (e: Exception) {
                 ProcessingService.stop(getApplication())
                 showTransientError(e.message ?: "Upload failed")
@@ -986,17 +954,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.starting))
             ProcessingService.start(getApplication(), str(R.string.starting), 0)
             try {
-                val resp = api().process(
-                    ProcessRequest(
-                        url = url,
-                        model = _ui.value.selectedModel,
-                        audio_only = _ui.value.audioOnly,
-                        bitrate = _ui.value.bitrate,
-                    )
-                )
-                _ui.value = _ui.value.copy(jobId = resp.job_id)
-                prefs.edit().putString("active_job_id", resp.job_id).apply()
-                pollStatus(resp.job_id)
+                val jobId = backend().startUrl(url, options())
+                _ui.value = _ui.value.copy(jobId = jobId)
+                prefs.edit().putString("active_job_id", jobId).apply()
+                runJob(jobId)
             } catch (e: Exception) {
                 ProcessingService.stop(getApplication())
                 showTransientError(e.message ?: "Connection failed")
@@ -1009,83 +970,77 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private suspend fun pollStatus(jobId: String) {
-        notif.showProgress(str(R.string.starting), 0)
-        var retries = 0
-        while (true) {
-            delay(2500)
-            try {
-                val status = api().status(jobId)
-                retries = 0
-                val text = when (status.status) {
-                    "queued" -> str(R.string.queued)
-                    "uploading" -> str(R.string.uploading)
-                    "extracting" -> str(R.string.extracting)
-                    "downloading" -> str(R.string.downloading)
-                    "downloading_model" -> str(R.string.downloading_model)
-                    "separating" -> str(R.string.separating)
-                    "merging" -> str(R.string.merging)
-                    "done" -> str(R.string.vocals_extracted)
-                    "error" -> status.error ?: "Error"
-                    else -> status.status
-                }
-                _ui.value = _ui.value.copy(progress = status.progress, statusText = text)
-                ProcessingService.start(getApplication(), text, status.progress)
+    private fun options() = ProcessOptions(_ui.value.selectedModel, _ui.value.audioOnly, _ui.value.bitrate)
 
-                when (status.status) {
-                    "done" -> {
-                        val filename = status.filename ?: "Done"
-                        _ui.value = _ui.value.copy(state = UiState.Done, statusText = filename)
-                        // Cache result on-device
-                        cache.cacheResult(serverUrl, jobId, filename)
-                        val meta = activeJobMeta
-                        // Parse metadata from server (yt-dlp data)
-                        val ytMeta = status.metadata
-                        historyStore.add(HistoryItem(
-                            filename = filename,
-                            url = meta?.url ?: "",
-                            model = meta?.model ?: _ui.value.selectedModel,
-                            jobId = jobId,
-                            isFileUpload = meta?.isFileUpload ?: false,
-                            sourceFileName = meta?.sourceFileName,
-                            sourceFileSize = meta?.sourceFileSize,
-                            sourceFilePath = meta?.sourceFilePath,
-                            ytTitle = ytMeta?.title ?: meta?.ytTitle,
-                            ytChannel = ytMeta?.channel ?: meta?.ytChannel,
-                            ytThumbnail = ytMeta?.thumbnail ?: meta?.ytThumbnail,
-                            ytDuration = ytMeta?.duration ?: meta?.ytDuration ?: 0,
-                            ytViewCount = ytMeta?.view_count ?: meta?.ytViewCount ?: 0,
-                            ytUploadDate = ytMeta?.upload_date ?: meta?.ytUploadDate,
-                            ytDescription = ytMeta?.description ?: meta?.ytDescription,
-                        ))
-                        _ui.value = _ui.value.copy(history = historyStore.getAll())
-                        prefs.edit().remove("active_job_id").putString("last_done_job_id", jobId).apply()
-                        ProcessingService.stop(getApplication())
-                        notif.showDone(filename)
-                        hapticTick()
-                        activeJobMeta = null
-                        // Process next in queue if any
-                        if (_ui.value.queue.isNotEmpty()) {
-                            processNextInQueue()
-                        }
-                        return
-                    }
-                    "error", "cancelled" -> {
-                        prefs.edit().remove("active_job_id").apply()
-                        ProcessingService.stop(getApplication())
-                        notif.showError(text)
-                        showTransientError(text)
-                        if (_ui.value.queue.isNotEmpty()) {
-                            processNextInQueue()
-                        } else {
-                            _ui.value = _ui.value.copy(state = UiState.Idle)
-                        }
-                        return
+    private fun statusText(status: String, error: String?): String = when (status) {
+        "queued" -> str(R.string.queued)
+        "uploading" -> str(R.string.uploading)
+        "extracting" -> str(R.string.extracting)
+        "downloading" -> str(R.string.downloading)
+        "downloading_model" -> str(R.string.downloading_model)
+        "separating" -> str(R.string.separating)
+        "merging" -> str(R.string.merging)
+        "done" -> str(R.string.vocals_extracted)
+        "error" -> error ?: "Error"
+        else -> status
+    }
+
+    private suspend fun runJob(jobId: String) {
+        notif.showProgress(str(R.string.starting), 0)
+        backend().events(jobId).collect { e ->
+            when (e) {
+                is JobEvent.Progress -> {
+                    val text = statusText(e.status, e.error)
+                    _ui.value = _ui.value.copy(progress = e.progress, statusText = text)
+                    ProcessingService.start(getApplication(), text, e.progress)
+                }
+                is JobEvent.Done -> {
+                    val filename = e.filename
+                    _ui.value = _ui.value.copy(state = UiState.Done, statusText = filename)
+                    val meta = activeJobMeta
+                    // Parse metadata from server (yt-dlp data)
+                    val ytMeta = e.metadata
+                    historyStore.add(HistoryItem(
+                        filename = filename,
+                        url = meta?.url ?: "",
+                        model = meta?.model ?: _ui.value.selectedModel,
+                        jobId = jobId,
+                        isFileUpload = meta?.isFileUpload ?: false,
+                        sourceFileName = meta?.sourceFileName,
+                        sourceFileSize = meta?.sourceFileSize,
+                        sourceFilePath = meta?.sourceFilePath,
+                        ytTitle = ytMeta?.title ?: meta?.ytTitle,
+                        ytChannel = ytMeta?.channel ?: meta?.ytChannel,
+                        ytThumbnail = ytMeta?.thumbnail ?: meta?.ytThumbnail,
+                        ytDuration = ytMeta?.duration ?: meta?.ytDuration ?: 0,
+                        ytViewCount = ytMeta?.view_count ?: meta?.ytViewCount ?: 0,
+                        ytUploadDate = ytMeta?.upload_date ?: meta?.ytUploadDate,
+                        ytDescription = ytMeta?.description ?: meta?.ytDescription,
+                    ))
+                    _ui.value = _ui.value.copy(history = historyStore.getAll())
+                    prefs.edit().remove("active_job_id").putString("last_done_job_id", jobId).apply()
+                    ProcessingService.stop(getApplication())
+                    notif.showDone(filename, jobId, resultPlayUrl(jobId))
+                    hapticTick()
+                    activeJobMeta = null
+                    // Process next in queue if any
+                    if (_ui.value.queue.isNotEmpty()) {
+                        processNextInQueue()
                     }
                 }
-            } catch (e: Exception) {
-                retries++
-                if (retries >= 30) {
+                is JobEvent.Failed -> {
+                    val text = statusText(e.status, e.error)
+                    prefs.edit().remove("active_job_id").apply()
+                    ProcessingService.stop(getApplication())
+                    notif.showError(text)
+                    showTransientError(text)
+                    if (_ui.value.queue.isNotEmpty()) {
+                        processNextInQueue()
+                    } else {
+                        _ui.value = _ui.value.copy(state = UiState.Idle)
+                    }
+                }
+                JobEvent.ConnectionLost -> {
                     prefs.edit().remove("active_job_id").apply()
                     ProcessingService.stop(getApplication())
                     notif.showError(str(R.string.lost_connection))
@@ -1095,26 +1050,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     } else {
                         _ui.value = _ui.value.copy(state = UiState.Idle)
                     }
-                    return
                 }
-                delay(retries * 1000L)
             }
         }
     }
 
     // --- Results ---
-    /** Check if a download URL is valid before playing */
-    fun checkAndPlay(url: String, title: String, onSuccess: (String, String) -> Unit) {
+    /** Local cached result as a content:// URI, else the remote download URL */
+    private fun resultPlayUrl(jobId: String): String? =
+        cache.cachedUri(jobId)?.toString() ?: backend().remoteResultUrl(jobId)
+
+    /** Play a history item — local cached file first, else the server if it still has the result */
+    fun playHistoryItem(item: HistoryItem, onPlay: (String, String, String?) -> Unit) {
+        val title = item.filename.removeSuffix(".mp4")
+        val cachedUri = cache.cachedUri(item.jobId)
+        if (cachedUri != null) {
+            onPlay(cachedUri.toString(), title, item.jobId)
+            return
+        }
         _ui.value = _ui.value.copy(checkingPlay = true)
         bgScope.launch {
             try {
-                // Extract job ID from URL and check status
-                val jobId = url.substringAfterLast("/")
-                val status = api().status(jobId)
+                val available = backend().isResultAvailable(item.jobId)
                 _ui.value = _ui.value.copy(checkingPlay = false)
-                if (status.status == "done") {
+                val url = backend().remoteResultUrl(item.jobId)
+                if (available && url != null) {
                     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                        onSuccess(url, title)
+                        onPlay(url, title, item.jobId)
                     }
                 } else {
                     showTransientError("File not ready or no longer available")
@@ -1126,9 +1088,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** Server pre-computed waveform for the player, or null */
+    suspend fun serverWaveform(jobId: String): List<Float>? = backend().waveform(jobId)
+
     fun getStreamUrl(): String? {
         val jobId = _ui.value.jobId ?: return null
-        return "${serverUrl}/api/download/$jobId"
+        return resultPlayUrl(jobId)
     }
 
     fun getFilename(): String = _ui.value.statusText.ifEmpty { "vocals-only.mp4" }
@@ -1148,21 +1113,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     cacheDir.mkdirs()
                     val file = java.io.File(cacheDir, filename)
 
-                    val url = java.net.URL("${serverUrl}/api/download/$jobId")
-                    val conn = url.openConnection() as java.net.HttpURLConnection
-                    conn.connect()
-                    if (conn.responseCode == 404) {
+                    val cached = cache.getCachedFile(jobId)
+                    if (cached != null) {
+                        // Copy so the shared file keeps its original name (cache names carry a jobId prefix)
+                        cached.copyTo(file, overwrite = true)
+                    } else {
+                        val url = java.net.URL(backend().remoteResultUrl(jobId) ?: throw Exception("File no longer available on server"))
+                        val conn = url.openConnection() as java.net.HttpURLConnection
+                        conn.connect()
+                        if (conn.responseCode == 404) {
+                            conn.disconnect()
+                            throw Exception("File no longer available on server")
+                        }
+                        conn.inputStream.use { input ->
+                            file.outputStream().use { output -> input.copyTo(output) }
+                        }
                         conn.disconnect()
-                        throw Exception("File no longer available on server")
                     }
-                    conn.inputStream.use { input ->
-                        file.outputStream().use { output -> input.copyTo(output) }
-                    }
-                    conn.disconnect()
 
-                    val uri = androidx.core.content.FileProvider.getUriForFile(
-                        context, "${context.packageName}.fileprovider", file
-                    )
+                    val uri = cache.contentUri(file)
                     val mime = if (filename.endsWith(".mp3")) "audio/mpeg" else "video/mp4"
                     val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                         type = mime
@@ -1232,13 +1201,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _ui.value = _ui.value.copy(downloading = true)
         bgScope.launch {
             try {
-                val url = java.net.URL("${serverUrl}/api/download/$jobId")
-                val conn = url.openConnection() as java.net.HttpURLConnection
-                conn.connect()
-                context.contentResolver.openOutputStream(uri)?.use { out ->
-                    conn.inputStream.use { it.copyTo(out) }
+                val cached = cache.getCachedFile(jobId)
+                if (cached != null) {
+                    context.contentResolver.openOutputStream(uri)?.use { out ->
+                        cached.inputStream().use { it.copyTo(out) }
+                    }
+                } else {
+                    val url = java.net.URL(backend().remoteResultUrl(jobId) ?: throw Exception("File not available"))
+                    val conn = url.openConnection() as java.net.HttpURLConnection
+                    conn.connect()
+                    context.contentResolver.openOutputStream(uri)?.use { out ->
+                        conn.inputStream.use { it.copyTo(out) }
+                    }
+                    conn.disconnect()
                 }
-                conn.disconnect()
                 _ui.value = _ui.value.copy(downloading = false)
             } catch (e: Exception) {
                 _ui.value = _ui.value.copy(downloading = false, state = UiState.Error, errorMessage = "Save failed: ${e.message}")

@@ -18,7 +18,8 @@ import kotlin.math.max
 fun streamWaveform(context: Context, url: String, barCount: Int = 150): Flow<List<Float>> = flow {
     try {
         val extractor = MediaExtractor()
-        extractor.setDataSource(url)
+        // Uri form handles both content:// (cached results) and http(s):// (server)
+        extractor.setDataSource(context, android.net.Uri.parse(url), null)
 
         var audioTrackIndex = -1
         var audioFormat: MediaFormat? = null

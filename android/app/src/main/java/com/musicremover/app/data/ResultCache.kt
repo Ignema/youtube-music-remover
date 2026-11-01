@@ -1,6 +1,8 @@
 package com.musicremover.app.data
 
 import android.content.Context
+import android.net.Uri
+import androidx.core.content.FileProvider
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
@@ -10,6 +12,7 @@ import java.net.URL
  * works even after the server restarts.
  */
 class ResultCache(context: Context) {
+    private val appContext = context.applicationContext
     private val cacheDir = File(context.filesDir, "results").apply { mkdirs() }
 
     fun getCachedFile(jobId: String): File? {
@@ -19,16 +22,23 @@ class ResultCache(context: Context) {
 
     fun isCached(jobId: String): Boolean = getCachedFile(jobId) != null
 
+    /** FileProvider content:// URI for a file inside the app's shareable dirs */
+    fun contentUri(file: File): Uri =
+        FileProvider.getUriForFile(appContext, "${appContext.packageName}.fileprovider", file)
+
+    /** content:// URI of the cached result for a job, or null if not cached */
+    fun cachedUri(jobId: String): Uri? = getCachedFile(jobId)?.let { contentUri(it) }
+
     /**
-     * Download result from server and cache it locally.
+     * Download a result from [downloadUrl] and cache it locally.
      * Returns the cached file, or null on failure.
      */
-    fun cacheResult(serverUrl: String, jobId: String, filename: String): File? {
+    fun cacheFromUrl(downloadUrl: String, jobId: String, filename: String): File? {
         return try {
             val file = File(cacheDir, "${jobId}_${filename}")
             if (file.exists() && file.length() > 0) return file
 
-            val url = URL("$serverUrl/api/download/$jobId")
+            val url = URL(downloadUrl)
             val conn = url.openConnection() as HttpURLConnection
             conn.connectTimeout = 10000
             conn.readTimeout = 30000

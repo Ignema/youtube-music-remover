@@ -106,7 +106,7 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -> Unit, onPlay: (url: String, title: String) -> Unit = { _, _ -> }) {
+fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -> Unit, onPlay: (url: String, title: String, jobId: String?) -> Unit = { _, _, _ -> }) {
     val ui by vm.ui.collectAsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val context = LocalContext.current
@@ -907,7 +907,7 @@ private fun ProcessingBanner(ui: MainUiState, vm: MainViewModel) {
 }
 
 @Composable
-private fun DoneContent(ui: MainUiState, vm: MainViewModel, context: android.content.Context, onPlay: (String, String) -> Unit) {
+private fun DoneContent(ui: MainUiState, vm: MainViewModel, context: android.content.Context, onPlay: (String, String, String?) -> Unit) {
     val saveLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.CreateDocument("video/mp4"),
     ) { uri ->
@@ -951,7 +951,7 @@ private fun DoneContent(ui: MainUiState, vm: MainViewModel, context: android.con
         Button(
             onClick = {
                 val url = vm.getStreamUrl() ?: return@Button
-                onPlay(url, ui.statusText)
+                onPlay(url, ui.statusText, ui.jobId)
             },
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -1001,7 +1001,7 @@ private fun DoneContent(ui: MainUiState, vm: MainViewModel, context: android.con
 }
 
 @Composable
-private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay: (String, String) -> Unit) {
+private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay: (String, String, String?) -> Unit) {
     var filterText by remember { mutableStateOf("") }
     var searchExpanded by remember { mutableStateOf(false) }
 
@@ -1092,10 +1092,9 @@ private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, String) -> Unit) {
+private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, String, String?) -> Unit) {
     val dateFormat = SimpleDateFormat("MMM d, h:mm a", Locale.getDefault())
     val dateStr = dateFormat.format(Date(item.timestamp))
-    val serverUrl = vm.ui.collectAsState().value.serverUrl
     val hasUrl = item.url.isNotEmpty()
 
     Card(
@@ -1110,8 +1109,7 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                 .fillMaxWidth()
                 .combinedClickable(
                     onClick = {
-                        val url = "$serverUrl/api/download/${item.jobId}"
-                        vm.checkAndPlay(url, item.filename.removeSuffix(".mp4"), onPlay)
+                        vm.playHistoryItem(item, onPlay)
                     },
                     onLongClick = {
                         vm.hapticTick()
