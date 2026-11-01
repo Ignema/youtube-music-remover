@@ -174,7 +174,9 @@ class MainActivity : AppCompatActivity() {
         val title = intent.getStringExtra("play_title") ?: "Result"
         vm.pendingPlayUrl = url
         vm.pendingPlayTitle = title
+        // Notifications from older versions only carry a /api/download/<id> play_url
         vm.pendingPlayJobId = intent.getStringExtra("play_job_id")
+            ?: url.substringAfter("/api/download/", "").substringBefore('?').takeIf { it.isNotEmpty() }
     }
 
     private fun handleShareAction(intent: Intent?) {

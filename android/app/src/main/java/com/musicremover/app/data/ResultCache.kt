@@ -34,10 +34,11 @@ class ResultCache(context: Context) {
      * Returns the cached file, or null on failure.
      */
     fun cacheFromUrl(downloadUrl: String, jobId: String, filename: String): File? {
+        val file = File(cacheDir, "${jobId}_${filename}")
+        if (file.exists() && file.length() > 0) return file
+        // Must not start with jobId, so getCachedFile never returns a partial download
+        val tmp = File(cacheDir, ".tmp_$jobId")
         return try {
-            val file = File(cacheDir, "${jobId}_${filename}")
-            if (file.exists() && file.length() > 0) return file
-
             val url = URL(downloadUrl)
             val conn = url.openConnection() as HttpURLConnection
             conn.connectTimeout = 10000
@@ -49,12 +50,18 @@ class ResultCache(context: Context) {
                 return null
             }
 
-            conn.inputStream.use { input ->
-                file.outputStream().use { output -> input.copyTo(output) }
+            val expected = conn.contentLengthLong
+            val copied = conn.inputStream.use { input ->
+                tmp.outputStream().use { output -> input.copyTo(output) }
             }
             conn.disconnect()
+            if ((expected >= 0 && copied != expected) || copied == 0L || !tmp.renameTo(file)) {
+                tmp.delete()
+                return null
+            }
             file
         } catch (_: Exception) {
+            tmp.delete()
             null
         }
     }

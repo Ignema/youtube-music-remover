@@ -10,6 +10,7 @@ import com.musicremover.app.data.ResultCache
 import com.musicremover.app.data.VideoInfo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -105,7 +106,7 @@ class RemoteServerBackend(
                 continue
             }
             retries = 0
-            emit(JobEvent.Progress(status.status, status.progress, status.error))
+            emit(JobEvent.Progress(status.status, status.progress, status.error, status.filename))
             when (status.status) {
                 "done" -> {
                     val name = status.filename ?: "Done"
@@ -128,7 +129,10 @@ class RemoteServerBackend(
         api().status(jobId).status == "done"
 
     override suspend fun fetchResult(jobId: String, filename: String): File? =
-        withContext(Dispatchers.IO) { cache.cacheFromUrl(remoteResultUrl(jobId), jobId, filename) }
+        // A finished job must not lose its result to a late cancel
+        withContext(Dispatchers.IO + NonCancellable) {
+            cache.cacheFromUrl(remoteResultUrl(jobId), jobId, filename)
+        }
 
     override suspend fun waveform(jobId: String): List<Float>? = try {
         api().waveform(jobId).waveform.takeIf { it.isNotEmpty() }

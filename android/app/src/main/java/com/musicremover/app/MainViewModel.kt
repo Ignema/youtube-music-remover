@@ -993,10 +993,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     val text = statusText(e.status, e.error)
                     _ui.value = _ui.value.copy(progress = e.progress, statusText = text)
                     ProcessingService.start(getApplication(), text, e.progress)
+                    if (e.status == "done") {
+                        // Show the result as soon as the job finishes, while it is stored locally
+                        _ui.value = _ui.value.copy(state = UiState.Done, statusText = e.filename ?: "Done")
+                    }
                 }
                 is JobEvent.Done -> {
                     val filename = e.filename
-                    _ui.value = _ui.value.copy(state = UiState.Done, statusText = filename)
+                    if (_ui.value.jobId == jobId) {
+                        _ui.value = _ui.value.copy(state = UiState.Done, statusText = filename)
+                    }
                     val meta = activeJobMeta
                     // Parse metadata from server (yt-dlp data)
                     val ytMeta = e.metadata
