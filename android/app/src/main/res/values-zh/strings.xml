@@ -48,11 +48,8 @@
 
     <!-- Settings -->
     <string name="settings">设置</string>
-    <string name="server_mode">服务器模式</string>
     <string name="local_termux">本地 (Termux)</string>
-    <string name="custom">自定义</string>
     <string name="server_url">服务器 URL</string>
-    <string name="on_device_processing">设备端处理</string>
     <string name="on_device_desc">使用 Termux + Ubuntu (proot) 在手机上本地运行服务器。</string>
     <string name="termux_detected">已检测到 Termux</string>
     <string name="termux_not_found">未找到 Termux</string>

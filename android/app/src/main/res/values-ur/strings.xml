@@ -48,11 +48,8 @@
 
     <!-- Settings -->
     <string name="settings">ترتیبات</string>
-    <string name="server_mode">سرور موڈ</string>
     <string name="local_termux">مقامی (Termux)</string>
-    <string name="custom">حسب ضرورت</string>
     <string name="server_url">سرور URL</string>
-    <string name="on_device_processing">ڈیوائس پر پروسیسنگ</string>
     <string name="on_device_desc">Termux + Ubuntu (proot) استعمال کرتے ہوئے اپنے فون پر سرور مقامی طور پر چلائیں۔</string>
     <string name="termux_detected">Termux مل گیا</string>
     <string name="termux_not_found">Termux نہیں ملا</string>

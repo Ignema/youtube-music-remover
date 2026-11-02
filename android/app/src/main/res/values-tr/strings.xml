@@ -48,11 +48,8 @@
 
     <!-- Settings -->
     <string name="settings">Ayarlar</string>
-    <string name="server_mode">Sunucu Modu</string>
     <string name="local_termux">Yerel (Termux)</string>
-    <string name="custom">Özel</string>
     <string name="server_url">Sunucu URL\'si</string>
-    <string name="on_device_processing">Cihazda İşleme</string>
     <string name="on_device_desc">Sunucuyu Termux + Ubuntu (proot) kullanarak telefonunuzda yerel olarak çalıştırın.</string>
     <string name="termux_detected">Termux algılandı</string>
     <string name="termux_not_found">Termux bulunamadı</string>

@@ -48,11 +48,8 @@
 
     <!-- Settings -->
     <string name="settings">सेटिंग्स</string>
-    <string name="server_mode">सर्वर मोड</string>
     <string name="local_termux">लोकल (Termux)</string>
-    <string name="custom">कस्टम</string>
     <string name="server_url">सर्वर URL</string>
-    <string name="on_device_processing">डिवाइस पर प्रोसेसिंग</string>
     <string name="on_device_desc">Termux + Ubuntu (proot) का उपयोग करके अपने फ़ोन पर सर्वर लोकली चलाएँ।</string>
     <string name="termux_detected">Termux मिल गया</string>
     <string name="termux_not_found">Termux नहीं मिला</string>

@@ -48,11 +48,8 @@
 
     <!-- Settings -->
     <string name="settings">設定</string>
-    <string name="server_mode">サーバーモード</string>
     <string name="local_termux">ローカル (Termux)</string>
-    <string name="custom">カスタム</string>
     <string name="server_url">サーバーURL</string>
-    <string name="on_device_processing">デバイス上で処理</string>
     <string name="on_device_desc">Termux + Ubuntu (proot) を使ってスマホ上でサーバーをローカル実行します。</string>
     <string name="termux_detected">Termux を検出しました</string>
     <string name="termux_not_found">Termux が見つかりません</string>

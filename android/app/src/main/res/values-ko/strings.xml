@@ -48,11 +48,8 @@
 
     <!-- Settings -->
     <string name="settings">설정</string>
-    <string name="server_mode">서버 모드</string>
     <string name="local_termux">로컬 (Termux)</string>
-    <string name="custom">사용자 지정</string>
     <string name="server_url">서버 URL</string>
-    <string name="on_device_processing">기기에서 처리</string>
     <string name="on_device_desc">Termux + Ubuntu (proot)를 사용하여 휴대폰에서 서버를 로컬로 실행합니다.</string>
     <string name="termux_detected">Termux 감지됨</string>
     <string name="termux_not_found">Termux를 찾을 수 없음</string>

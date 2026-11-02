@@ -48,11 +48,8 @@
 
     <!-- Settings -->
     <string name="settings">Ajustes</string>
-    <string name="server_mode">Modo de servidor</string>
     <string name="local_termux">Local (Termux)</string>
-    <string name="custom">Personalizado</string>
     <string name="server_url">URL del servidor</string>
-    <string name="on_device_processing">Procesamiento en el dispositivo</string>
     <string name="on_device_desc">Ejecuta el servidor localmente en tu teléfono usando Termux + Ubuntu (proot).</string>
     <string name="termux_detected">Termux detectado</string>
     <string name="termux_not_found">Termux no encontrado</string>

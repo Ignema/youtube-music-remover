@@ -22,7 +22,9 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.DownloadDone
+import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Stop
@@ -38,6 +40,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -57,7 +60,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.musicremover.app.MainViewModel
 import com.musicremover.app.R
+import com.musicremover.app.UiState
 import com.musicremover.app.processing.BackendProvider
+import com.musicremover.app.processing.internal.ModelState
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -255,44 +260,56 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(Modifier.height(24.dp))
 
-            // --- Server Mode ---
-            SectionLabel(stringResource(R.string.server_mode))
+            // --- Processing mode ---
+            SectionLabel(stringResource(R.string.processing_mode))
             Spacer(Modifier.height(8.dp))
-
-            val isLocal = ui.serverUrl == BackendProvider.TERMUX_URL
-            val isCustom = !isLocal
 
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                FilterChip(
-                    selected = isLocal,
-                    onClick = { vm.onServerUrlChange(BackendProvider.TERMUX_URL) },
-                    label = { Text(stringResource(R.string.local_termux)) },
-                    leadingIcon = {
-                        Icon(Icons.Outlined.PhoneAndroid, null, Modifier.size(18.dp))
-                    },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    ),
-                )
-                FilterChip(
-                    selected = isCustom,
-                    onClick = { vm.onServerUrlChange("http://") },
-                    label = { Text(stringResource(R.string.custom)) },
-                    leadingIcon = {
-                        Icon(Icons.Outlined.Cloud, null, Modifier.size(18.dp))
-                    },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    ),
-                )
+                listOf(
+                    Triple(BackendProvider.MODE_INTERNAL, Icons.Outlined.Memory, R.string.mode_internal),
+                    Triple(BackendProvider.MODE_TERMUX, Icons.Outlined.PhoneAndroid, R.string.local_termux),
+                    Triple(BackendProvider.MODE_SERVER, Icons.Outlined.Cloud, R.string.mode_server),
+                ).forEach { (mode, icon, label) ->
+                    FilterChip(
+                        selected = ui.processingMode == mode,
+                        onClick = { vm.setProcessingMode(mode) },
+                        label = { Text(stringResource(label)) },
+                        leadingIcon = {
+                            Icon(icon, null, Modifier.size(18.dp))
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        ),
+                    )
+                }
             }
 
             Spacer(Modifier.height(16.dp))
 
-            AnimatedVisibility(visible = isCustom) {
+            AnimatedVisibility(visible = ui.processingMode == BackendProvider.MODE_INTERNAL) {
+                InternalModelCard(vm)
+            }
+
+            AnimatedVisibility(visible = ui.processingMode == BackendProvider.MODE_TERMUX) {
+                Column {
+                    Text(
+                        stringResource(R.string.on_device_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    if (ui.termuxInstalled) {
+                        TermuxControls(vm)
+                    } else {
+                        TermuxNotInstalled()
+                    }
+                }
+            }
+
+            AnimatedVisibility(visible = ui.processingMode == BackendProvider.MODE_SERVER) {
                 Column {
                     OutlinedTextField(
                         value = ui.serverUrl,
@@ -309,39 +326,6 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
                         shape = RoundedCornerShape(12.dp),
                     ) {
                         Text(stringResource(R.string.discover_server))
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(24.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Spacer(Modifier.height(24.dp))
-
-            // --- Termux Section ---
-            var termuxExpanded by remember { mutableStateOf(false) }
-            Row(
-                modifier = Modifier.fillMaxWidth().clickable { termuxExpanded = !termuxExpanded },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Column {
-                    SectionLabel(stringResource(R.string.on_device_processing))
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        stringResource(R.string.on_device_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-
-            AnimatedVisibility(visible = termuxExpanded) {
-                Column {
-                    Spacer(Modifier.height(16.dp))
-                    if (ui.termuxInstalled) {
-                        TermuxControls(vm)
-                    } else {
-                        TermuxNotInstalled()
                     }
                 }
             }
@@ -578,6 +562,100 @@ private fun TermuxControls(vm: MainViewModel) {
             Spacer(Modifier.height(12.dp))
             Text(
                 stringResource(R.string.first_time_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+private fun formatMb(bytes: Long): String = "%.1f MB".format(bytes / 1_048_576.0)
+
+@Composable
+private fun InternalModelCard(vm: MainViewModel) {
+    val ui by vm.ui.collectAsState()
+    val modelState = ui.modelState
+    val total = formatMb(ui.modelSizeBytes)
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+        ),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            ui.internalUnsupportedReason?.let { reason ->
+                Text(
+                    reason,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+                Spacer(Modifier.height(12.dp))
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Outlined.Memory,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    stringResource(R.string.internal_model_name),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            val statusText = when (modelState) {
+                is ModelState.Ready -> stringResource(R.string.internal_model_downloaded, formatMb(modelState.sizeBytes))
+                is ModelState.Downloading -> stringResource(
+                    R.string.internal_model_downloading,
+                    formatMb(modelState.bytes),
+                    formatMb(if (modelState.total > 0) modelState.total else ui.modelSizeBytes),
+                )
+                is ModelState.Failed -> modelState.message
+                ModelState.NotDownloaded -> stringResource(R.string.internal_model_not_downloaded, total)
+            }
+            Text(
+                statusText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (modelState is ModelState.Failed) MaterialTheme.colorScheme.error
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (modelState is ModelState.Downloading) {
+                Spacer(Modifier.height(8.dp))
+                val totalBytes = if (modelState.total > 0) modelState.total else ui.modelSizeBytes
+                LinearProgressIndicator(
+                    progress = { (modelState.bytes.toFloat() / totalBytes).coerceIn(0f, 1f) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            Spacer(Modifier.height(12.dp))
+            when (modelState) {
+                is ModelState.Ready -> OutlinedButton(
+                    onClick = vm::deleteModel,
+                    enabled = ui.state != UiState.Processing,
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Icon(Icons.Outlined.DeleteOutline, null, Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.delete_model))
+                }
+                is ModelState.Downloading -> Unit
+                else -> FilledTonalButton(
+                    onClick = vm::downloadModel,
+                    enabled = ui.internalUnsupportedReason == null,
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Icon(Icons.Outlined.Download, null, Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.download_model))
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            Text(
+                stringResource(R.string.internal_warning),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

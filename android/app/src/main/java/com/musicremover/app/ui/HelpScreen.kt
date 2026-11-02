@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.ContentPaste
+import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.MusicOff
 import androidx.compose.material.icons.outlined.PhoneAndroid
 import androidx.compose.material.icons.outlined.PlayArrow
@@ -84,6 +85,9 @@ fun HelpScreen(onBack: () -> Unit) {
             )
             Spacer(Modifier.height(12.dp))
 
+            TipCard(Icons.Outlined.Memory, stringResource(R.string.help_on_device),
+                stringResource(R.string.help_on_device_desc))
+            Spacer(Modifier.height(8.dp))
             TipCard(Icons.Outlined.PhoneAndroid, stringResource(R.string.help_local_termux),
                 stringResource(R.string.help_local_termux_desc))
             Spacer(Modifier.height(8.dp))

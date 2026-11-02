@@ -48,11 +48,8 @@
 
     <!-- Settings -->
     <string name="settings">Pengaturan</string>
-    <string name="server_mode">Mode Server</string>
     <string name="local_termux">Lokal (Termux)</string>
-    <string name="custom">Kustom</string>
     <string name="server_url">URL Server</string>
-    <string name="on_device_processing">Pemrosesan di Perangkat</string>
     <string name="on_device_desc">Jalankan server secara lokal di ponselmu menggunakan Termux + Ubuntu (proot).</string>
     <string name="termux_detected">Termux terdeteksi</string>
     <string name="termux_not_found">Termux tidak ditemukan</string>

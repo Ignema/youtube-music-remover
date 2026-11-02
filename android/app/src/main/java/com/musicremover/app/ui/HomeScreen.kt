@@ -46,6 +46,7 @@ import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.MusicOff
 import androidx.compose.material.icons.outlined.Merge
 import androidx.compose.material.icons.outlined.PlayArrow
@@ -101,6 +102,8 @@ import com.musicremover.app.R
 import com.musicremover.app.UiState
 import com.musicremover.app.data.HistoryItem
 import com.musicremover.app.data.displayTitle
+import com.musicremover.app.processing.BackendProvider
+import com.musicremover.app.processing.internal.ModelCatalog
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -123,7 +126,10 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
                         Text(stringResource(R.string.app_name))
                         Spacer(Modifier.width(8.dp))
                         // Server status dot
-                        val statusText = if (ui.serverConnected)
+                        val statusText = if (ui.processingMode == BackendProvider.MODE_INTERNAL) {
+                            if (ui.serverConnected) stringResource(R.string.status_ready_on_device)
+                            else ui.internalUnsupportedReason ?: stringResource(R.string.status_model_unavailable)
+                        } else if (ui.serverConnected)
                             stringResource(R.string.server_online)
                         else stringResource(R.string.lost_connection)
 
@@ -470,80 +476,92 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                     )
                     Spacer(Modifier.height(16.dp))
 
-                    ModelOption(
-                        name = stringResource(R.string.model_quality_name),
-                        description = stringResource(R.string.model_quality_desc),
-                        tag = stringResource(R.string.tag_default),
-                        selected = ui.selectedModel == "Kim_Vocal_2.onnx",
-                        onClick = { vm.onModelSelect("Kim_Vocal_2.onnx") },
-                    )
-                    Spacer(Modifier.height(8.dp))
+                    val internalMode = ui.processingMode == BackendProvider.MODE_INTERNAL
+                    if (!internalMode) {
+                        ModelOption(
+                            name = stringResource(R.string.model_quality_name),
+                            description = stringResource(R.string.model_quality_desc),
+                            tag = stringResource(R.string.tag_default),
+                            selected = ui.selectedModel == "Kim_Vocal_2.onnx",
+                            onClick = { vm.onModelSelect("Kim_Vocal_2.onnx") },
+                        )
+                        Spacer(Modifier.height(8.dp))
+                    }
                     ModelOption(
                         name = stringResource(R.string.model_default_name),
                         description = stringResource(R.string.model_default_desc),
                         tag = stringResource(R.string.tag_fast),
-                        selected = ui.selectedModel == "UVR-MDX-NET-Inst_HQ_3.onnx",
-                        onClick = { vm.onModelSelect("UVR-MDX-NET-Inst_HQ_3.onnx") },
+                        selected = ui.selectedModel == ModelCatalog.HQ3,
+                        onClick = { vm.onModelSelect(ModelCatalog.HQ3) },
                     )
-                    Spacer(Modifier.height(8.dp))
-                    ModelOption(
-                        name = stringResource(R.string.model_karaoke_name),
-                        description = stringResource(R.string.model_karaoke_desc),
-                        tag = stringResource(R.string.tag_karaoke),
-                        selected = ui.selectedModel == "UVR_MDXNET_KARA_2.onnx",
-                        onClick = { vm.onModelSelect("UVR_MDXNET_KARA_2.onnx") },
-                    )
+                    if (internalMode) {
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            stringResource(R.string.internal_models_note),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    } else {
+                        Spacer(Modifier.height(8.dp))
+                        ModelOption(
+                            name = stringResource(R.string.model_karaoke_name),
+                            description = stringResource(R.string.model_karaoke_desc),
+                            tag = stringResource(R.string.tag_karaoke),
+                            selected = ui.selectedModel == "UVR_MDXNET_KARA_2.onnx",
+                            onClick = { vm.onModelSelect("UVR_MDXNET_KARA_2.onnx") },
+                        )
 
-                    Spacer(Modifier.height(16.dp))
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    Spacer(Modifier.height(12.dp))
-                    Text(stringResource(R.string.premium_models), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        stringResource(R.string.premium_models_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(16.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        Spacer(Modifier.height(12.dp))
+                        Text(stringResource(R.string.premium_models), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            stringResource(R.string.premium_models_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(Modifier.height(12.dp))
 
-                    ModelOption(
-                        name = stringResource(R.string.model_melband_name),
-                        description = stringResource(R.string.model_melband_desc),
-                        tag = stringResource(R.string.tag_best),
-                        selected = ui.selectedModel == "vocals_mel_band_roformer.ckpt",
-                        onClick = { vm.onModelSelect("vocals_mel_band_roformer.ckpt") },
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    ModelOption(
-                        name = stringResource(R.string.model_bsroformer_name),
-                        description = stringResource(R.string.model_bsroformer_desc),
-                        tag = stringResource(R.string.tag_premium),
-                        selected = ui.selectedModel == "model_bs_roformer_ep_317_sdr_12.9755.ckpt",
-                        onClick = { vm.onModelSelect("model_bs_roformer_ep_317_sdr_12.9755.ckpt") },
-                    )
+                        ModelOption(
+                            name = stringResource(R.string.model_melband_name),
+                            description = stringResource(R.string.model_melband_desc),
+                            tag = stringResource(R.string.tag_best),
+                            selected = ui.selectedModel == "vocals_mel_band_roformer.ckpt",
+                            onClick = { vm.onModelSelect("vocals_mel_band_roformer.ckpt") },
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        ModelOption(
+                            name = stringResource(R.string.model_bsroformer_name),
+                            description = stringResource(R.string.model_bsroformer_desc),
+                            tag = stringResource(R.string.tag_premium),
+                            selected = ui.selectedModel == "model_bs_roformer_ep_317_sdr_12.9755.ckpt",
+                            onClick = { vm.onModelSelect("model_bs_roformer_ep_317_sdr_12.9755.ckpt") },
+                        )
 
-                    Spacer(Modifier.height(16.dp))
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    Spacer(Modifier.height(12.dp))
-                    Text(stringResource(R.string.custom_model), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = ui.customModel,
-                        onValueChange = vm::onCustomModelChange,
-                        label = { Text(stringResource(R.string.custom_model_hint)) },
-                        placeholder = { Text("model_name.ckpt") },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    FilledTonalButton(
-                        onClick = vm::applyCustomModel,
-                        enabled = ui.customModel.isNotBlank(),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(stringResource(R.string.use_custom_model))
+                        Spacer(Modifier.height(16.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        Spacer(Modifier.height(12.dp))
+                        Text(stringResource(R.string.custom_model), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = ui.customModel,
+                            onValueChange = vm::onCustomModelChange,
+                            label = { Text(stringResource(R.string.custom_model_hint)) },
+                            placeholder = { Text("model_name.ckpt") },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        FilledTonalButton(
+                            onClick = vm::applyCustomModel,
+                            enabled = ui.customModel.isNotBlank(),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(stringResource(R.string.use_custom_model))
+                        }
                     }
                 }
             }
@@ -1642,7 +1660,29 @@ private fun ModelOption(
 
 
 @Composable
+private fun InternalUrlUnsupportedCard(ui: MainUiState) {
+    if (ui.processingMode != BackendProvider.MODE_INTERNAL) return
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Outlined.Info, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.width(10.dp))
+            Text(
+                stringResource(R.string.internal_url_unsupported),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+    Spacer(Modifier.height(12.dp))
+}
+
+@Composable
 private fun UrlInputTab(ui: MainUiState, vm: MainViewModel) {
+    InternalUrlUnsupportedCard(ui)
     OutlinedTextField(
         value = ui.url,
         onValueChange = { vm.onUrlChange(it) },
@@ -1724,6 +1764,7 @@ private fun FileInputTab(ui: MainUiState, vm: MainViewModel, filePicker: android
 
 @Composable
 private fun BatchInputTab(ui: MainUiState, vm: MainViewModel, urlFilePicker: androidx.activity.result.ActivityResultLauncher<String>) {
+    InternalUrlUnsupportedCard(ui)
     OutlinedTextField(
         value = ui.batchText,
         onValueChange = vm::onBatchTextChange,

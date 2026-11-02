@@ -48,11 +48,8 @@
 
     <!-- Settings -->
     <string name="settings">Настройки</string>
-    <string name="server_mode">Режим сервера</string>
     <string name="local_termux">Локальный (Termux)</string>
-    <string name="custom">Свой</string>
     <string name="server_url">URL сервера</string>
-    <string name="on_device_processing">Обработка на устройстве</string>
     <string name="on_device_desc">Запустите сервер локально на телефоне с помощью Termux + Ubuntu (proot).</string>
     <string name="termux_detected">Termux обнаружен</string>
     <string name="termux_not_found">Termux не найден</string>

@@ -1,5 +1,6 @@
 package com.musicremover.app.processing.internal
 
+import android.annotation.SuppressLint
 import android.content.Context
 import java.io.File
 import java.io.FileInputStream
@@ -64,6 +65,8 @@ class ModelManager private constructor(context: Context) {
      * Returns the verified model file, downloading it first if needed. Resumes from `<name>.part`.
      * Throws [ModelStorageException], [ModelCorruptException], or [IOException] for download failures.
      */
+    // The storage check is a plain estimate against usableSpace; a later write failure surfaces as an IOException
+    @SuppressLint("UsableSpace")
     suspend fun ensure(name: String, onProgress: (Long, Long) -> Unit = { _, _ -> }): File = mutex.withLock {
         val spec = ModelCatalog.spec(appContext, name) ?: throw IllegalArgumentException("Unknown model: $name")
         val target = file(name)

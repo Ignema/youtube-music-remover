@@ -48,11 +48,8 @@
 
     <!-- Settings -->
     <string name="settings">Tetapan</string>
-    <string name="server_mode">Mod Pelayan</string>
     <string name="local_termux">Tempatan (Termux)</string>
-    <string name="custom">Tersuai</string>
     <string name="server_url">URL Pelayan</string>
-    <string name="on_device_processing">Pemprosesan Pada Peranti</string>
     <string name="on_device_desc">Jalankan pelayan secara tempatan pada telefon anda menggunakan Termux + Ubuntu (proot).</string>
     <string name="termux_detected">Termux dikesan</string>
     <string name="termux_not_found">Termux tidak dijumpai</string>
