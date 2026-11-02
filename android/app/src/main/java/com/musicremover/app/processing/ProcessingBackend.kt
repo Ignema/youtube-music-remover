@@ -10,6 +10,10 @@ data class ProcessOptions(
     val audioOnly: Boolean,
     val bitrate: String,
     val batchSize: Int = 4,
+    /** Size of the picked source file, for the history entry the on-device backend writes. Remote ignores it. */
+    val sourceFileSize: Long? = null,
+    /** Original picker URI of the source file, for the on-device history entry. Remote ignores it. */
+    val sourceFilePath: String? = null,
 )
 
 sealed interface JobEvent {
@@ -37,9 +41,18 @@ sealed interface JobEvent {
     data object ConnectionLost : JobEvent
 }
 
-/** Where vocal separation runs. Phase 1 only has the remote server (PC or Termux). */
+/**
+ * Where vocal separation runs: a remote Murem server (PC, Docker or Termux on this phone) or on-device
+ * ([InternalBackend]). [BackendProvider] picks one per mode and routes existing jobs by id.
+ */
 interface ProcessingBackend {
     val id: String
+
+    /**
+     * True if the backend posts its own progress, done and error notifications and keeps itself in the
+     * foreground (on-device worker). The ViewModel then skips ProcessingService and its notifications.
+     */
+    val managesNotifications: Boolean get() = false
 
     /** True if the backend can accept jobs. Never throws. */
     suspend fun isReady(): Boolean

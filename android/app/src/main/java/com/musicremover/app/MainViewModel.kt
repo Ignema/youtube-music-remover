@@ -17,9 +17,18 @@ import com.musicremover.app.data.TermuxHelper
 import com.musicremover.app.data.VideoInfo
 import com.musicremover.app.data.displayTitle
 import com.musicremover.app.processing.BackendProvider
+import com.musicremover.app.processing.InternalBackend
+import com.musicremover.app.processing.InternalJobEvents
 import com.musicremover.app.processing.JobEvent
 import com.musicremover.app.processing.ProcessOptions
+import com.musicremover.app.processing.ProcessingBackend
 import com.musicremover.app.processing.RemoteServerBackend
+import com.musicremover.app.processing.internal.ModelCatalog
+import com.musicremover.app.processing.internal.ModelCorruptException
+import com.musicremover.app.processing.internal.ModelManager
+import com.musicremover.app.processing.internal.ModelState
+import com.musicremover.app.processing.internal.ModelStorageException
+import com.musicremover.app.processing.statusLabel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -27,7 +36,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 enum class UiState { Idle, Processing, Done, Error }
 
@@ -111,6 +122,13 @@ data class MainUiState(
     val dynamicColor: Boolean = true,
     val language: String = "",
     val widgetTheme: String = "orange",
+    // Processing mode: "internal", "termux" or "server"
+    val processingMode: String = BackendProvider.MODE_SERVER,
+    // On-device model (HQ_3)
+    val modelState: ModelState = ModelState.NotDownloaded,
+    val modelSizeBytes: Long = 66_759_214,
+    /** Why this phone cannot run on-device processing, or null if it can */
+    val internalUnsupportedReason: String? = null,
 )
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -122,11 +140,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val cache = ResultCache(application)
     private val backends = BackendProvider(application)
     private fun backend() = backends.current()
+    private fun isInternalMode() = _ui.value.processingMode == BackendProvider.MODE_INTERNAL
+    private val modelManager = ModelManager.get(application)
     private val bgScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val prefs = application.getSharedPreferences("app", Context.MODE_PRIVATE)
     private var pollingJob: kotlinx.coroutines.Job? = null
 
-    private val serverUrl: String get() = _ui.value.serverUrl
+    /** A queued file item waits for the app to come to the foreground (on-device mode, §3.5) */
+    @Volatile
+    private var pendingInternalStart = false
+
     private val gson = com.google.gson.Gson()
 
     private fun saveQueue(queue: List<QueueItem>) {
@@ -152,11 +175,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             dynamicColor = settingsStore.dynamicColor,
             language = settingsStore.language,
             widgetTheme = settingsStore.widgetTheme,
+            processingMode = settingsStore.processingMode,
         )
+        applyModelsForMode()
         // Resume polling if app was killed mid-processing
         val savedJobId = prefs.getString("active_job_id", null)
-        // Remove temps and markers left by killed downloads; keep the job being resumed
-        bgScope.launch { cache.cleanStale(setOfNotNull(savedJobId)) }
+        // Remove temps, markers and work dirs left by killed jobs; keep the resumed job and live workers
+        bgScope.launch {
+            val keep = try {
+                val live = androidx.work.WorkManager.getInstance(application)
+                    .getWorkInfosByTagFlow(InternalBackend.WORK_TAG).first()
+                    .filter { !it.state.isFinished }
+                    .map { InternalJobEvents.PREFIX + it.id }
+                setOfNotNull(savedJobId) + live
+            } catch (e: Exception) {
+                // Deleting a live worker's temp file is worse than leaving a stale one
+                android.util.Log.w(TAG, "Skipping stale result cleanup", e)
+                null
+            }
+            if (keep != null) {
+                cache.cleanStale(keep)
+                backends.internal.cleanStaleWork(keep)
+            }
+        }
         val savedQueue = loadQueue()
         if (savedJobId != null) {
             _ui.value = _ui.value.copy(
@@ -165,9 +206,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 queue = savedQueue,
             )
             pollingJob = bgScope.launch { runJob(savedJobId) }
-        } else if (savedQueue.isNotEmpty()) {
-            // No active job but queue was saved — clear stale queue
-            prefs.edit().remove("queue").apply()
+        } else if (prefs.getBoolean(PENDING_INTERNAL_START, false) && savedQueue.isNotEmpty()) {
+            // A queued on-device item was waiting for the app; the first onResume starts it
+            pendingInternalStart = true
+            _ui.value = _ui.value.copy(
+                state = UiState.Idle,
+                statusText = application.getString(R.string.internal_waiting_foreground),
+                queue = savedQueue,
+            )
+        } else {
+            if (savedQueue.isNotEmpty()) {
+                // No active job but queue was saved — clear stale queue
+                prefs.edit().remove("queue").apply()
+            }
+            prefs.edit().remove(PENDING_INTERNAL_START).apply()
+        }
+
+        // On-device model state for Settings
+        bgScope.launch {
+            modelManager.state.collect { states ->
+                _ui.value = _ui.value.copy(modelState = states[ModelCatalog.HQ3] ?: ModelState.NotDownloaded)
+            }
+        }
+        bgScope.launch {
+            val reason = backends.internal.unsupportedReason()
+            _ui.value = _ui.value.copy(internalUnsupportedReason = reason)
         }
 
         // Periodic server connectivity check (only when app is in foreground)
@@ -188,8 +251,65 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     @Volatile
     private var appInForeground = true
 
-    fun setForeground(foreground: Boolean) {
-        appInForeground = foreground
+    fun setForeground(fg: Boolean) {
+        appInForeground = fg
+        if (fg && pendingInternalStart && _ui.value.state != UiState.Processing) {
+            pendingInternalStart = false
+            prefs.edit().remove(PENDING_INTERNAL_START).apply()
+            processNextInQueue()
+        }
+    }
+
+    private fun clearPendingInternalStart() {
+        pendingInternalStart = false
+        prefs.edit().remove(PENDING_INTERNAL_START).apply()
+    }
+
+    // --- Processing mode / on-device model ---
+    /** Model list of the current backend; the selected model is coerced in internal mode */
+    private fun applyModelsForMode() {
+        val models = backend().supportedModels()
+        val ui = _ui.value
+        val selected = if (ui.processingMode == BackendProvider.MODE_INTERNAL && ui.selectedModel !in models) {
+            ModelCatalog.HQ3
+        } else ui.selectedModel
+        _ui.value = ui.copy(models = models, selectedModel = selected)
+    }
+
+    fun setProcessingMode(mode: String) {
+        if (mode !in com.musicremover.app.data.SettingsStore.PROCESSING_MODES) return
+        settingsStore.processingMode = mode
+        _ui.value = _ui.value.copy(processingMode = mode)
+        when (mode) {
+            // Same as the old Local chip
+            BackendProvider.MODE_TERMUX -> onServerUrlChange(BackendProvider.TERMUX_URL)
+            // Same as the old Custom chip
+            BackendProvider.MODE_SERVER -> if (_ui.value.serverUrl == BackendProvider.TERMUX_URL) onServerUrlChange("http://")
+        }
+        applyModelsForMode()
+        refresh()
+    }
+
+    fun downloadModel() {
+        bgScope.launch {
+            try {
+                modelManager.ensure(ModelCatalog.HQ3)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: ModelStorageException) {
+                showTransientError(getApplication<Application>().getString(R.string.internal_no_space, (e.neededBytes / 1_000_000).toInt()))
+            } catch (e: ModelCorruptException) {
+                showTransientError(str(R.string.internal_model_corrupt))
+            } catch (e: Exception) {
+                showTransientError(getApplication<Application>().getString(R.string.internal_model_download_failed, e.message ?: ""))
+            }
+        }
+    }
+
+    fun deleteModel() {
+        if (!modelManager.delete(ModelCatalog.HQ3)) {
+            showTransientError(str(R.string.internal_model_in_use))
+        }
     }
 
     // --- Haptics ---
@@ -228,7 +348,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun onUrlChange(url: String) {
         previewJob?.cancel()
-        if (looksLikeUrl(url)) {
+        // On-device mode cannot fetch link metadata
+        if (looksLikeUrl(url) && !isInternalMode()) {
             _ui.value = _ui.value.copy(url = url, urlPreview = null, loadingPreview = true)
             fetchUrlPreview(url)
         } else {
@@ -300,7 +421,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             history = _ui.value.history,
             serverUrl = _ui.value.serverUrl,
             termuxInstalled = _ui.value.termuxInstalled,
+            processingMode = _ui.value.processingMode,
+            modelState = _ui.value.modelState,
+            internalUnsupportedReason = _ui.value.internalUnsupportedReason,
         )
+        applyModelsForMode()
     }
 
     /** Pull-to-refresh: reload history and check server status */
@@ -424,8 +549,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
             // Fall back to server, cache for next time
             try {
-                if (backend().isResultAvailable(item.jobId)) {
-                    val file = backend().fetchResult(item.jobId, item.filename)
+                val backend = backends.forJob(item.jobId)
+                if (backend.isResultAvailable(item.jobId)) {
+                    val file = backend.fetchResult(item.jobId, item.filename)
                     if (file != null) {
                         viewFile(context, file)
                     }
@@ -567,7 +693,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (error != null) {
             _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = error)
         } else {
-            onServerUrlChange(BackendProvider.TERMUX_URL)
+            setProcessingMode(BackendProvider.MODE_TERMUX)
             _ui.value = _ui.value.copy(termuxOperation = str(R.string.starting_server))
             pollServerOnline()
         }
@@ -638,7 +764,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             // Download from server
                             var downloaded = false
                             try {
-                                val remote = backend().remoteResultUrl(item.jobId)
+                                val remote = backends.forJob(item.jobId).remoteResultUrl(item.jobId)
                                 if (remote != null) {
                                     val conn = java.net.URL(remote).openConnection() as java.net.HttpURLConnection
                                     conn.connectTimeout = 10000
@@ -696,7 +822,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             repeat(60) { // Try for ~2 minutes
                 delay(2000)
                 try {
-                    val response = java.net.URL("${serverUrl}/api/models").readText()
+                    val response = java.net.URL("${BackendProvider.TERMUX_URL}/api/models").readText()
                     if (response.contains("models")) {
                         _ui.value = _ui.value.copy(
                             termuxOperation = str(R.string.server_online),
@@ -727,6 +853,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 showTransientError(str(R.string.enter_url_or_file))
                 return
             }
+            if (isInternalMode()) {
+                showTransientError(str(R.string.internal_url_unsupported))
+                return
+            }
             queueUrls(urls)
             _ui.value = _ui.value.copy(batchText = "")
             return
@@ -737,6 +867,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         if (fileUri == null && url.isEmpty()) {
             showTransientError(str(R.string.enter_url_or_file))
+            return
+        }
+        // On-device mode handles local files only; the link stays in the field
+        if (fileUri == null && isInternalMode()) {
+            showTransientError(str(R.string.internal_url_unsupported))
             return
         }
 
@@ -777,6 +912,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Queue multiple URLs at once (from URL file import) */
     fun queueUrls(urls: List<String>) {
+        if (isInternalMode()) {
+            showTransientError(str(R.string.internal_url_unsupported))
+            return
+        }
         val items = urls.map { url ->
             QueueItem(
                 url = url,
@@ -822,15 +961,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (index in updated.indices) updated.removeAt(index)
         _ui.value = _ui.value.copy(queue = updated)
         saveQueue(updated)
+        if (updated.isEmpty()) clearPendingInternalStart()
     }
 
     private fun processNextInQueue() {
         val queue = _ui.value.queue
         if (queue.isEmpty()) {
             saveQueue(emptyList())
+            clearPendingInternalStart()
             return
         }
         val next = queue.first()
+        // A worker enqueued in the background cannot start its foreground service: wait for the app
+        if (next.fileUri != null && backend() is InternalBackend && !appInForeground) {
+            pendingInternalStart = true
+            prefs.edit().putBoolean(PENDING_INTERNAL_START, true).apply()
+            val text = str(R.string.internal_waiting_foreground)
+            _ui.value = _ui.value.copy(state = UiState.Idle, statusText = text)
+            notif.showError(text)
+            return
+        }
+        if (pendingInternalStart) clearPendingInternalStart()
         val remaining = queue.drop(1)
         _ui.value = _ui.value.copy(
             queue = remaining,
@@ -863,17 +1014,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         pollingJob = null
         activeJobMeta = null
         prefs.edit().remove("active_job_id").apply()
-        ProcessingService.stop(getApplication())
         notif.dismiss()
-        if (jobId != null) {
-            bgScope.launch { try { backend().cancel(jobId) } catch (_: Exception) {} }
+        val backend = jobId?.let { backends.forJob(it) }
+        if (jobId != null && backend != null && backend.managesNotifications) {
+            cancelInternalThenContinue(backend, jobId)
+            return
+        }
+        ProcessingService.stop(getApplication())
+        if (jobId != null && backend != null) {
+            bgScope.launch { try { backend.cancel(jobId) } catch (_: Exception) {} }
         }
         if (_ui.value.queue.isNotEmpty()) {
             _ui.value = _ui.value.copy(progress = 0, statusText = "")
             processNextInQueue()
         } else {
-            prefs.edit().remove("queue").apply()
-            _ui.value = _ui.value.copy(state = UiState.Idle, progress = 0, statusText = "", processingMinimized = false, queue = emptyList())
+            setIdle()
         }
     }
 
@@ -884,11 +1039,38 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         pollingJob = null
         activeJobMeta = null
         prefs.edit().remove("active_job_id").remove("queue").apply()
-        ProcessingService.stop(getApplication())
+        clearPendingInternalStart()
         notif.dismiss()
-        if (jobId != null) {
-            bgScope.launch { try { backend().cancel(jobId) } catch (_: Exception) {} }
+        val backend = jobId?.let { backends.forJob(it) }
+        if (jobId != null && backend != null && backend.managesNotifications) {
+            _ui.value = _ui.value.copy(queue = emptyList())
+            cancelInternalThenContinue(backend, jobId)
+            return
         }
+        ProcessingService.stop(getApplication())
+        if (jobId != null && backend != null) {
+            bgScope.launch { try { backend.cancel(jobId) } catch (_: Exception) {} }
+        }
+        _ui.value = _ui.value.copy(state = UiState.Idle, progress = 0, statusText = "", processingMinimized = false, queue = emptyList())
+    }
+
+    /**
+     * On-device cancel: wait until the work is CANCELLED before the next enqueue, so APPEND_OR_REPLACE
+     * never chains the next job behind a work that is about to be cancelled (§3.5).
+     */
+    private fun cancelInternalThenContinue(backend: ProcessingBackend, jobId: String) {
+        _ui.value = _ui.value.copy(progress = 0, statusText = "")
+        bgScope.launch {
+            backend.cancel(jobId)
+            withContext(Dispatchers.Main) {
+                if (_ui.value.queue.isNotEmpty()) processNextInQueue() else setIdle()
+            }
+        }
+    }
+
+    private fun setIdle() {
+        prefs.edit().remove("queue").apply()
+        clearPendingInternalStart()
         _ui.value = _ui.value.copy(state = UiState.Idle, progress = 0, statusText = "", processingMinimized = false, queue = emptyList())
     }
 
@@ -953,16 +1135,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             sourceFilePath = _ui.value.originalFileUri,
         )
         pollingJob = bgScope.launch {
-            _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.uploading))
-            ProcessingService.start(getApplication(), str(R.string.uploading), 0)
+            val backend = backend()
+            val managed = backend.managesNotifications
+            // On-device jobs do not upload anything
+            val text = if (managed) str(R.string.starting) else str(R.string.uploading)
+            _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = text)
+            if (!managed) ProcessingService.start(getApplication(), text, 0)
             try {
                 val fileName = _ui.value.selectedFileName ?: "video.mp4"
-                val jobId = backend().startFile(uri, fileName, options())
+                val jobId = backend.startFile(uri, fileName, options(backend))
                 _ui.value = _ui.value.copy(jobId = jobId)
                 prefs.edit().putString("active_job_id", jobId).apply()
                 runJob(jobId)
             } catch (e: Exception) {
-                ProcessingService.stop(getApplication())
+                if (!managed) ProcessingService.stop(getApplication())
                 showTransientError(e.message ?: "Upload failed")
                 if (_ui.value.queue.isNotEmpty()) {
                     processNextInQueue()
@@ -980,15 +1166,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             sourceFileName = null, sourceFileSize = null,
         )
         pollingJob = bgScope.launch {
+            val backend = backend()
+            val managed = backend.managesNotifications
             _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.starting))
-            ProcessingService.start(getApplication(), str(R.string.starting), 0)
+            if (!managed) ProcessingService.start(getApplication(), str(R.string.starting), 0)
             try {
-                val jobId = backend().startUrl(url, options())
+                val jobId = backend.startUrl(url, options(backend))
                 _ui.value = _ui.value.copy(jobId = jobId)
                 prefs.edit().putString("active_job_id", jobId).apply()
                 runJob(jobId)
             } catch (e: Exception) {
-                ProcessingService.stop(getApplication())
+                if (!managed) ProcessingService.stop(getApplication())
                 showTransientError(e.message ?: "Connection failed")
                 if (_ui.value.queue.isNotEmpty()) {
                     processNextInQueue()
@@ -999,29 +1187,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun options() = ProcessOptions(_ui.value.selectedModel, _ui.value.audioOnly, _ui.value.bitrate)
-
-    private fun statusText(status: String, error: String?): String = when (status) {
-        "queued" -> str(R.string.queued)
-        "uploading" -> str(R.string.uploading)
-        "extracting" -> str(R.string.extracting)
-        "downloading" -> str(R.string.downloading)
-        "downloading_model" -> str(R.string.downloading_model)
-        "separating" -> str(R.string.separating)
-        "merging" -> str(R.string.merging)
-        "done" -> str(R.string.vocals_extracted)
-        "error" -> error ?: "Error"
-        else -> status
+    private fun options(backend: ProcessingBackend): ProcessOptions {
+        // The on-device backend only has its own models (§3.6)
+        val supported = backend.supportedModels()
+        val model = _ui.value.selectedModel.let {
+            if (backend is InternalBackend && it !in supported) supported.first() else it
+        }
+        return ProcessOptions(
+            model, _ui.value.audioOnly, _ui.value.bitrate,
+            sourceFileSize = _ui.value.selectedFileSize,
+            sourceFilePath = _ui.value.originalFileUri,
+        )
     }
 
+    private fun statusText(status: String, error: String?): String =
+        statusLabel(getApplication(), status, error)
+
     private suspend fun runJob(jobId: String) {
-        notif.showProgress(str(R.string.starting), 0)
-        backend().events(jobId).collect { e ->
+        val backend = backends.forJob(jobId)
+        // The on-device worker posts its own notifications and runs its own foreground service
+        val managed = backend.managesNotifications
+        if (!managed) notif.showProgress(str(R.string.starting), 0)
+        backend.events(jobId).collect { e ->
             when (e) {
                 is JobEvent.Progress -> {
                     val text = statusText(e.status, e.error)
                     _ui.value = _ui.value.copy(progress = e.progress, statusText = text)
-                    ProcessingService.start(getApplication(), text, e.progress)
+                    if (!managed) ProcessingService.start(getApplication(), text, e.progress)
                     if (e.status == "done") {
                         val filename = e.filename ?: "Done"
                         // Show the result as soon as the job finishes, while it is stored locally
@@ -1056,8 +1248,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         _ui.value = _ui.value.copy(state = UiState.Done, statusText = filename)
                     }
                     prefs.edit().remove("active_job_id").putString("last_done_job_id", jobId).apply()
-                    ProcessingService.stop(getApplication())
-                    notif.showDone(filename, jobId, resultPlayUrl(jobId))
+                    if (!managed) {
+                        ProcessingService.stop(getApplication())
+                        notif.showDone(filename, jobId, resultPlayUrl(jobId))
+                    }
                     hapticTick()
                     activeJobMeta = null
                     // Process next in queue if any
@@ -1068,8 +1262,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 is JobEvent.Failed -> {
                     val text = statusText(e.status, e.error)
                     prefs.edit().remove("active_job_id").apply()
-                    ProcessingService.stop(getApplication())
-                    notif.showError(text)
+                    if (!managed) {
+                        ProcessingService.stop(getApplication())
+                        notif.showError(text)
+                    }
                     showTransientError(text)
                     if (_ui.value.queue.isNotEmpty()) {
                         processNextInQueue()
@@ -1079,8 +1275,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 JobEvent.ConnectionLost -> {
                     prefs.edit().remove("active_job_id").apply()
-                    ProcessingService.stop(getApplication())
-                    notif.showError(str(R.string.lost_connection))
+                    if (!managed) {
+                        ProcessingService.stop(getApplication())
+                        notif.showError(str(R.string.lost_connection))
+                    }
                     showTransientError(str(R.string.lost_connection))
                     if (_ui.value.queue.isNotEmpty()) {
                         processNextInQueue()
@@ -1095,7 +1293,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // --- Results ---
     /** Local cached result as a content:// URI, else the remote download URL */
     private fun resultPlayUrl(jobId: String): String? =
-        cache.cachedUri(jobId)?.toString() ?: backend().remoteResultUrl(jobId)
+        cache.cachedUri(jobId)?.toString() ?: backends.forJob(jobId).remoteResultUrl(jobId)
 
     /** Play a history item — local cached file first, else the server if it still has the result */
     fun playHistoryItem(item: HistoryItem, onPlay: (String, String, String?) -> Unit) {
@@ -1116,9 +1314,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _ui.value = _ui.value.copy(checkingPlay = true)
         bgScope.launch {
             try {
-                val available = backend().isResultAvailable(item.jobId)
+                val backend = backends.forJob(item.jobId)
+                val available = backend.isResultAvailable(item.jobId)
                 _ui.value = _ui.value.copy(checkingPlay = false)
-                val url = backend().remoteResultUrl(item.jobId)
+                val url = backend.remoteResultUrl(item.jobId)
                 if (available && url != null) {
                     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                         onPlay(url, title, item.jobId)
@@ -1146,8 +1345,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /** Server pre-computed waveform for the player, or null */
-    suspend fun serverWaveform(jobId: String): List<Float>? =
-        if (!_ui.value.serverConnected) null else backend().waveform(jobId)
+    suspend fun serverWaveform(jobId: String): List<Float>? {
+        val backend = backends.forJob(jobId)
+        // On-device results are local files; the player decodes them itself
+        return if (!_ui.value.serverConnected || backend is InternalBackend) null else backend.waveform(jobId)
+    }
 
     fun getStreamUrl(): String? {
         val jobId = _ui.value.jobId ?: return null
@@ -1179,7 +1381,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         cached.copyTo(file, overwrite = true)
                     } else {
                         try {
-                            val url = java.net.URL(backend().remoteResultUrl(jobId) ?: throw Exception("File no longer available on server"))
+                            val url = java.net.URL(backends.forJob(jobId).remoteResultUrl(jobId) ?: throw Exception("File no longer available on server"))
                             val conn = url.openConnection() as java.net.HttpURLConnection
                             conn.connect()
                             if (conn.responseCode == 404) {
@@ -1200,7 +1402,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     }
 
                     val uri = cache.contentUri(file)
-                    val mime = if (filename.endsWith(".mp3")) "audio/mpeg" else "video/mp4"
+                    val mime = mimeFor(filename)
                     val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                         type = mime
                         putExtra(android.content.Intent.EXTRA_STREAM, uri)
@@ -1248,7 +1450,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val uri = androidx.core.content.FileProvider.getUriForFile(
                     context, "${context.packageName}.fileprovider", file
                 )
-                val mime = if (filename.endsWith(".mp3")) "audio/mpeg" else "video/mp4"
+                val mime = mimeFor(filename)
                 val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                     type = mime
                     putExtra(android.content.Intent.EXTRA_STREAM, uri)
@@ -1275,7 +1477,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         cached.inputStream().use { it.copyTo(out) }
                     }
                 } else {
-                    val url = java.net.URL(backend().remoteResultUrl(jobId) ?: throw Exception("File not available"))
+                    val url = java.net.URL(backends.forJob(jobId).remoteResultUrl(jobId) ?: throw Exception("File not available"))
                     val conn = url.openConnection() as java.net.HttpURLConnection
                     conn.connect()
                     context.contentResolver.openOutputStream(uri)?.use { out ->
@@ -1300,5 +1502,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
         }
+    }
+
+    private companion object {
+        const val TAG = "MainViewModel"
+        /** Pref: a queued on-device item is waiting for the app to come to the foreground */
+        const val PENDING_INTERNAL_START = "pending_internal_start"
     }
 }
