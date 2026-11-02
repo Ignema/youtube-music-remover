@@ -15,6 +15,7 @@ import com.musicremover.app.data.ResultCache
 import com.musicremover.app.data.SettingsStore
 import com.musicremover.app.data.TermuxHelper
 import com.musicremover.app.data.VideoInfo
+import com.musicremover.app.data.displayTitle
 import com.musicremover.app.processing.BackendProvider
 import com.musicremover.app.processing.JobEvent
 import com.musicremover.app.processing.ProcessOptions
@@ -154,6 +155,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
         // Resume polling if app was killed mid-processing
         val savedJobId = prefs.getString("active_job_id", null)
+        // Remove temps and markers left by killed downloads; keep the job being resumed
+        bgScope.launch { cache.cleanStale(setOfNotNull(savedJobId)) }
         val savedQueue = loadQueue()
         if (savedJobId != null) {
             _ui.value = _ui.value.copy(
@@ -387,38 +390,50 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _ui.value = _ui.value.copy(history = updated)
     }
 
+    private fun mimeFor(name: String): String = when {
+        name.endsWith(".mp3") -> "audio/mpeg"
+        name.endsWith(".m4a") -> "audio/mp4"
+        else -> "video/mp4"
+    }
+
+    private fun viewFile(context: Context, file: java.io.File) {
+        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+            setDataAndType(cache.contentUri(file), mimeFor(file.name))
+            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+    }
+
     fun tryPlayHistoryItem(item: HistoryItem, context: Context) {
         bgScope.launch {
             // Try local cache first
             val cachedFile = cache.getCachedFile(item.jobId)
+                ?: if (!_ui.value.serverConnected) cache.getUnverifiedFile(item.jobId) else null
             if (cachedFile != null) {
-                val uri = cache.contentUri(cachedFile)
-                val mime = if (cachedFile.name.endsWith(".mp3")) "audio/mpeg" else "video/mp4"
-                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
-                    setDataAndType(uri, mime)
-                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                context.startActivity(intent)
+                viewFile(context, cachedFile)
                 return@launch
+            }
+            // Last resort when the server cannot provide the result: an unverified local file
+            val openUnverifiedOrUrl = {
+                val unverified = cache.getUnverifiedFile(item.jobId)
+                if (unverified != null) {
+                    viewFile(context, unverified)
+                } else {
+                    _ui.value = _ui.value.copy(url = item.url)
+                }
             }
             // Fall back to server, cache for next time
             try {
                 if (backend().isResultAvailable(item.jobId)) {
                     val file = backend().fetchResult(item.jobId, item.filename)
                     if (file != null) {
-                        val uri = cache.contentUri(file)
-                        val mime = if (file.name.endsWith(".mp3")) "audio/mpeg" else "video/mp4"
-                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
-                            setDataAndType(uri, mime)
-                            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                        context.startActivity(intent)
+                        viewFile(context, file)
                     }
                 } else {
-                    _ui.value = _ui.value.copy(url = item.url)
+                    openUnverifiedOrUrl()
                 }
             } catch (_: Exception) {
-                _ui.value = _ui.value.copy(url = item.url)
+                openUnverifiedOrUrl()
             }
         }
     }
@@ -621,18 +636,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             exported++
                         } else {
                             // Download from server
-                            val url = java.net.URL(backend().remoteResultUrl(item.jobId) ?: continue)
-                            val conn = url.openConnection() as java.net.HttpURLConnection
-                            conn.connectTimeout = 10000
-                            conn.readTimeout = 30000
-                            conn.connect()
-                            if (conn.responseCode == 200) {
-                                conn.inputStream.use { input ->
-                                    target.outputStream().use { output -> input.copyTo(output) }
+                            var downloaded = false
+                            try {
+                                val remote = backend().remoteResultUrl(item.jobId)
+                                if (remote != null) {
+                                    val conn = java.net.URL(remote).openConnection() as java.net.HttpURLConnection
+                                    conn.connectTimeout = 10000
+                                    conn.readTimeout = 30000
+                                    conn.connect()
+                                    if (conn.responseCode == 200) {
+                                        conn.inputStream.use { input ->
+                                            target.outputStream().use { output -> input.copyTo(output) }
+                                        }
+                                        downloaded = true
+                                    }
+                                    conn.disconnect()
                                 }
+                            } catch (_: Exception) { /* try the unverified local file */ }
+                            if (downloaded) {
                                 exported++
+                            } else {
+                                val unverified = cache.getUnverifiedFile(item.jobId)
+                                if (unverified != null) {
+                                    unverified.copyTo(target, overwrite = true)
+                                    exported++
+                                }
                             }
-                            conn.disconnect()
                         }
                     } catch (_: Exception) { /* skip failed items */ }
                 }
@@ -994,8 +1023,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     _ui.value = _ui.value.copy(progress = e.progress, statusText = text)
                     ProcessingService.start(getApplication(), text, e.progress)
                     if (e.status == "done") {
+                        val filename = e.filename ?: "Done"
                         // Show the result as soon as the job finishes, while it is stored locally
-                        _ui.value = _ui.value.copy(state = UiState.Done, statusText = e.filename ?: "Done")
+                        _ui.value = _ui.value.copy(state = UiState.Done, statusText = filename)
+                        // Write history before the result download starts, so a cancel cannot lose it
+                        val meta = activeJobMeta
+                        // Parse metadata from server (yt-dlp data)
+                        val ytMeta = e.metadata
+                        historyStore.add(HistoryItem(
+                            filename = filename,
+                            url = meta?.url ?: "",
+                            model = meta?.model ?: _ui.value.selectedModel,
+                            jobId = jobId,
+                            isFileUpload = meta?.isFileUpload ?: false,
+                            sourceFileName = meta?.sourceFileName,
+                            sourceFileSize = meta?.sourceFileSize,
+                            sourceFilePath = meta?.sourceFilePath,
+                            ytTitle = ytMeta?.title ?: meta?.ytTitle,
+                            ytChannel = ytMeta?.channel ?: meta?.ytChannel,
+                            ytThumbnail = ytMeta?.thumbnail ?: meta?.ytThumbnail,
+                            ytDuration = ytMeta?.duration ?: meta?.ytDuration ?: 0,
+                            ytViewCount = ytMeta?.view_count ?: meta?.ytViewCount ?: 0,
+                            ytUploadDate = ytMeta?.upload_date ?: meta?.ytUploadDate,
+                            ytDescription = ytMeta?.description ?: meta?.ytDescription,
+                        ))
+                        _ui.value = _ui.value.copy(history = historyStore.getAll())
                     }
                 }
                 is JobEvent.Done -> {
@@ -1003,27 +1055,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     if (_ui.value.jobId == jobId) {
                         _ui.value = _ui.value.copy(state = UiState.Done, statusText = filename)
                     }
-                    val meta = activeJobMeta
-                    // Parse metadata from server (yt-dlp data)
-                    val ytMeta = e.metadata
-                    historyStore.add(HistoryItem(
-                        filename = filename,
-                        url = meta?.url ?: "",
-                        model = meta?.model ?: _ui.value.selectedModel,
-                        jobId = jobId,
-                        isFileUpload = meta?.isFileUpload ?: false,
-                        sourceFileName = meta?.sourceFileName,
-                        sourceFileSize = meta?.sourceFileSize,
-                        sourceFilePath = meta?.sourceFilePath,
-                        ytTitle = ytMeta?.title ?: meta?.ytTitle,
-                        ytChannel = ytMeta?.channel ?: meta?.ytChannel,
-                        ytThumbnail = ytMeta?.thumbnail ?: meta?.ytThumbnail,
-                        ytDuration = ytMeta?.duration ?: meta?.ytDuration ?: 0,
-                        ytViewCount = ytMeta?.view_count ?: meta?.ytViewCount ?: 0,
-                        ytUploadDate = ytMeta?.upload_date ?: meta?.ytUploadDate,
-                        ytDescription = ytMeta?.description ?: meta?.ytDescription,
-                    ))
-                    _ui.value = _ui.value.copy(history = historyStore.getAll())
                     prefs.edit().remove("active_job_id").putString("last_done_job_id", jobId).apply()
                     ProcessingService.stop(getApplication())
                     notif.showDone(filename, jobId, resultPlayUrl(jobId))
@@ -1068,11 +1099,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Play a history item — local cached file first, else the server if it still has the result */
     fun playHistoryItem(item: HistoryItem, onPlay: (String, String, String?) -> Unit) {
-        val title = item.filename.removeSuffix(".mp4")
+        val title = displayTitle(item.filename)
         val cachedUri = cache.cachedUri(item.jobId)
         if (cachedUri != null) {
             onPlay(cachedUri.toString(), title, item.jobId)
             return
+        }
+        // Offline: play an unverified local file right away instead of waiting for the server
+        if (!_ui.value.serverConnected) {
+            val unverified = cache.getUnverifiedFile(item.jobId)
+            if (unverified != null) {
+                onPlay(cache.contentUri(unverified).toString(), title, item.jobId)
+                return
+            }
         }
         _ui.value = _ui.value.copy(checkingPlay = true)
         bgScope.launch {
@@ -1084,18 +1123,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                         onPlay(url, title, item.jobId)
                     }
-                } else {
+                } else if (!playUnverified(item, title, onPlay)) {
                     showTransientError("File not ready or no longer available")
                 }
             } catch (_: Exception) {
                 _ui.value = _ui.value.copy(checkingPlay = false)
-                showTransientError("Server not reachable")
+                if (!playUnverified(item, title, onPlay)) {
+                    showTransientError("Server not reachable")
+                }
             }
         }
     }
 
+    /** Last resort: play an unverified local file. Returns false if there is none. */
+    private suspend fun playUnverified(item: HistoryItem, title: String, onPlay: (String, String, String?) -> Unit): Boolean {
+        val unverified = cache.getUnverifiedFile(item.jobId) ?: return false
+        val uri = cache.contentUri(unverified).toString()
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+            onPlay(uri, title, item.jobId)
+        }
+        return true
+    }
+
     /** Server pre-computed waveform for the player, or null */
-    suspend fun serverWaveform(jobId: String): List<Float>? = backend().waveform(jobId)
+    suspend fun serverWaveform(jobId: String): List<Float>? =
+        if (!_ui.value.serverConnected) null else backend().waveform(jobId)
 
     fun getStreamUrl(): String? {
         val jobId = _ui.value.jobId ?: return null
@@ -1119,22 +1171,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     cacheDir.mkdirs()
                     val file = java.io.File(cacheDir, filename)
 
+                    // Offline: use an unverified local file right away instead of waiting for the server
                     val cached = cache.getCachedFile(jobId)
+                        ?: if (!_ui.value.serverConnected) cache.getUnverifiedFile(jobId) else null
                     if (cached != null) {
                         // Copy so the shared file keeps its original name (cache names carry a jobId prefix)
                         cached.copyTo(file, overwrite = true)
                     } else {
-                        val url = java.net.URL(backend().remoteResultUrl(jobId) ?: throw Exception("File no longer available on server"))
-                        val conn = url.openConnection() as java.net.HttpURLConnection
-                        conn.connect()
-                        if (conn.responseCode == 404) {
+                        try {
+                            val url = java.net.URL(backend().remoteResultUrl(jobId) ?: throw Exception("File no longer available on server"))
+                            val conn = url.openConnection() as java.net.HttpURLConnection
+                            conn.connect()
+                            if (conn.responseCode == 404) {
+                                conn.disconnect()
+                                throw Exception("File no longer available on server")
+                            }
+                            conn.inputStream.use { input ->
+                                file.outputStream().use { output -> input.copyTo(output) }
+                            }
                             conn.disconnect()
-                            throw Exception("File no longer available on server")
+                        } catch (e: kotlinx.coroutines.CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            // Last resort: an unverified local file
+                            val unverified = cache.getUnverifiedFile(jobId) ?: throw e
+                            unverified.copyTo(file, overwrite = true)
                         }
-                        conn.inputStream.use { input ->
-                            file.outputStream().use { output -> input.copyTo(output) }
-                        }
-                        conn.disconnect()
                     }
 
                     val uri = cache.contentUri(file)
@@ -1223,7 +1285,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 _ui.value = _ui.value.copy(downloading = false)
             } catch (e: Exception) {
-                _ui.value = _ui.value.copy(downloading = false, state = UiState.Error, errorMessage = "Save failed: ${e.message}")
+                // Last resort: an unverified local file ("wt" truncates any partial write)
+                val saved = cache.getUnverifiedFile(jobId)?.let { unverified ->
+                    try {
+                        context.contentResolver.openOutputStream(uri, "wt")?.use { out ->
+                            unverified.inputStream().use { it.copyTo(out) }
+                        } != null
+                    } catch (_: Exception) { false }
+                } ?: false
+                if (saved) {
+                    _ui.value = _ui.value.copy(downloading = false)
+                } else {
+                    _ui.value = _ui.value.copy(downloading = false, state = UiState.Error, errorMessage = "Save failed: ${e.message}")
+                }
             }
         }
     }

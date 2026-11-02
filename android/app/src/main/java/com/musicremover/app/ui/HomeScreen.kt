@@ -100,6 +100,7 @@ import com.musicremover.app.MainViewModel
 import com.musicremover.app.R
 import com.musicremover.app.UiState
 import com.musicremover.app.data.HistoryItem
+import com.musicremover.app.data.displayTitle
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -1128,7 +1129,7 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = item.filename.removeSuffix(".mp4"),
+                    text = displayTitle(item.filename),
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,

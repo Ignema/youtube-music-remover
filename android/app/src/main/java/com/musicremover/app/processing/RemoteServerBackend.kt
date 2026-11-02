@@ -106,7 +106,7 @@ class RemoteServerBackend(
                 continue
             }
             retries = 0
-            emit(JobEvent.Progress(status.status, status.progress, status.error, status.filename))
+            emit(JobEvent.Progress(status.status, status.progress, status.error, status.filename, status.metadata))
             when (status.status) {
                 "done" -> {
                     val name = status.filename ?: "Done"

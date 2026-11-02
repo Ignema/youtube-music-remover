@@ -36,18 +36,24 @@ class HistoryStore(context: Context) {
         return gson.fromJson(json, type)
     }
 
-    @Synchronized
+    // Shared by all instances: several HistoryStores in one process may add the same job
     fun add(item: HistoryItem) {
-        if (item.jobId in savedJobIds) return
-        val list = getAll().toMutableList()
-        if (list.any { it.jobId == item.jobId }) {
+        synchronized(LOCK) {
+            if (item.jobId in savedJobIds) return
+            val list = getAll().toMutableList()
+            if (list.any { it.jobId == item.jobId }) {
+                savedJobIds.add(item.jobId)
+                return
+            }
+            list.add(0, item)
             savedJobIds.add(item.jobId)
-            return
+            val trimmed = list.take(50)
+            prefs.edit().putString(key, gson.toJson(trimmed)).apply()
         }
-        list.add(0, item)
-        savedJobIds.add(item.jobId)
-        val trimmed = list.take(50)
-        prefs.edit().putString(key, gson.toJson(trimmed)).apply()
+    }
+
+    private companion object {
+        val LOCK = Any()
     }
 
     fun clear() {

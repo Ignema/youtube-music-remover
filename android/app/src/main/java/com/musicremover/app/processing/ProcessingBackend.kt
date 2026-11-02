@@ -16,14 +16,15 @@ sealed interface JobEvent {
     /**
      * Raw backend status ("queued", "uploading", "extracting", "downloading", "downloading_model",
      * "separating", "merging", "done", "error", "cancelled", or unknown). Emitted on every poll,
-     * including the terminal one, before [Done]/[Failed]. [filename] is set once the status is "done",
-     * while the result is still being stored locally.
+     * including the terminal one, before [Done]/[Failed]. [filename] and [metadata] are set once the
+     * status is "done", while the result is still being stored locally.
      */
     data class Progress(
         val status: String,
         val progress: Int,
         val error: String? = null,
         val filename: String? = null,
+        val metadata: VideoInfo? = null,
     ) : JobEvent
 
     /** [file] is the result in ResultCache, or null if it could not be stored locally */

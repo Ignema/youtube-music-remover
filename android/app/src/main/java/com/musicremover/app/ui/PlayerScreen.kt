@@ -146,11 +146,11 @@ fun PlayerScreen(
         }
     }
 
-    // Waveform — try the server's pre-computed one for server jobs, else decode the media itself
-    // (local content:// file or server URL)
+    // Waveform — try the server's pre-computed one when streaming from the server, else decode the
+    // media itself (local content:// file or server URL)
     val amplitudes = remember { mutableStateListOf<Float>() }
     LaunchedEffect(url) {
-        if (jobId != null) {
+        if (jobId != null && (url.startsWith("http://") || url.startsWith("https://"))) {
             val wave = loadServerWaveform(jobId)
             if (!wave.isNullOrEmpty()) {
                 amplitudes.clear()
