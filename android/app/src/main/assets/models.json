@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "models": [{
+    "name": "UVR-MDX-NET-Inst_HQ_3.onnx",
+    "url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/UVR-MDX-NET-Inst_HQ_3.onnx",
+    "size": 66759214,
+    "sha256": "317554b07fe1ea5279a77f2b1520a41ea4b93432560c4ffd08792c30fddf9adc",
+    "n_fft": 6144, "dim_f": 3072, "dim_t": 256, "hop": 1024,
+    "compensate": 1.022, "primary_stem": "Instrumental",
+    "segment_size": 256, "overlap": 0.25
+  }]
+}

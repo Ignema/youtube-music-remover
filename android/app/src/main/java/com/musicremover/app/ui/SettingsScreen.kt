@@ -57,6 +57,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.musicremover.app.MainViewModel
 import com.musicremover.app.R
+import com.musicremover.app.processing.BackendProvider
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -258,7 +259,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
             SectionLabel(stringResource(R.string.server_mode))
             Spacer(Modifier.height(8.dp))
 
-            val isLocal = ui.serverUrl == "http://127.0.0.1:8000"
+            val isLocal = ui.serverUrl == BackendProvider.TERMUX_URL
             val isCustom = !isLocal
 
             FlowRow(
@@ -267,7 +268,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
             ) {
                 FilterChip(
                     selected = isLocal,
-                    onClick = { vm.onServerUrlChange("http://127.0.0.1:8000") },
+                    onClick = { vm.onServerUrlChange(BackendProvider.TERMUX_URL) },
                     label = { Text(stringResource(R.string.local_termux)) },
                     leadingIcon = {
                         Icon(Icons.Outlined.PhoneAndroid, null, Modifier.size(18.dp))

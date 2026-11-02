@@ -21,4 +21,9 @@ class BackendProvider(context: Context) {
         remote?.let { if (it.baseUrl == url) return it }
         return RemoteServerBackend(appContext, url, cache).also { remote = it }
     }
+
+    companion object {
+        /** URL of the server started inside Termux on this phone. */
+        const val TERMUX_URL = "http://127.0.0.1:8000"
+    }
 }

@@ -16,6 +16,12 @@ android {
         versionName = "3.0.0"
 
         buildConfigField("String", "API_BASE_URL", "\"http://localhost:8000\"")
+
+        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }
+    }
+
+    packaging {
+        jniLibs { useLegacyPackaging = true }
     }
 
     buildTypes {
@@ -42,6 +48,17 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
+        unitTests.all {
+            it.maxHeapSize = "1g"
+            it.systemProperty("murem.parityDir", (project.findProperty("murem.parityDir") ?: "").toString())
+        }
+    }
+}
+
+// The Android ORT AAR loads natives via System.loadLibrary; JVM unit tests use the desktop artifact instead.
+configurations.configureEach {
+    if (name.endsWith("UnitTestRuntimeClasspath")) {
+        exclude(group = "com.microsoft.onnxruntime", module = "onnxruntime-android")
     }
 }
 
@@ -87,7 +104,11 @@ dependencies {
     // WorkManager
     implementation("androidx.work:work-runtime-ktx:2.10.0")
 
+    // On-device separation
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.31.1")
+
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     testImplementation("junit:junit:4.13.2")
+    testImplementation("com.microsoft.onnxruntime:onnxruntime:1.31.1")
 }

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- On-device (internal) processing strings. English only for now; other locales fall back to these. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <!-- Settings: processing mode -->
+    <string name="processing_mode">Processing mode</string>
+    <string name="mode_internal">Internal (on-device)</string>
+    <string name="mode_server">Server</string>
+    <string name="internal_warning">On-device processing is slow (it can take longer than the track itself), uses a lot of battery and about 1.5 GB of RAM. Keep the phone charging. Links need Termux or Server mode for now.</string>
+    <string name="internal_model_name">MDX-NET HQ3</string>
+    <string name="internal_model_downloaded">Downloaded · %1$s</string>
+    <string name="internal_model_not_downloaded">Not downloaded (%1$s, downloads on first use)</string>
+    <string name="internal_model_downloading">Downloading %1$s / %2$s</string>
+    <string name="download_model">Download</string>
+    <string name="delete_model">Delete</string>
+    <string name="internal_model_in_use">The model is in use. Try again when the download or processing has finished.</string>
+
+    <!-- Home / Help -->
+    <string name="status_ready_on_device">Ready for on-device processing</string>
+    <string name="status_model_unavailable">Model not downloaded and no internet connection</string>
+    <string name="internal_models_note">More models are available in Termux or Server mode</string>
+    <string name="internal_url_unsupported">Links need Termux or Server mode for now. Pick a local file instead.</string>
+    <string name="help_on_device">On-device processing</string>
+    <string name="help_on_device_desc">Internal mode removes music on your phone without a server. It works with local files only, downloads the MDX-NET HQ3 model (64 MB) on first use, and is slow and battery hungry, so keep the phone charging.</string>
+
+    <!-- Errors -->
+    <string name="internal_bad_source">Cannot read file</string>
+    <string name="internal_no_space">Not enough storage space (%1$d MB needed)</string>
+    <string name="internal_model_download_failed">Model download failed: %1$s</string>
+    <string name="internal_model_corrupt">The model file is damaged. It will be downloaded again next time.</string>
+    <string name="internal_model_mismatch">Model does not match its metadata</string>
+    <string name="internal_out_of_memory">Not enough free memory. Close other apps and try again.</string>
+    <string name="internal_processing_failed">On-device processing failed</string>
+    <string name="internal_no_audio">The file has no audio track</string>
+    <string name="internal_codec_unsupported">This audio format is not supported on this phone</string>
+    <string name="internal_video_codec_unsupported">This video format cannot be copied on-device. Turn on Audio only or use Server mode.</string>
+    <string name="internal_encode_failed">Could not encode the result</string>
+    <string name="internal_interrupted">Processing was interrupted repeatedly</string>
+    <string name="internal_job_not_found">On-device job not found</string>
+    <string name="internal_needs_foreground">On-device processing needs Murem to be open when it starts. Open Murem and try again.</string>
+    <string name="internal_waiting_foreground">Open Murem to continue on-device processing</string>
+    <string name="internal_device_unsupported">This phone does not have enough memory for on-device processing. Use Termux or Server mode.</string>
+</resources>

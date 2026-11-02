@@ -567,7 +567,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (error != null) {
             _ui.value = _ui.value.copy(state = UiState.Error, errorMessage = error)
         } else {
-            onServerUrlChange("http://127.0.0.1:8000")
+            onServerUrlChange(BackendProvider.TERMUX_URL)
             _ui.value = _ui.value.copy(termuxOperation = str(R.string.starting_server))
             pollServerOnline()
         }
