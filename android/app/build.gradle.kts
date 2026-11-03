@@ -111,6 +111,10 @@ dependencies {
     // On-device separation
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.31.1")
 
+    // On-device links: yt-dlp (Python) and ffmpeg runtimes
+    implementation("io.github.junkfood02.youtubedl-android:library:0.18.1")
+    implementation("io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1")
+
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     testImplementation("junit:junit:4.13.2")

@@ -29,6 +29,7 @@ import com.musicremover.app.processing.internal.ModelCatalog
 import com.musicremover.app.processing.internal.ModelFailure
 import com.musicremover.app.processing.internal.ModelManager
 import com.musicremover.app.processing.internal.ModelState
+import com.musicremover.app.processing.internal.YtDlpRuntime
 import com.musicremover.app.processing.statusLabel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,6 +43,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 enum class UiState { Idle, Processing, Done, Error }
+
+/** Settings "Update yt-dlp" state. */
+sealed interface YtDlpUpdateState {
+    data object Idle : YtDlpUpdateState
+    data object Running : YtDlpUpdateState
+    data class Done(val updated: Boolean, val version: String) : YtDlpUpdateState
+    /** [busy]: a link download held the yt-dlp lock. */
+    data class Failed(val busy: Boolean) : YtDlpUpdateState
+}
 
 data class QueueItem(
     val url: String,
@@ -130,6 +140,9 @@ data class MainUiState(
     val modelSizeBytes: Long = 66_759_214,
     /** Why this phone cannot run on-device processing, or null if it can */
     val internalUnsupportedReason: String? = null,
+    // On-device links (yt-dlp); null until loaded, the first load unzips Python
+    val ytDlpVersion: String? = null,
+    val ytDlpUpdate: YtDlpUpdateState = YtDlpUpdateState.Idle,
 )
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -141,7 +154,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val cache = ResultCache(application)
     private val backends = BackendProvider(application)
     private fun backend() = backends.current()
-    private fun isInternalMode() = _ui.value.processingMode == BackendProvider.MODE_INTERNAL
     private val modelManager = ModelManager.get(application)
     private val bgScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val prefs = application.getSharedPreferences("app", Context.MODE_PRIVATE)
@@ -324,6 +336,39 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         ModelFailure.Other -> str(R.string.internal_processing_failed)
     }
 
+    /** Loads the bundled yt-dlp version once (Settings, Internal mode). */
+    fun loadYtDlpVersion() {
+        if (_ui.value.ytDlpVersion != null) return
+        bgScope.launch {
+            val v = try {
+                YtDlpRuntime.version(getApplication())
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                android.util.Log.w(TAG, "yt-dlp version failed", e)
+                "?"
+            }
+            _ui.value = _ui.value.copy(ytDlpVersion = v)
+        }
+    }
+
+    /** Settings "Update yt-dlp"; a second tap while it runs is ignored. */
+    fun updateYtDlp() {
+        if (_ui.value.ytDlpUpdate == YtDlpUpdateState.Running) return
+        _ui.value = _ui.value.copy(ytDlpUpdate = YtDlpUpdateState.Running)
+        bgScope.launch {
+            val state = when (val r = YtDlpRuntime.update(getApplication())) {
+                is YtDlpRuntime.UpdateResult.Updated -> YtDlpUpdateState.Done(updated = true, version = r.version)
+                is YtDlpRuntime.UpdateResult.UpToDate -> YtDlpUpdateState.Done(updated = false, version = r.version)
+                YtDlpRuntime.UpdateResult.Busy -> YtDlpUpdateState.Failed(busy = true)
+                YtDlpRuntime.UpdateResult.Failed -> YtDlpUpdateState.Failed(busy = false)
+            }
+            // update() re-reads the version with --version after a change
+            val version = (state as? YtDlpUpdateState.Done)?.version?.takeIf { it.isNotEmpty() }
+            _ui.value = _ui.value.copy(ytDlpUpdate = state, ytDlpVersion = version ?: _ui.value.ytDlpVersion)
+        }
+    }
+
     fun deleteModel() {
         if (!modelManager.delete(ModelCatalog.HQ3)) {
             showTransientError(str(R.string.internal_model_in_use))
@@ -366,8 +411,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun onUrlChange(url: String) {
         previewJob?.cancel()
-        // On-device mode cannot fetch link metadata
-        if (looksLikeUrl(url) && !isInternalMode()) {
+        if (looksLikeUrl(url)) {
             _ui.value = _ui.value.copy(url = url, urlPreview = null, loadingPreview = true)
             fetchUrlPreview(url)
         } else {
@@ -500,7 +544,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         previewJob = bgScope.launch {
             delay(600) // Debounce
             try {
-                val info = kotlinx.coroutines.withTimeout(10_000) {
+                val info = kotlinx.coroutines.withTimeout(infoTimeoutMs(10_000)) {
                     backend().info(url)
                 }
                 if (_ui.value.url.isNotEmpty()) {
@@ -511,6 +555,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+
+    /** On-device info needs a cold Python start plus extraction on a phone; remote backends keep [remoteDefault]. */
+    private fun infoTimeoutMs(remoteDefault: Long) = if (backend() is InternalBackend) 30_000L else remoteDefault
 
     /** Check if input looks like a URL or YouTube video ID */
     private fun looksLikeUrl(input: String): Boolean {
@@ -631,7 +678,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (needsFetch) {
             bgScope.launch {
                 try {
-                    val info = kotlinx.coroutines.withTimeout(10_000) { backend().info(item.url) }
+                    val info = kotlinx.coroutines.withTimeout(infoTimeoutMs(10_000)) { backend().info(item.url) }
                     _ui.value = _ui.value.copy(videoInfo = info, loadingInfo = false)
                 } catch (_: Exception) {
                     _ui.value = _ui.value.copy(loadingInfo = false, videoInfoError = true)
@@ -641,7 +688,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             // Have basic info but missing rich data — try server in background
             bgScope.launch {
                 try {
-                    val rich = kotlinx.coroutines.withTimeout(8_000) { backend().info(item.url) }
+                    val rich = kotlinx.coroutines.withTimeout(infoTimeoutMs(8_000)) { backend().info(item.url) }
                     if (_ui.value.showInfoSheet) {
                         _ui.value = _ui.value.copy(videoInfo = rich)
                     }
@@ -871,10 +918,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 showTransientError(str(R.string.enter_url_or_file))
                 return
             }
-            if (isInternalMode()) {
-                showTransientError(str(R.string.internal_url_unsupported))
-                return
-            }
             queueUrls(urls)
             _ui.value = _ui.value.copy(batchText = "")
             return
@@ -885,11 +928,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         if (fileUri == null && url.isEmpty()) {
             showTransientError(str(R.string.enter_url_or_file))
-            return
-        }
-        // On-device mode handles local files only; the link stays in the field
-        if (fileUri == null && isInternalMode()) {
-            showTransientError(str(R.string.internal_url_unsupported))
             return
         }
 
@@ -930,10 +968,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Queue multiple URLs at once (from URL file import) */
     fun queueUrls(urls: List<String>) {
-        if (isInternalMode()) {
-            showTransientError(str(R.string.internal_url_unsupported))
-            return
-        }
         val items = urls.map { url ->
             QueueItem(
                 url = url,
@@ -991,7 +1025,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
         val next = queue.first()
         // A worker enqueued in the background cannot start its foreground service: wait for the app
-        if (next.fileUri != null && backend() is InternalBackend && !appInForeground) {
+        if (backend() is InternalBackend && !appInForeground) {
             pendingInternalStart = true
             prefs.edit().putBoolean(PENDING_INTERNAL_START, true).apply()
             val text = str(R.string.internal_waiting_foreground)

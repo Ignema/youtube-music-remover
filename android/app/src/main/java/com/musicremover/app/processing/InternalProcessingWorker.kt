@@ -12,10 +12,10 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.musicremover.app.R
-import com.musicremover.app.data.HistoryItem
 import com.musicremover.app.data.HistoryStore
 import com.musicremover.app.data.NotificationHelper
 import com.musicremover.app.data.ResultCache
+import com.musicremover.app.data.VideoInfo
 import com.musicremover.app.processing.internal.AudioDecoder
 import com.musicremover.app.processing.internal.InternalCapability
 import com.musicremover.app.processing.internal.InternalJobException
@@ -30,7 +30,13 @@ import com.musicremover.app.processing.internal.PcmFileReader
 import com.musicremover.app.processing.internal.PcmFileWriter
 import com.musicremover.app.processing.internal.PrimarySink
 import com.musicremover.app.processing.internal.VideoResultWriter
+import com.musicremover.app.processing.internal.UrlNormalizer
 import com.musicremover.app.processing.internal.VocalsSink
+import com.musicremover.app.processing.internal.YtDlpDownloader
+import com.musicremover.app.processing.internal.YtDlpErrors
+import com.musicremover.app.processing.internal.YtDlpException
+import com.musicremover.app.processing.internal.YtDlpInfo
+import com.musicremover.app.processing.internal.ytDlpKindText
 import java.io.File
 import java.io.IOException
 import kotlin.math.abs
@@ -41,9 +47,10 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
- * On-device separation of one local file: model download, decode, MDX-Net separation, AAC encode and
- * mux, commit to [ResultCache], history entry and notification. Runs as a dataSync foreground worker;
- * all notifications go through [NotificationHelper].
+ * On-device separation of one local file or one link: model download, link download with yt-dlp
+ * ([YtDlpDownloader]), decode, MDX-Net separation, AAC encode and mux, commit to [ResultCache], history
+ * entry and notification. Runs as a dataSync foreground worker; all notifications go through
+ * [NotificationHelper].
  */
 class InternalProcessingWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     private val ctx = context.applicationContext
@@ -55,6 +62,8 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
     private val modelName = inputData.getString(InternalBackend.KEY_MODEL) ?: ModelCatalog.HQ3
     private val sourceFileSize = inputData.getLong(InternalBackend.KEY_SOURCE_SIZE, -1L).takeIf { it >= 0 }
     private val sourceFilePath = inputData.getString(InternalBackend.KEY_SOURCE_PATH)
+    /** Set for link jobs; normalized by [InternalBackend.startUrl]. */
+    private val inputUrl = inputData.getString(InternalBackend.KEY_URL)
 
     private var lastStatus: String? = null
     private var lastProgress = -1
@@ -74,7 +83,7 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
             // 1. An earlier attempt was stopped after commit
             cache.getCachedFile(jobId)?.let { file ->
                 val name = file.name.removePrefix("${jobId}_")
-                finish(name, durationS = 0)
+                finish(name, durationS = 0, info = null)
                 return Result.success(workDataOf(InternalJobEvents.KEY_FILENAME to name))
             }
             // 1a. Bound reschedules after process death or system stops
@@ -100,8 +109,14 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
 
     /** Steps 2-8, under [InternalProcessingLock]. */
     private suspend fun separate(): Result {
-        val uri = inputData.getString(InternalBackend.KEY_URI)?.let(Uri::parse)
-            ?: throw jobError(R.string.internal_bad_source)
+        // Data may come from an older app version: validate the link again
+        val url = inputUrl?.let { UrlNormalizer.normalize(it) ?: throw jobError(R.string.internal_url_invalid) }
+        val uri = if (url != null) null else {
+            inputData.getString(InternalBackend.KEY_URI)?.let(Uri::parse) ?: throw jobError(R.string.internal_bad_source)
+        }
+        // Progress bands: links 0-5 model, 5-15 download, 15-20 extract; files 0-10 model, 10-20 extract
+        val modelEnd = if (url != null) 5 else 10
+        val extractStart = if (url != null) 15 else 10
         val audioOnly = inputData.getBoolean(InternalBackend.KEY_AUDIO_ONLY, false)
         val bitrate = parseBitrate(inputData.getString(InternalBackend.KEY_BITRATE)) ?: run {
             Log.w(TAG, "$jobId: invalid bitrate, using 192k")
@@ -122,14 +137,16 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
                 workDir.deleteRecursively()
                 if (!workDir.mkdirs()) throw IOException("cannot create work dir")
             }
-            val readable = withContext(Dispatchers.IO) { InternalBackend.isReadableSource(ctx, uri) }
-            if (!readable) throw jobError(R.string.internal_bad_source)
+            if (uri != null) {
+                val readable = withContext(Dispatchers.IO) { InternalBackend.isReadableSource(ctx, uri) }
+                if (!readable) throw jobError(R.string.internal_bad_source)
+            }
 
-            // 3. Model (0-10)
+            // 3. Model (0-10, links 0-5); before the link download so a missing model fails early
             val models = ModelManager.get(ctx)
             val modelFile = try {
                 models.ensure(modelName) { bytes, total ->
-                    report("downloading_model", if (total > 0) (bytes * 10 / total).toInt() else 0)
+                    report("downloading_model", if (total > 0) (bytes * modelEnd / total).toInt() else 0)
                 }
             } catch (e: ModelStorageException) {
                 throw InternalJobException(ctx.getString(R.string.internal_no_space, (e.neededBytes / 1_000_000).toInt()), e)
@@ -140,11 +157,41 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
                 throw InternalJobException(ctx.getString(R.string.internal_model_download_failed, e.message ?: ""), e)
             }
 
-            // 4. Decode (10-20)
-            report("extracting", 10)
+            // 3b. Link: info and download (5-15), inside the lock so the stream URLs are fresh
+            var info: YtDlpInfo? = null
+            val audioUri: Uri
+            var videoUri: Uri? = null
+            if (url != null) {
+                report("downloading", modelEnd)
+                val downloader = YtDlpDownloader(ctx)
+                val i = try {
+                    downloader.info(url, "$jobId-info-$runAttemptCount")
+                } catch (e: YtDlpException) {
+                    throw linkError(e, null)
+                }
+                if (i.isLive) {
+                    Log.i(TAG, "$jobId: live stream refused")
+                    throw jobError(R.string.internal_url_live)
+                }
+                info = i
+                val media = try {
+                    downloader.download(i, workDir, audioOnly, "$jobId-dl-$runAttemptCount") { p ->
+                        report("downloading", modelEnd + p / 10)
+                    }
+                } catch (e: YtDlpException) {
+                    throw linkError(e, i)
+                }
+                audioUri = Uri.fromFile(media.audio)
+                videoUri = media.video?.let(Uri::fromFile)
+            } else {
+                audioUri = uri!!
+            }
+
+            // 4. Decode (10-20, links 15-20)
+            report("extracting", extractStart)
             val mixFile = File(workDir, "mix.f32")
-            val decoded = AudioDecoder(ctx).decode(uri, mixFile, audioOnly, bitrate) { p ->
-                report("extracting", 10 + p / 10)
+            val decoded = AudioDecoder(ctx).decode(audioUri, mixFile, audioOnly, bitrate, videoUri) { p ->
+                report("extracting", extractStart + p * (20 - extractStart) / 100)
             }
 
             // 4b. Free memory right before the session is created
@@ -203,7 +250,7 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
             // 6. Encode + mux (90-99)
             report("merging", 90)
             val gain = if (peakVocals > 0.9f) 0.9f / peakVocals else 1f
-            val stem = sanitizeStem(fileName)
+            val stem = if (info != null) sanitizeName(info.videoInfo.title.ifBlank { "video" }) else sanitizeStem(fileName)
             val outName = if (decoded.videoTrack != null) "$stem-vocals-only.mp4" else "$stem-vocals-only.m4a"
             val out = withContext(Dispatchers.IO) { cache.tempFile(jobId) }
             tmp = out
@@ -213,7 +260,7 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
                 bitrateBps = bitrate,
                 audioStartUs = decoded.audioStartUs,
                 video = decoded.videoTrack,
-                source = if (decoded.videoTrack != null) uri else null,
+                source = decoded.videoSource,
                 out = out,
                 workDir = workDir,
             ) { p -> report("merging", 90 + p * 9 / 100) }
@@ -225,7 +272,7 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
                     throw jobError(R.string.internal_processing_failed)
                 }
                 committed = true
-                finish(outName, durationS = (decoded.frames / AudioDecoder.SAMPLE_RATE).toInt())
+                finish(outName, durationS = (decoded.frames / AudioDecoder.SAMPLE_RATE).toInt(), info = info?.videoInfo)
                 Result.success(workDataOf(InternalJobEvents.KEY_FILENAME to outName))
             }
         } finally {
@@ -241,23 +288,31 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
         }
     }
 
-    /** History entry and done notification (the ViewModel may be gone). HistoryStore deduplicates. */
-    private fun finish(outName: String, durationS: Int) {
+    /**
+     * History entry and done notification (the ViewModel may be gone). HistoryStore is first-writer-wins,
+     * so link jobs are recorded as links here, with [info] on the normal path and without it on resume.
+     */
+    private fun finish(outName: String, durationS: Int, info: VideoInfo?) {
         HistoryStore(ctx).add(
-            HistoryItem(
-                filename = outName,
-                url = "",
-                model = modelName,
+            InternalHistory.item(
                 jobId = jobId,
-                isFileUpload = true,
-                sourceFileName = fileName,
+                model = modelName,
+                outName = outName,
+                durationS = durationS,
+                url = inputUrl,
+                info = info,
+                fileName = fileName,
                 sourceFileSize = sourceFileSize,
                 sourceFilePath = sourceFilePath,
-                ytTitle = fileName.substringBeforeLast('.'),
-                ytDuration = durationS,
             )
         )
         notif.showDone(outName, jobId, cache.cachedUri(jobId)?.toString())
+    }
+
+    /** Localized error for a failed link step; NO_SPACE names the MB from the info, if any. */
+    private fun linkError(e: YtDlpException, info: YtDlpInfo?): InternalJobException {
+        val mb = YtDlpErrors.neededMb(info?.videoInfo?.duration ?: 0, info?.knownBytes)
+        return InternalJobException(ytDlpKindText(ctx, e.kind, mb), e)
     }
 
     private fun fail(message: String): Result {
@@ -321,8 +376,11 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
             return if (kbps in 64..320) kbps * 1000 else null
         }
 
+        /** [name] made safe for the result name, extension kept as text ("Mr. Smith" stays); "audio" if nothing is left. */
+        fun sanitizeName(name: String): String =
+            name.replace(UNSAFE_CHARS, "_").trim().take(100).ifEmpty { "audio" }
+
         /** File name without extension, safe for the result name; "audio" if nothing is left. */
-        fun sanitizeStem(fileName: String): String =
-            fileName.substringBeforeLast('.').replace(UNSAFE_CHARS, "_").trim().take(100).ifEmpty { "audio" }
+        fun sanitizeStem(fileName: String): String = sanitizeName(fileName.substringBeforeLast('.'))
     }
 }

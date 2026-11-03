@@ -5,7 +5,7 @@
     <string name="processing_mode">Processing mode</string>
     <string name="mode_internal">Internal (on-device)</string>
     <string name="mode_server">Server</string>
-    <string name="internal_warning">On-device processing is slow (it can take longer than the track itself), uses a lot of battery and about 1.5 GB of RAM. Keep the phone charging. Links need Termux or Server mode for now.</string>
+    <string name="internal_warning">On-device processing is slow (it can take longer than the track itself), uses a lot of battery and about 1.5 GB of RAM. Keep the phone charging.</string>
     <string name="internal_model_name">MDX-NET HQ3</string>
     <string name="internal_model_downloaded">Downloaded · %1$s</string>
     <string name="internal_model_not_downloaded">Not downloaded (%1$s, downloads on first use)</string>
@@ -18,9 +18,8 @@
     <string name="status_ready_on_device">Ready for on-device processing</string>
     <string name="status_model_unavailable">Model not downloaded and no internet connection</string>
     <string name="internal_models_note">More models are available in Termux or Server mode</string>
-    <string name="internal_url_unsupported">Links need Termux or Server mode for now. Pick a local file instead.</string>
     <string name="help_on_device">On-device processing</string>
-    <string name="help_on_device_desc">Internal mode removes music on your phone without a server. It works with local files only, downloads the MDX-NET HQ3 model (64 MB) on first use, and is slow and battery hungry, so keep the phone charging.</string>
+    <string name="help_on_device_desc">Internal mode removes music on your phone without a server. It downloads the MDX-NET HQ3 model (64 MB) on first use, and is slow and battery hungry, so keep the phone charging.</string>
 
     <!-- Errors -->
     <string name="internal_bad_source">Cannot read file</string>
@@ -41,4 +40,25 @@
     <string name="internal_needs_foreground">On-device processing needs Murem to be open when it starts. Open Murem and try again.</string>
     <string name="internal_waiting_foreground">Open Murem to continue on-device processing</string>
     <string name="internal_device_unsupported">This phone does not have enough memory for on-device processing. Use Termux or Server mode.</string>
+
+    <!-- Links (yt-dlp) -->
+    <string name="internal_url_invalid">This is not a valid link</string>
+    <string name="internal_url_live">Live streams cannot be processed. Try again when the stream has ended.</string>
+    <string name="internal_url_unsupported_site">This site is not supported on-device. Try Server mode.</string>
+    <string name="internal_url_unavailable">This video is unavailable or private</string>
+    <string name="internal_url_blocked">The site refused the download. Try Update yt-dlp in Settings, or use Server mode.</string>
+    <string name="internal_url_network">Could not reach the site. Check your internet connection.</string>
+    <string name="internal_url_download_failed">Could not download this link on-device. Try Server mode.</string>
+    <string name="internal_ytdlp_init_failed">Could not prepare the link downloader. Free some storage space and try again.</string>
+
+    <!-- Settings: yt-dlp -->
+    <string name="ytdlp_title">yt-dlp (links)</string>
+    <string name="ytdlp_version">Version %1$s</string>
+    <string name="ytdlp_version_loading">Loading version…</string>
+    <string name="ytdlp_update">Update yt-dlp</string>
+    <string name="ytdlp_updating">Updating…</string>
+    <string name="ytdlp_updated">Updated to %1$s</string>
+    <string name="ytdlp_up_to_date">Already up to date (%1$s)</string>
+    <string name="ytdlp_update_failed">Update failed. Check your internet connection.</string>
+    <string name="ytdlp_update_busy">Wait until the current download has finished</string>
 </resources>

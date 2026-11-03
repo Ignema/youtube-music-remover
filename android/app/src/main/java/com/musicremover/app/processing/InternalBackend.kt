@@ -17,7 +17,14 @@ import com.musicremover.app.data.VideoInfo
 import com.musicremover.app.processing.internal.InternalCapability
 import com.musicremover.app.processing.internal.ModelCatalog
 import com.musicremover.app.processing.internal.ModelManager
+import com.musicremover.app.processing.internal.UrlNormalizer
+import com.musicremover.app.processing.internal.YtDlpDownloader
+import com.musicremover.app.processing.internal.YtDlpErrors
+import com.musicremover.app.processing.internal.YtDlpException
+import com.musicremover.app.processing.internal.YtDlpRuntime
+import com.musicremover.app.processing.internal.ytDlpKindText
 import java.io.File
+import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -45,7 +52,10 @@ internal suspend fun <T> awaitOrCancel(await: suspend () -> T, onCancel: suspend
         throw e
     }
 
-/** Runs jobs on this phone in [InternalProcessingWorker] (local files only). Job ids are `"local-" + work id`. */
+/**
+ * Runs jobs on this phone in [InternalProcessingWorker]: local files, and links through the bundled yt-dlp
+ * ([YtDlpDownloader]). Job ids are `"local-" + work id`.
+ */
 class InternalBackend(context: Context, private val cache: ResultCache) : ProcessingBackend {
     private val appContext = context.applicationContext
     private val workManager get() = WorkManager.getInstance(appContext)
@@ -69,22 +79,53 @@ class InternalBackend(context: Context, private val cache: ResultCache) : Proces
     /** Localized reason why this phone cannot run on-device processing, or null. */
     fun unsupportedReason(): String? = InternalCapability.current(appContext)
 
-    override suspend fun info(url: String): VideoInfo =
-        throw UnsupportedOperationException(appContext.getString(R.string.internal_url_unsupported))
+    /**
+     * Link metadata from the bundled yt-dlp. Throws [IllegalArgumentException] for an invalid link and
+     * [IllegalStateException] with a localized text when yt-dlp fails. A cancel (the caller's timeout)
+     * kills the yt-dlp process.
+     */
+    override suspend fun info(url: String): VideoInfo = withContext(Dispatchers.IO) {
+        val normalized = UrlNormalizer.normalize(url)
+            ?: throw IllegalArgumentException(appContext.getString(R.string.internal_url_invalid))
+        try {
+            YtDlpRuntime.ensureInit(appContext)
+            YtDlpDownloader(appContext).info(normalized, "preview-${UUID.randomUUID()}").videoInfo
+        } catch (e: YtDlpException) {
+            throw IllegalStateException(ytDlpKindText(appContext, e.kind, YtDlpErrors.neededMb(0, null)), e)
+        }
+    }
 
     override fun supportedModels(): List<String> = ModelCatalog.get(appContext).map { it.name }
 
-    override suspend fun startUrl(url: String, options: ProcessOptions): String =
-        throw UnsupportedOperationException(appContext.getString(R.string.internal_url_unsupported))
+    /** Enqueues a link job; the worker inits yt-dlp and downloads. Same rules as [startFile]. */
+    override suspend fun startUrl(url: String, options: ProcessOptions): String {
+        val req = withContext(Dispatchers.IO) {
+            unsupportedReason()?.let { throw IllegalArgumentException(it) }
+            val normalized = UrlNormalizer.normalize(url)
+                ?: throw IllegalArgumentException(appContext.getString(R.string.internal_url_invalid))
+            checkModel(options.model)
+            val input = Data.Builder()
+                .putString(KEY_URL, normalized)
+                .putString(KEY_MODEL, options.model)
+                .putBoolean(KEY_AUDIO_ONLY, options.audioOnly)
+                .putString(KEY_BITRATE, options.bitrate)
+                .build()
+            OneTimeWorkRequestBuilder<InternalProcessingWorker>()
+                .setInputData(input)
+                .addTag(WORK_TAG)
+                .build()
+        }
+        // Enqueue, await and return in the caller's context (see awaitOrCancel)
+        val op = workManager.enqueueUniqueWork(UNIQUE_WORK, ExistingWorkPolicy.APPEND_OR_REPLACE, req)
+        awaitOrCancel({ op.await() }, { workManager.cancelWorkById(req.id).await() })
+        return InternalJobEvents.PREFIX + req.id
+    }
 
     override suspend fun startFile(uri: Uri, fileName: String, options: ProcessOptions): String {
         unsupportedReason()?.let { throw IllegalArgumentException(it) }
         val readable = withContext(Dispatchers.IO) { isReadableSource(appContext, uri) }
         if (!readable) throw IllegalArgumentException(appContext.getString(R.string.internal_bad_source))
-        if (options.model !in supportedModels()) {
-            Log.e(TAG, "Model not available on-device")
-            throw IllegalArgumentException("Model not available on-device")
-        }
+        checkModel(options.model)
         val input = Data.Builder()
             .putString(KEY_URI, uri.toString())
             .putString(KEY_FILE_NAME, fileName)
@@ -102,6 +143,13 @@ class InternalBackend(context: Context, private val cache: ResultCache) : Proces
         val op = workManager.enqueueUniqueWork(UNIQUE_WORK, ExistingWorkPolicy.APPEND_OR_REPLACE, req)
         awaitOrCancel({ op.await() }, { workManager.cancelWorkById(req.id).await() })
         return InternalJobEvents.PREFIX + req.id
+    }
+
+    private fun checkModel(model: String) {
+        if (model !in supportedModels()) {
+            Log.e(TAG, "Model not available on-device")
+            throw IllegalArgumentException("Model not available on-device")
+        }
     }
 
     override fun events(jobId: String): Flow<JobEvent> {
@@ -155,6 +203,8 @@ class InternalBackend(context: Context, private val cache: ResultCache) : Proces
 
         // Worker input Data keys
         const val KEY_URI = "uri"
+        /** Normalized link; set instead of [KEY_URI] for link jobs. */
+        const val KEY_URL = "url"
         const val KEY_FILE_NAME = "fileName"
         const val KEY_MODEL = "model"
         const val KEY_AUDIO_ONLY = "audioOnly"

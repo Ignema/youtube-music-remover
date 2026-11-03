@@ -46,6 +46,8 @@ class DecodeResult(
     val audioStartUs: Long,
     /** null when Audio only is on or the source has no video track. */
     val videoTrack: VideoTrackInfo?,
+    /** The file [videoTrack] comes from (`videoUri ?: uri`), or null when there is no [videoTrack]. */
+    val videoSource: Uri? = null,
 )
 
 /**
@@ -58,6 +60,8 @@ class AudioDecoder(context: Context) {
     /**
      * Writes the mix to [out]. [bitrateBps] is only used for the free-storage estimate.
      * [onProgress] receives 0..100 (pts / duration). Throws [InternalJobException].
+     * [videoUri], when set and different from [uri], is a separate file the video track is taken from
+     * (link jobs download video and audio separately).
      */
     // The storage check (§3.6) is a plain estimate against usableSpace; a later write failure maps to the same error
     @SuppressLint("UsableSpace")
@@ -66,6 +70,7 @@ class AudioDecoder(context: Context) {
         out: File,
         audioOnly: Boolean,
         bitrateBps: Int,
+        videoUri: Uri? = null,
         onProgress: (Int) -> Unit,
     ): DecodeResult = withContext(Dispatchers.IO) {
         val ctx = currentCoroutineContext()
@@ -77,6 +82,8 @@ class AudioDecoder(context: Context) {
             } catch (e: IOException) {
                 throw fail(R.string.internal_bad_source, e)
             }
+            val videoSource = videoUri ?: uri
+            val separateVideo = videoSource != uri
 
             var audioIndex = -1
             var audioFormat: MediaFormat? = null
@@ -90,7 +97,11 @@ class AudioDecoder(context: Context) {
                 }
             }
             if (audioFormat == null) throw fail(R.string.internal_no_audio)
-            val video = if (audioOnly) null else chooseVideo(formats)
+            val video = when {
+                audioOnly -> null
+                separateVideo -> chooseVideo(videoFormats(videoSource))
+                else -> chooseVideo(formats)
+            }
             if (video != null && video.plan == VideoCodecPolicy.Plan.UNSUPPORTED) {
                 Log.w(TAG, "video track ${video.index} (${video.mime}): no MP4 passthrough and no decoder")
                 throw InternalJobException(
@@ -100,7 +111,7 @@ class AudioDecoder(context: Context) {
 
             val durationUs = if (audioFormat.containsKey(MediaFormat.KEY_DURATION)) audioFormat.getLong(MediaFormat.KEY_DURATION) else -1L
             // The transcode path writes a temporary H.264 copy; the source size is an upper bound for it
-            val transcodeBytes = if (video?.plan == VideoCodecPolicy.Plan.TRANSCODE) sourceSize(appContext, uri) else 0L
+            val transcodeBytes = if (video?.plan == VideoCodecPolicy.Plan.TRANSCODE) sourceSize(appContext, videoSource) else 0L
             val neededBytes = if (durationUs > 0) {
                 val seconds = durationUs / 1_000_000.0
                 (seconds * PCM_BYTES_PER_SECOND + seconds * bitrateBps / 8 + SPACE_MARGIN + transcodeBytes).toLong()
@@ -221,6 +232,7 @@ class AudioDecoder(context: Context) {
                 durationUs = if (durationUs > 0) durationUs else frames * 1_000_000L / SAMPLE_RATE,
                 audioStartUs = startUs.coerceAtLeast(0L),
                 videoTrack = video,
+                videoSource = if (video != null) videoSource else null,
             )
         } finally {
             codec?.let { cd ->
@@ -251,6 +263,21 @@ class AudioDecoder(context: Context) {
                     r[i] = sample(base + 1) + center
                 }
             }
+        }
+    }
+
+    /** Track formats of a separate video file. */
+    private fun videoFormats(uri: Uri): List<MediaFormat> {
+        val ex = MediaExtractor()
+        try {
+            try {
+                ex.setDataSource(appContext, uri, null)
+            } catch (e: IOException) {
+                throw fail(R.string.internal_bad_source, e)
+            }
+            return (0 until ex.trackCount).map { ex.getTrackFormat(it) }
+        } finally {
+            ex.release()
         }
     }
 

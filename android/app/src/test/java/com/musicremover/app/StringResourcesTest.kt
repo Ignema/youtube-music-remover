@@ -2,6 +2,7 @@ package com.musicremover.app
 
 import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -34,6 +35,22 @@ class StringResourcesTest {
                     val text = strings[key] ?: continue
                     assertTrue("$key in ${dir.name}/${file.name} lost %1\$s: $text", text.contains("%1\$s"))
                 }
+            }
+        }
+    }
+
+    /** Links work on-device now; the old "links need Termux or Server" string must not come back. */
+    @Test
+    fun internalUrlUnsupportedIsGoneInEveryLocale() {
+        val dirs = res.listFiles { f -> f.isDirectory && f.name.startsWith("values") }.orEmpty()
+        assertTrue("no values dirs under ${res.absolutePath}", dirs.isNotEmpty())
+        for (dir in dirs) {
+            val files = dir.listFiles { f -> f.name.startsWith("strings") && f.name.endsWith(".xml") }.orEmpty()
+            for (file in files) {
+                assertFalse(
+                    "internal_url_unsupported still in ${dir.name}/${file.name}",
+                    "internal_url_unsupported" in parse(file),
+                )
             }
         }
     }

@@ -48,6 +48,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -61,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import com.musicremover.app.MainViewModel
 import com.musicremover.app.R
 import com.musicremover.app.UiState
+import com.musicremover.app.YtDlpUpdateState
 import com.musicremover.app.processing.BackendProvider
 import com.musicremover.app.processing.internal.ModelFailure
 import com.musicremover.app.processing.internal.ModelState
@@ -291,7 +293,11 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
             Spacer(Modifier.height(16.dp))
 
             AnimatedVisibility(visible = ui.processingMode == BackendProvider.MODE_INTERNAL) {
-                InternalModelCard(vm)
+                Column {
+                    InternalModelCard(vm)
+                    Spacer(Modifier.height(12.dp))
+                    YtDlpCard(vm)
+                }
             }
 
             AnimatedVisibility(visible = ui.processingMode == BackendProvider.MODE_TERMUX) {
@@ -665,6 +671,83 @@ private fun InternalModelCard(vm: MainViewModel) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+    }
+}
+
+/** Bundled yt-dlp for on-device links: version and "Update yt-dlp" (network only on tap). */
+@Composable
+private fun YtDlpCard(vm: MainViewModel) {
+    val ui by vm.ui.collectAsState()
+    // The first call unzips Python, so the version arrives after a few seconds
+    LaunchedEffect(Unit) { vm.loadYtDlpVersion() }
+    val update = ui.ytDlpUpdate
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+        ),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Outlined.Download,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    stringResource(R.string.ytdlp_title),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                ui.ytDlpVersion?.let { stringResource(R.string.ytdlp_version, it) }
+                    ?: stringResource(R.string.ytdlp_version_loading),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (update == YtDlpUpdateState.Running) {
+                Spacer(Modifier.height(8.dp))
+                // The library reports no byte progress
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    stringResource(R.string.ytdlp_updating),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            val result = when (update) {
+                is YtDlpUpdateState.Done ->
+                    if (update.updated) stringResource(R.string.ytdlp_updated, update.version)
+                    else stringResource(R.string.ytdlp_up_to_date, update.version)
+                is YtDlpUpdateState.Failed ->
+                    if (update.busy) stringResource(R.string.ytdlp_update_busy)
+                    else stringResource(R.string.ytdlp_update_failed)
+                else -> null
+            }
+            result?.let {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (update is YtDlpUpdateState.Failed && !update.busy) MaterialTheme.colorScheme.error
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Spacer(Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = vm::updateYtDlp,
+                enabled = update != YtDlpUpdateState.Running,
+                shape = RoundedCornerShape(12.dp),
+            ) {
+                Text(stringResource(R.string.ytdlp_update))
+            }
         }
     }
 }

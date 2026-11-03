@@ -46,7 +46,6 @@ import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.History
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.MusicOff
 import androidx.compose.material.icons.outlined.Merge
 import androidx.compose.material.icons.outlined.PlayArrow
@@ -1660,29 +1659,7 @@ private fun ModelOption(
 
 
 @Composable
-private fun InternalUrlUnsupportedCard(ui: MainUiState) {
-    if (ui.processingMode != BackendProvider.MODE_INTERNAL) return
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Outlined.Info, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.width(10.dp))
-            Text(
-                stringResource(R.string.internal_url_unsupported),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-    Spacer(Modifier.height(12.dp))
-}
-
-@Composable
 private fun UrlInputTab(ui: MainUiState, vm: MainViewModel) {
-    InternalUrlUnsupportedCard(ui)
     OutlinedTextField(
         value = ui.url,
         onValueChange = { vm.onUrlChange(it) },
@@ -1764,7 +1741,6 @@ private fun FileInputTab(ui: MainUiState, vm: MainViewModel, filePicker: android
 
 @Composable
 private fun BatchInputTab(ui: MainUiState, vm: MainViewModel, urlFilePicker: androidx.activity.result.ActivityResultLauncher<String>) {
-    InternalUrlUnsupportedCard(ui)
     OutlinedTextField(
         value = ui.batchText,
         onValueChange = vm::onBatchTextChange,
