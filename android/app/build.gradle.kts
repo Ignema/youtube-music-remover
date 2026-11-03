@@ -18,6 +18,8 @@ android {
         buildConfigField("String", "API_BASE_URL", "\"http://localhost:8000\"")
 
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     packaging {
@@ -113,4 +115,7 @@ dependencies {
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("com.microsoft.onnxruntime:onnxruntime:1.31.1")
+
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test:runner:1.7.0")
 }
