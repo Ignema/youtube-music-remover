@@ -7,6 +7,10 @@
 # ONNX Runtime: the JNI layer looks up Java classes by name
 -keep class ai.onnxruntime.** { *; }
 
+# Gson TypeToken subclasses need their generic signature (HistoryStore, MainViewModel)
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+
 # Gson DTOs for assets/models.json
 -keep class com.musicremover.app.processing.internal.ModelCatalogJson { *; }
 -keep class com.musicremover.app.processing.internal.ModelSpecJson { *; }
