@@ -17,13 +17,25 @@ android {
 
         buildConfigField("String", "API_BASE_URL", "\"http://localhost:8000\"")
 
-        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // One APK per ABI plus a universal one; versionCodes are set per ABI in androidComponents below.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a", "x86_64")
+            isUniversalApk = true
+        }
+    }
+
     packaging {
-        jniLibs { useLegacyPackaging = true }
+        jniLibs {
+            useLegacyPackaging = true
+            // No 32-bit x86 in the universal APK (the ORT and youtubedl AARs ship it)
+            excludes += "lib/x86/**"
+        }
     }
 
     buildTypes {
@@ -53,6 +65,26 @@ android {
         unitTests.all {
             it.maxHeapSize = "1g"
             it.systemProperty("murem.parityDir", (project.findProperty("murem.parityDir") ?: "").toString())
+        }
+    }
+}
+
+// versionCode = defaultConfig.versionCode * 10 + abiCode (universal 0, armeabi-v7a 1, arm64-v8a 2, x86_64 3)
+androidComponents {
+    onVariants { variant ->
+        val base = android.defaultConfig.versionCode ?: error("defaultConfig.versionCode is not set")
+        variant.outputs.forEach { output ->
+            val abi = output.filters
+                .find { it.filterType == com.android.build.api.variant.FilterConfiguration.FilterType.ABI }
+                ?.identifier
+            val abiCode = when (abi) {
+                null -> 0
+                "armeabi-v7a" -> 1
+                "arm64-v8a" -> 2
+                "x86_64" -> 3
+                else -> error("No versionCode for ABI $abi")
+            }
+            output.versionCode.set(base * 10 + abiCode)
         }
     }
 }

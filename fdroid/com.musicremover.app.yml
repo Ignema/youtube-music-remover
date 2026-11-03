@@ -12,6 +12,10 @@ AutoName: Murem
 RepoType: git
 Repo: https://github.com/Ignema/youtube-music-remover.git
 
+# Releases after v3.0.0 build one APK per ABI (versionCode = base * 10 + abiCode)
+# and need one Builds entry per ABI with a prebuild step that removes the
+# debug signingConfig, plus a License review (bundled GPL-3.0 components).
+# See fdroid/README.md before adding the next Builds entries.
 Builds:
   - versionName: 2.1.0
     versionCode: 3
