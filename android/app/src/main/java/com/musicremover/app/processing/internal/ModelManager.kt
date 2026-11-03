@@ -26,7 +26,29 @@ sealed class ModelState {
     data object NotDownloaded : ModelState()
     data class Downloading(val bytes: Long, val total: Long) : ModelState()
     data class Ready(val sizeBytes: Long) : ModelState()
-    data class Failed(val message: String) : ModelState()
+    data class Failed(val failure: ModelFailure) : ModelState()
+}
+
+/** Why a model download failed, mapped to a localized text by the UI. */
+sealed interface ModelFailure {
+    data class NoSpace(val neededBytes: Long) : ModelFailure
+    data object Corrupt : ModelFailure
+    data object Network : ModelFailure
+    data object Other : ModelFailure
+
+    companion object {
+        /** Pure. First match wins. [neededBytes] is the model size + margin, used for a disk-full write. */
+        fun of(e: Throwable, neededBytes: Long): ModelFailure = when {
+            e is ModelStorageException -> NoSpace(e.neededBytes)
+            StorageErrors.isNoSpace(e) -> NoSpace(neededBytes)
+            e is ModelCorruptException -> Corrupt
+            e is IOException && e.message == RENAME_FAILED -> Other
+            e is IOException -> Network
+            else -> Other
+        }
+
+        internal const val RENAME_FAILED = "rename failed"
+    }
 }
 
 /** Not enough free storage for the model; [neededBytes] = model size + margin. */
@@ -74,16 +96,16 @@ class ModelManager private constructor(context: Context) {
             setState(name, ModelState.Ready(spec.size))
             return@withLock target
         }
+        val needed = spec.size + SPACE_MARGIN
         try {
             withContext(Dispatchers.IO) {
                 dir.mkdirs()
-                val needed = spec.size + SPACE_MARGIN
                 if (dir.usableSpace < needed) throw ModelStorageException(needed)
                 val part = File(dir, "$name.part")
                 download(spec, part, onProgress)
                 verify(spec, part)
                 target.delete()
-                if (!part.renameTo(target)) throw IOException("rename failed")
+                if (!part.renameTo(target)) throw IOException(ModelFailure.RENAME_FAILED)
             }
             setState(name, ModelState.Ready(spec.size))
             target
@@ -91,7 +113,7 @@ class ModelManager private constructor(context: Context) {
             setState(name, diskState(spec))
             throw e
         } catch (e: Exception) {
-            setState(name, ModelState.Failed(e.message ?: e.javaClass.simpleName))
+            setState(name, ModelState.Failed(ModelFailure.of(e, needed)))
             throw e
         }
     }

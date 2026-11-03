@@ -100,7 +100,7 @@ class AudioDecoder(context: Context) {
 
             val durationUs = if (audioFormat.containsKey(MediaFormat.KEY_DURATION)) audioFormat.getLong(MediaFormat.KEY_DURATION) else -1L
             // The transcode path writes a temporary H.264 copy; the source size is an upper bound for it
-            val transcodeBytes = if (video?.plan == VideoCodecPolicy.Plan.TRANSCODE) sourceSize(uri) else 0L
+            val transcodeBytes = if (video?.plan == VideoCodecPolicy.Plan.TRANSCODE) sourceSize(appContext, uri) else 0L
             val neededBytes = if (durationUs > 0) {
                 val seconds = durationUs / 1_000_000.0
                 (seconds * PCM_BYTES_PER_SECOND + seconds * bitrateBps / 8 + SPACE_MARGIN + transcodeBytes).toLong()
@@ -277,12 +277,6 @@ class AudioDecoder(context: Context) {
     } catch (e: Exception) {
         Log.w(TAG, "decoder lookup failed", e)
         false
-    }
-
-    private fun sourceSize(uri: Uri): Long = try {
-        appContext.contentResolver.openAssetFileDescriptor(uri, "r")?.use { it.length.coerceAtLeast(0L) } ?: 0L
-    } catch (e: Exception) {
-        0L
     }
 
     private fun fail(res: Int, cause: Throwable? = null) = InternalJobException(appContext.getString(res), cause)

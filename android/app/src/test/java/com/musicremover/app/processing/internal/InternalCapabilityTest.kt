@@ -18,11 +18,16 @@ class InternalCapabilityTest {
 
     @Test
     fun refusesBelowTotalMemory() {
-        assertEquals(Refusal.TOTAL_MEM, InternalCapability.check(true, 3_999_999_999L, false))
+        assertEquals(Refusal.TOTAL_MEM, InternalCapability.check(true, 3_399_999_999L, false))
     }
 
     @Test
     fun acceptsAtThreshold() {
-        assertNull(InternalCapability.check(true, 4_000_000_000L, false))
+        assertNull(InternalCapability.check(true, 3_400_000_000L, false))
+    }
+
+    @Test
+    fun accepts4GbPhone() {
+        assertNull(InternalCapability.check(true, 3_650_000_000L, false))
     }
 }

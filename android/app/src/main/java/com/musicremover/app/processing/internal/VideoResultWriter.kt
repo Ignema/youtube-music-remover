@@ -1,5 +1,6 @@
 package com.musicremover.app.processing.internal
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.media.MediaExtractor
 import android.media.MediaFormat
@@ -24,6 +25,8 @@ class VideoResultWriter(context: Context) {
      * the file [video] belongs to; [workDir] holds the temporary H.264 file. [forceTranscode] skips the
      * copy attempt. [onProgress] receives 0..100. Throws [InternalJobException].
      */
+    // The storage check is a plain estimate against usableSpace; a later write failure maps to the same error
+    @SuppressLint("UsableSpace")
     suspend fun write(
         pcm: File,
         gain: Float,
@@ -57,6 +60,12 @@ class VideoResultWriter(context: Context) {
 
         // Re-encode the video (0-60), then mux it with the vocals (60-100)
         val h264 = File(workDir, TRANSCODED_NAME)
+        // The source size is an upper bound for the temporary H.264 copy (AudioDecoder only counts it for TRANSCODE plans)
+        val needBytes = withContext(Dispatchers.IO) { sourceSize(appContext, source) } + SPACE_MARGIN
+        if (workDir.usableSpace < needBytes) {
+            Log.w(TAG, "not enough space for the H.264 copy (mime=${video.mime}): need $needBytes, usable ${workDir.usableSpace}")
+            throw noSpace(needBytes, null)
+        }
         try {
             val frames = withContext(Dispatchers.IO) { PcmFileReader(pcm).use { it.frames } }
             val audioEndUs = audioStartUs + frames * 1_000_000L / AudioDecoder.SAMPLE_RATE
@@ -71,9 +80,11 @@ class VideoResultWriter(context: Context) {
         } catch (e: CancellationException) {
             throw e
         } catch (e: TranscodeException) {
+            checkNoSpace(e, video, workDir, needBytes)
             Log.e(TAG, "video transcode failed (mime=${video.mime}, error=${e.errorCodeName})", e)
             throw convertFailed(video, e)
         } catch (e: VideoCopyException) {
+            checkNoSpace(e, video, workDir, needBytes)
             Log.e(
                 TAG,
                 "muxing the H.264 copy failed (source mime=${video.mime}, stage=${e.stage}); " +
@@ -84,6 +95,7 @@ class VideoResultWriter(context: Context) {
         } catch (e: InternalJobException) {
             throw e
         } catch (e: Exception) {
+            checkNoSpace(e, video, workDir, needBytes)
             Log.e(TAG, "video fallback failed (mime=${video.mime})", e)
             throw convertFailed(video, e)
         } finally {
@@ -115,8 +127,22 @@ class VideoResultWriter(context: Context) {
         cause,
     )
 
+    /** Throws the "not enough storage" error if [e] looks like a full disk ([StorageErrors.isLikelyNoSpace]). */
+    @SuppressLint("UsableSpace")
+    private fun checkNoSpace(e: Exception, video: VideoTrackInfo, workDir: File, needBytes: Long) {
+        if (!StorageErrors.isLikelyNoSpace(e, workDir.usableSpace)) return
+        Log.w(TAG, "video fallback failed, storage looks full (mime=${video.mime}, usable ${workDir.usableSpace})", e)
+        throw noSpace(needBytes, e)
+    }
+
+    private fun noSpace(needBytes: Long, cause: Throwable?) = InternalJobException(
+        appContext.getString(R.string.internal_no_space, (needBytes / 1_000_000).toInt()),
+        cause,
+    )
+
     private companion object {
         const val TAG = "MuremInternal"
         const val TRANSCODED_NAME = "video-h264.mp4"
+        const val SPACE_MARGIN = 50L * 1024 * 1024
     }
 }

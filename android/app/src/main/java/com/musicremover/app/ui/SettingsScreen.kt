@@ -62,6 +62,7 @@ import com.musicremover.app.MainViewModel
 import com.musicremover.app.R
 import com.musicremover.app.UiState
 import com.musicremover.app.processing.BackendProvider
+import com.musicremover.app.processing.internal.ModelFailure
 import com.musicremover.app.processing.internal.ModelState
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -614,7 +615,12 @@ private fun InternalModelCard(vm: MainViewModel) {
                     formatMb(modelState.bytes),
                     formatMb(if (modelState.total > 0) modelState.total else ui.modelSizeBytes),
                 )
-                is ModelState.Failed -> modelState.message
+                is ModelState.Failed -> when (val f = modelState.failure) {
+                    is ModelFailure.NoSpace -> stringResource(R.string.internal_no_space, (f.neededBytes / 1_000_000).toInt())
+                    ModelFailure.Corrupt -> stringResource(R.string.internal_model_corrupt)
+                    ModelFailure.Network -> stringResource(R.string.internal_model_failed_network)
+                    ModelFailure.Other -> stringResource(R.string.internal_processing_failed)
+                }
                 ModelState.NotDownloaded -> stringResource(R.string.internal_model_not_downloaded, total)
             }
             Text(

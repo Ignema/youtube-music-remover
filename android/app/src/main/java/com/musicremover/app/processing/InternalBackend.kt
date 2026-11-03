@@ -20,12 +20,30 @@ import com.musicremover.app.processing.internal.ModelManager
 import java.io.File
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.withContext
+
+/**
+ * Awaits an enqueue; if the caller is cancelled during [await], runs [onCancel] (e.g. cancels the enqueued
+ * work) in [NonCancellable] and rethrows, so a cancelled start never leaves an orphan worker.
+ *
+ * Rule for callers: only the blocking pre-checks run inside `withContext(Dispatchers.IO)`. The enqueue,
+ * `awaitOrCancel` and the `return` of the job id run in the caller's context, and nothing suspends after
+ * `awaitOrCancel` returns. Otherwise a cancel landing after [await] resumed would make `withContext` throw,
+ * discard the id and skip [onCancel].
+ */
+internal suspend fun <T> awaitOrCancel(await: suspend () -> T, onCancel: suspend () -> Unit): T =
+    try {
+        await()
+    } catch (e: CancellationException) {
+        withContext(NonCancellable) { onCancel() }
+        throw e
+    }
 
 /** Runs jobs on this phone in [InternalProcessingWorker] (local files only). Job ids are `"local-" + work id`. */
 class InternalBackend(context: Context, private val cache: ResultCache) : ProcessingBackend {
@@ -81,7 +99,8 @@ class InternalBackend(context: Context, private val cache: ResultCache) : Proces
             .addTag(WORK_TAG)
             .build()
         // Await the enqueue so the WorkInfo row exists before events() is collected
-        workManager.enqueueUniqueWork(UNIQUE_WORK, ExistingWorkPolicy.APPEND_OR_REPLACE, req).await()
+        val op = workManager.enqueueUniqueWork(UNIQUE_WORK, ExistingWorkPolicy.APPEND_OR_REPLACE, req)
+        awaitOrCancel({ op.await() }, { workManager.cancelWorkById(req.id).await() })
         return InternalJobEvents.PREFIX + req.id
     }
 

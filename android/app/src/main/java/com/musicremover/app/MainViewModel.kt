@@ -16,18 +16,19 @@ import com.musicremover.app.data.SettingsStore
 import com.musicremover.app.data.TermuxHelper
 import com.musicremover.app.data.VideoInfo
 import com.musicremover.app.data.displayTitle
+import com.musicremover.app.processing.ActiveJobTracker
 import com.musicremover.app.processing.BackendProvider
 import com.musicremover.app.processing.InternalBackend
 import com.musicremover.app.processing.InternalJobEvents
 import com.musicremover.app.processing.JobEvent
+import com.musicremover.app.processing.ModelSelection
 import com.musicremover.app.processing.ProcessOptions
 import com.musicremover.app.processing.ProcessingBackend
 import com.musicremover.app.processing.RemoteServerBackend
 import com.musicremover.app.processing.internal.ModelCatalog
-import com.musicremover.app.processing.internal.ModelCorruptException
+import com.musicremover.app.processing.internal.ModelFailure
 import com.musicremover.app.processing.internal.ModelManager
 import com.musicremover.app.processing.internal.ModelState
-import com.musicremover.app.processing.internal.ModelStorageException
 import com.musicremover.app.processing.statusLabel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -144,7 +145,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val modelManager = ModelManager.get(application)
     private val bgScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val prefs = application.getSharedPreferences("app", Context.MODE_PRIVATE)
-    private var pollingJob: kotlinx.coroutines.Job? = null
+    /** The running job (start + events), separate from [MainUiState.jobId], which the Done screen keeps */
+    private val tracker = ActiveJobTracker()
+
+    /** The Server/Termux model replaced by HQ3 while in internal mode; restored when leaving it. In memory only. */
+    private var remoteModelBeforeInternal: String? = null
 
     /** A queued file item waits for the app to come to the foreground (on-device mode, §3.5) */
     @Volatile
@@ -205,7 +210,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 statusText = application.getString(R.string.resuming),
                 queue = savedQueue,
             )
-            pollingJob = bgScope.launch { runJob(savedJobId) }
+            val resumed = backends.forJob(savedJobId)
+            tracker.resume(
+                bgScope, resumed, savedJobId,
+                run = { runJob(it) },
+                onError = { onStartError(resumed, it, "Connection failed") },
+            )
         } else if (prefs.getBoolean(PENDING_INTERNAL_START, false) && savedQueue.isNotEmpty()) {
             // A queued on-device item was waiting for the app; the first onResume starts it
             pendingInternalStart = true
@@ -270,9 +280,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun applyModelsForMode() {
         val models = backend().supportedModels()
         val ui = _ui.value
-        val selected = if (ui.processingMode == BackendProvider.MODE_INTERNAL && ui.selectedModel !in models) {
-            ModelCatalog.HQ3
-        } else ui.selectedModel
+        val (selected, remembered) = ModelSelection.forMode(
+            internal = ui.processingMode == BackendProvider.MODE_INTERNAL,
+            selected = ui.selectedModel,
+            supported = models,
+            remembered = remoteModelBeforeInternal,
+        )
+        remoteModelBeforeInternal = remembered
         _ui.value = ui.copy(models = models, selectedModel = selected)
     }
 
@@ -296,14 +310,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 modelManager.ensure(ModelCatalog.HQ3)
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
-            } catch (e: ModelStorageException) {
-                showTransientError(getApplication<Application>().getString(R.string.internal_no_space, (e.neededBytes / 1_000_000).toInt()))
-            } catch (e: ModelCorruptException) {
-                showTransientError(str(R.string.internal_model_corrupt))
             } catch (e: Exception) {
-                showTransientError(getApplication<Application>().getString(R.string.internal_model_download_failed, e.message ?: ""))
+                // Same mapping as the Settings card, so both say the same thing
+                showTransientError(modelFailureText(ModelFailure.of(e, _ui.value.modelSizeBytes + MODEL_SPACE_MARGIN)))
             }
         }
+    }
+
+    private fun modelFailureText(f: ModelFailure): String = when (f) {
+        is ModelFailure.NoSpace -> getApplication<Application>().getString(R.string.internal_no_space, (f.neededBytes / 1_000_000).toInt())
+        ModelFailure.Corrupt -> str(R.string.internal_model_corrupt)
+        ModelFailure.Network -> str(R.string.internal_model_failed_network)
+        ModelFailure.Other -> str(R.string.internal_processing_failed)
     }
 
     fun deleteModel() {
@@ -1009,62 +1027,59 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Cancel current item — processes next in queue if any */
     fun cancelProcessing() {
-        val jobId = _ui.value.jobId
-        pollingJob?.cancel()
-        pollingJob = null
+        val slot = tracker.detach()
         activeJobMeta = null
         prefs.edit().remove("active_job_id").apply()
         notif.dismiss()
-        val backend = jobId?.let { backends.forJob(it) }
-        if (jobId != null && backend != null && backend.managesNotifications) {
-            cancelInternalThenContinue(backend, jobId)
+        if (slot != null && slot.backend.managesNotifications) {
+            cancelInternalThenContinue(slot)
             return
         }
         ProcessingService.stop(getApplication())
-        if (jobId != null && backend != null) {
-            bgScope.launch { try { backend.cancel(jobId) } catch (_: Exception) {} }
-        }
         if (_ui.value.queue.isNotEmpty()) {
             _ui.value = _ui.value.copy(progress = 0, statusText = "")
             processNextInQueue()
         } else {
             setIdle()
         }
+        slot?.let { cancelDetachedRemote(it) }
     }
 
     /** Cancel current item and clear entire queue */
     fun cancelAll() {
-        val jobId = _ui.value.jobId
-        pollingJob?.cancel()
-        pollingJob = null
+        val slot = tracker.detach()
         activeJobMeta = null
         prefs.edit().remove("active_job_id").remove("queue").apply()
         clearPendingInternalStart()
         notif.dismiss()
-        val backend = jobId?.let { backends.forJob(it) }
-        if (jobId != null && backend != null && backend.managesNotifications) {
+        if (slot != null && slot.backend.managesNotifications) {
             _ui.value = _ui.value.copy(queue = emptyList())
-            cancelInternalThenContinue(backend, jobId)
+            cancelInternalThenContinue(slot)
             return
         }
         ProcessingService.stop(getApplication())
-        if (jobId != null && backend != null) {
-            bgScope.launch { try { backend.cancel(jobId) } catch (_: Exception) {} }
-        }
         _ui.value = _ui.value.copy(state = UiState.Idle, progress = 0, statusText = "", processingMinimized = false, queue = emptyList())
+        slot?.let { cancelDetachedRemote(it) }
     }
 
     /**
      * On-device cancel: wait until the work is CANCELLED before the next enqueue, so APPEND_OR_REPLACE
      * never chains the next job behind a work that is about to be cancelled (§3.5).
      */
-    private fun cancelInternalThenContinue(backend: ProcessingBackend, jobId: String) {
+    private fun cancelInternalThenContinue(slot: ActiveJobTracker.Slot) {
         _ui.value = _ui.value.copy(progress = 0, statusText = "")
         bgScope.launch {
-            backend.cancel(jobId)
+            ActiveJobTracker.cancelAndTakeId(slot)?.let { slot.backend.cancel(it) }
             withContext(Dispatchers.Main) {
                 if (_ui.value.queue.isNotEmpty()) processNextInQueue() else setIdle()
             }
+        }
+    }
+
+    /** Server/Termux cancel of a detached slot; the queue has already moved on. */
+    private fun cancelDetachedRemote(slot: ActiveJobTracker.Slot) {
+        bgScope.launch {
+            ActiveJobTracker.cancelAndTakeId(slot)?.let { id -> runCatching { slot.backend.cancel(id) } }
         }
     }
 
@@ -1134,29 +1149,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             sourceFileSize = _ui.value.selectedFileSize,
             sourceFilePath = _ui.value.originalFileUri,
         )
-        pollingJob = bgScope.launch {
-            val backend = backend()
-            val managed = backend.managesNotifications
-            // On-device jobs do not upload anything
-            val text = if (managed) str(R.string.starting) else str(R.string.uploading)
-            _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = text)
-            if (!managed) ProcessingService.start(getApplication(), text, 0)
-            try {
-                val fileName = _ui.value.selectedFileName ?: "video.mp4"
-                val jobId = backend.startFile(uri, fileName, options(backend))
-                _ui.value = _ui.value.copy(jobId = jobId)
-                prefs.edit().putString("active_job_id", jobId).apply()
-                runJob(jobId)
-            } catch (e: Exception) {
-                if (!managed) ProcessingService.stop(getApplication())
-                showTransientError(e.message ?: "Upload failed")
-                if (_ui.value.queue.isNotEmpty()) {
-                    processNextInQueue()
-                } else {
-                    _ui.value = _ui.value.copy(state = UiState.Idle)
-                }
-            }
-        }
+        val backend = backend()
+        val managed = backend.managesNotifications
+        // On-device jobs do not upload anything
+        val text = if (managed) str(R.string.starting) else str(R.string.uploading)
+        _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = text, jobId = null)
+        if (!managed) ProcessingService.start(getApplication(), text, 0)
+        val fileName = _ui.value.selectedFileName ?: "video.mp4"
+        val options = options(backend)
+        tracker.launch(
+            bgScope, backend,
+            start = { backend.startFile(uri, fileName, options) },
+            run = { runStartedJob(it) },
+            onError = { onStartError(backend, it, "Upload failed") },
+        )
     }
 
     private fun processUrl(url: String) {
@@ -1165,24 +1171,35 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             isFileUpload = false,
             sourceFileName = null, sourceFileSize = null,
         )
-        pollingJob = bgScope.launch {
-            val backend = backend()
-            val managed = backend.managesNotifications
-            _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.starting))
-            if (!managed) ProcessingService.start(getApplication(), str(R.string.starting), 0)
-            try {
-                val jobId = backend.startUrl(url, options(backend))
-                _ui.value = _ui.value.copy(jobId = jobId)
-                prefs.edit().putString("active_job_id", jobId).apply()
-                runJob(jobId)
-            } catch (e: Exception) {
-                if (!managed) ProcessingService.stop(getApplication())
-                showTransientError(e.message ?: "Connection failed")
-                if (_ui.value.queue.isNotEmpty()) {
-                    processNextInQueue()
-                } else {
-                    _ui.value = _ui.value.copy(state = UiState.Idle)
-                }
+        val backend = backend()
+        val managed = backend.managesNotifications
+        _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.starting), jobId = null)
+        if (!managed) ProcessingService.start(getApplication(), str(R.string.starting), 0)
+        val options = options(backend)
+        tracker.launch(
+            bgScope, backend,
+            start = { backend.startUrl(url, options) },
+            run = { runStartedJob(it) },
+            onError = { onStartError(backend, it, "Connection failed") },
+        )
+    }
+
+    /** A started job: remember it for resume, then follow its events. */
+    private suspend fun runStartedJob(jobId: String) {
+        _ui.value = _ui.value.copy(jobId = jobId)
+        prefs.edit().putString("active_job_id", jobId).apply()
+        runJob(jobId)
+    }
+
+    /** Start (or event) failure of the tracked job; never called for a cancel. [fallback] is the toast without a message. */
+    private suspend fun onStartError(backend: ProcessingBackend, e: Exception, fallback: String) {
+        withContext(Dispatchers.Main) {
+            if (!backend.managesNotifications) ProcessingService.stop(getApplication())
+            showTransientError(e.message ?: fallback)
+            if (_ui.value.queue.isNotEmpty()) {
+                processNextInQueue()
+            } else {
+                _ui.value = _ui.value.copy(state = UiState.Idle)
             }
         }
     }
@@ -1506,6 +1523,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private companion object {
         const val TAG = "MainViewModel"
+
+        /** ModelManager's free-space margin, for a failure that did not reach the model state */
+        const val MODEL_SPACE_MARGIN = 50L * 1024 * 1024
         /** Pref: a queued on-device item is waiting for the app to come to the foreground */
         const val PENDING_INTERNAL_START = "pending_internal_start"
     }

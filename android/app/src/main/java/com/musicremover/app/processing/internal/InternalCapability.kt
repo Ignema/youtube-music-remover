@@ -9,9 +9,13 @@ import com.musicremover.app.R
 /**
  * Refuses devices that cannot run the ONNX model (about 1.0-1.2 GB of native memory per segment).
  * On Android the process is usually killed instead of getting an OutOfMemoryError, so this is checked up front.
+ *
+ * [MIN_TOTAL_MEM] is 3.4e9 bytes: `MemoryInfo.totalMem` leaves out kernel-reserved memory, so "4 GB" phones
+ * report about 3.6-3.8e9 and must pass, while 3 GB phones (about 2.7-2.9e9) are still refused. The per-run
+ * [MIN_AVAIL_MEM] check in the worker is the real out-of-memory guard.
  */
 object InternalCapability {
-    const val MIN_TOTAL_MEM = 4_000_000_000L
+    const val MIN_TOTAL_MEM = 3_400_000_000L
     const val MIN_AVAIL_MEM = 1_500_000_000L
 
     enum class Refusal { NOT_64_BIT, LOW_RAM_DEVICE, TOTAL_MEM }
