@@ -4,9 +4,12 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.media.AudioFormat
 import android.media.MediaCodec
+import android.media.MediaCodecList
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.net.Uri
+import android.os.Build
+import android.util.Log
 import com.musicremover.app.R
 import java.io.File
 import java.io.IOException
@@ -21,8 +24,17 @@ import kotlinx.coroutines.withContext
 /** A fatal on-device job error; [message] is localized and shown to the user. */
 class InternalJobException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
-/** The source's first video track, copied into the result by [VocalsEncoder]. */
-class VideoTrackInfo(val index: Int, val format: MediaFormat, val mime: String, val rotation: Int)
+/**
+ * The source video track kept in the result: copied by [VocalsEncoder] or, for [VideoCodecPolicy.Plan.TRANSCODE],
+ * re-encoded to H.264 first by [VideoResultWriter]. [rotation] is 0, 90, 180 or 270.
+ */
+class VideoTrackInfo(
+    val index: Int,
+    val format: MediaFormat,
+    val mime: String,
+    val rotation: Int,
+    val plan: VideoCodecPolicy.Plan = VideoCodecPolicy.Plan.PASSTHROUGH,
+)
 
 class DecodeResult(
     /** Stereo frames at 44.1 kHz written to the PCM file. */
@@ -68,25 +80,30 @@ class AudioDecoder(context: Context) {
 
             var audioIndex = -1
             var audioFormat: MediaFormat? = null
-            var video: VideoTrackInfo? = null
-            for (i in 0 until extractor.trackCount) {
-                val f = extractor.getTrackFormat(i)
+            val formats = (0 until extractor.trackCount).map { extractor.getTrackFormat(it) }
+            for ((i, f) in formats.withIndex()) {
                 val mime = f.getString(MediaFormat.KEY_MIME) ?: continue
-                if (audioFormat == null && mime.startsWith("audio/")) {
+                if (mime.startsWith("audio/")) {
                     audioIndex = i
                     audioFormat = f
-                } else if (!audioOnly && video == null && mime.startsWith("video/")) {
-                    val rotation = if (f.containsKey(MediaFormat.KEY_ROTATION)) f.getInteger(MediaFormat.KEY_ROTATION) else 0
-                    video = VideoTrackInfo(i, f, mime, rotation)
+                    break
                 }
             }
             if (audioFormat == null) throw fail(R.string.internal_no_audio)
-            if (video != null && video.mime !in VIDEO_MIMES) throw fail(R.string.internal_video_codec_unsupported)
+            val video = if (audioOnly) null else chooseVideo(formats)
+            if (video != null && video.plan == VideoCodecPolicy.Plan.UNSUPPORTED) {
+                Log.w(TAG, "video track ${video.index} (${video.mime}): no MP4 passthrough and no decoder")
+                throw InternalJobException(
+                    appContext.getString(R.string.internal_video_codec_unsupported, VideoCodecPolicy.displayMime(video.mime)),
+                )
+            }
 
             val durationUs = if (audioFormat.containsKey(MediaFormat.KEY_DURATION)) audioFormat.getLong(MediaFormat.KEY_DURATION) else -1L
+            // The transcode path writes a temporary H.264 copy; the source size is an upper bound for it
+            val transcodeBytes = if (video?.plan == VideoCodecPolicy.Plan.TRANSCODE) sourceSize(uri) else 0L
             val neededBytes = if (durationUs > 0) {
                 val seconds = durationUs / 1_000_000.0
-                (seconds * PCM_BYTES_PER_SECOND + seconds * bitrateBps / 8 + SPACE_MARGIN).toLong()
+                (seconds * PCM_BYTES_PER_SECOND + seconds * bitrateBps / 8 + SPACE_MARGIN + transcodeBytes).toLong()
             } else -1L
             if (neededBytes > 0 && appContext.filesDir.usableSpace < neededBytes) {
                 throw noSpace(neededBytes, null)
@@ -237,6 +254,37 @@ class AudioDecoder(context: Context) {
         }
     }
 
+    /** The video track to keep (see [VideoCodecPolicy.chooseVideoTrack]) and how to write it. */
+    private fun chooseVideo(formats: List<MediaFormat>): VideoTrackInfo? {
+        val sdk = Build.VERSION.SDK_INT
+        val index = VideoCodecPolicy.chooseVideoTrack(formats.map { it.getString(MediaFormat.KEY_MIME) }, sdk)
+        if (index < 0) return null
+        val f = formats[index]
+        val mime = f.getString(MediaFormat.KEY_MIME)!!
+        val rawRotation = if (f.containsKey(MediaFormat.KEY_ROTATION)) f.getInteger(MediaFormat.KEY_ROTATION) else 0
+        val rotation = VideoCodecPolicy.normalizeRotation(rawRotation)
+        val hasDecoder = !VideoCodecPolicy.isPassthrough(mime, sdk) && hasDecoder(f)
+        val plan = VideoCodecPolicy.plan(mime, sdk, hasDecoder)
+        val size = if (f.containsKey(MediaFormat.KEY_WIDTH) && f.containsKey(MediaFormat.KEY_HEIGHT)) {
+            "${f.getInteger(MediaFormat.KEY_WIDTH)}x${f.getInteger(MediaFormat.KEY_HEIGHT)}"
+        } else "?"
+        Log.i(TAG, "video track $index: mime=$mime size=$size rotation=$rawRotation->$rotation plan=$plan sdk=$sdk")
+        return VideoTrackInfo(index, f, mime, rotation, plan)
+    }
+
+    private fun hasDecoder(format: MediaFormat): Boolean = try {
+        MediaCodecList(MediaCodecList.REGULAR_CODECS).findDecoderForFormat(format) != null
+    } catch (e: Exception) {
+        Log.w(TAG, "decoder lookup failed", e)
+        false
+    }
+
+    private fun sourceSize(uri: Uri): Long = try {
+        appContext.contentResolver.openAssetFileDescriptor(uri, "r")?.use { it.length.coerceAtLeast(0L) } ?: 0L
+    } catch (e: Exception) {
+        0L
+    }
+
     private fun fail(res: Int, cause: Throwable? = null) = InternalJobException(appContext.getString(res), cause)
 
     private fun noSpace(neededBytes: Long, cause: Throwable?): InternalJobException {
@@ -246,8 +294,7 @@ class AudioDecoder(context: Context) {
 
     companion object {
         const val SAMPLE_RATE = 44_100
-        /** Video codecs MediaMuxer can write into MP4. */
-        val VIDEO_MIMES = setOf("video/avc", "video/hevc", "video/mp4v-es", "video/3gpp")
+        private const val TAG = "MuremInternal"
         /** mix.f32 + vocals.f32: 2 files × 44,100 frames × 8 bytes. */
         private const val PCM_BYTES_PER_SECOND = 705_600.0
         private const val SPACE_MARGIN = 50L * 1024 * 1024

@@ -7,6 +7,7 @@ import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMuxer
 import android.net.Uri
+import android.util.Log
 import com.musicremover.app.R
 import java.io.File
 import java.io.IOException
@@ -19,6 +20,13 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
 /**
+ * The source video track could not be copied into the MP4 ([stage] is one of the `VocalsEncoder.STAGE_*`
+ * values). Not shown to the user: [VideoResultWriter] retries with an H.264 re-encode.
+ */
+class VideoCopyException(val mime: String, val stage: String, cause: Throwable) :
+    Exception("video copy failed at $stage ($mime)", cause)
+
+/**
  * Encodes 44.1 kHz float32 stereo PCM to AAC LC and muxes it into MP4, optionally together with the
  * source's video track copied sample by sample (no re-encode).
  */
@@ -28,7 +36,9 @@ class VocalsEncoder(context: Context) {
     /**
      * Encodes [pcm] (scaled by [gain]) into [out]. When [video] is set, its samples are copied from
      * [videoSource] and samples past the end of the audio are dropped. [onProgress] receives 0..100.
-     * Throws [InternalJobException] (`internal_encode_failed`).
+     * Throws [VideoCopyException] when the failure comes from the video track (adding it, reading or
+     * writing its samples, or starting/stopping the muxer with it), else [InternalJobException]
+     * (`internal_encode_failed`).
      */
     suspend fun encode(
         pcm: File,
@@ -46,6 +56,7 @@ class VocalsEncoder(context: Context) {
         var videoExtractor: MediaExtractor? = null
         var muxerStarted = false
         var muxerStopped = false
+        var stage = STAGE_AUDIO
         try {
             PcmFileReader(pcm).use { reader ->
                 val totalFrames = reader.frames
@@ -68,19 +79,22 @@ class VocalsEncoder(context: Context) {
                 var videoTrack = -1
                 var vx: MediaExtractor? = null
                 if (video != null && videoSource != null) {
+                    stage = STAGE_VIDEO_READ
                     vx = MediaExtractor().also { videoExtractor = it }
                     vx.setDataSource(appContext, videoSource, null)
                     vx.selectTrack(video.index)
+                    stage = STAGE_VIDEO_ADD
                     videoTrack = mux.addTrack(video.format)
-                    if (video.rotation != 0) mux.setOrientationHint(video.rotation)
+                    stage = STAGE_ORIENTATION
+                    if (video.rotation in ORIENTATIONS) mux.setOrientationHint(video.rotation)
+                    stage = STAGE_AUDIO
                 }
                 var videoBuf = ByteBuffer.allocateDirect(initialVideoBufferSize(video))
                 val videoInfo = MediaCodec.BufferInfo()
                 var videoPending = false
                 var videoDone = vx == null
 
-                fun readVideo() {
-                    val x = vx ?: return
+                fun readVideoSample(x: MediaExtractor) {
                     while (true) {
                         val n = try {
                             x.readSampleData(videoBuf, 0)
@@ -107,6 +121,14 @@ class VocalsEncoder(context: Context) {
                         videoPending = true
                         return
                     }
+                }
+
+                // stage stays STAGE_VIDEO_READ if this throws, so the failure is classified as a video one
+                fun readVideo() {
+                    val x = vx ?: return
+                    stage = STAGE_VIDEO_READ
+                    readVideoSample(x)
+                    stage = STAGE_AUDIO
                 }
 
                 var audioTrack = -1
@@ -157,8 +179,10 @@ class VocalsEncoder(context: Context) {
                         val oi = enc.dequeueOutputBuffer(audioInfo, TIMEOUT_US)
                         if (oi == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                             audioTrack = mux.addTrack(enc.outputFormat)
+                            stage = STAGE_MUX_START
                             mux.start()
                             muxerStarted = true
+                            stage = STAGE_AUDIO
                             if (!videoDone) readVideo()
                         } else if (oi >= 0) {
                             if (audioInfo.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG != 0 || audioInfo.size == 0) {
@@ -189,13 +213,16 @@ class VocalsEncoder(context: Context) {
                     } else if (writeVideo) {
                         videoBuf.position(0)
                         videoBuf.limit(videoInfo.size)
+                        stage = STAGE_VIDEO_WRITE
                         mux.writeSampleData(videoTrack, videoBuf, videoInfo)
                         videoPending = false
+                        stage = STAGE_VIDEO_READ
                         vx!!.advance()
                         readVideo()
                     }
                 }
 
+                stage = STAGE_MUX_STOP
                 mux.stop()
                 muxerStopped = true
             }
@@ -205,6 +232,10 @@ class VocalsEncoder(context: Context) {
             throw e
         } catch (e: Exception) {
             // IllegalStateException / IOException / IllegalArgumentException from MediaCodec or MediaMuxer
+            if (video != null && VideoCodecPolicy.isVideoFailure(stage, hasVideo = videoSource != null)) {
+                throw VideoCopyException(video.mime, stage, e)
+            }
+            Log.e(TAG, "encode failed at $stage", e)
             throw InternalJobException(appContext.getString(R.string.internal_encode_failed), e)
         } finally {
             encoder?.let { en ->
@@ -234,6 +265,17 @@ class VocalsEncoder(context: Context) {
         private const val DEFAULT_VIDEO_BUFFER = 2 * 1024 * 1024
         private const val MAX_VIDEO_BUFFER = 16 * 1024 * 1024
         private const val TIMEOUT_US = 10_000L
+        private const val TAG = "MuremInternal"
+        private val ORIENTATIONS = setOf(90, 180, 270)
+
+        /** Failure stages; everything except [STAGE_AUDIO] counts as a video copy failure. */
+        const val STAGE_AUDIO = VideoCodecPolicy.STAGE_AUDIO
+        const val STAGE_VIDEO_READ = "video-read"
+        const val STAGE_VIDEO_ADD = "video-addTrack"
+        const val STAGE_ORIENTATION = "orientation"
+        const val STAGE_MUX_START = "mux-start"
+        const val STAGE_VIDEO_WRITE = "video-write"
+        const val STAGE_MUX_STOP = "mux-stop"
 
         /** Truncation like audio-separator's `(x * 32767).astype(int16)`. */
         fun toPcm16(v: Float, gain: Float): Short = (v * gain * 32767f).toInt().coerceIn(-32768, 32767).toShort()

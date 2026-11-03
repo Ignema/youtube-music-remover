@@ -32,7 +32,8 @@
     <string name="internal_processing_failed">On-device processing failed</string>
     <string name="internal_no_audio">The file has no audio track</string>
     <string name="internal_codec_unsupported">This audio format is not supported on this phone</string>
-    <string name="internal_video_codec_unsupported">This video format cannot be copied on-device. Turn on Audio only or use Server mode.</string>
+    <string name="internal_video_codec_unsupported">This video format (%1$s) cannot be processed on this phone. Turn on Audio only or use Server mode.</string>
+    <string name="internal_video_convert_failed">Could not copy or convert this video (%1$s) on-device. Turn on Audio only or use Server mode.</string>
     <string name="internal_encode_failed">Could not encode the result</string>
     <string name="internal_interrupted">Processing was interrupted repeatedly</string>
     <string name="internal_job_not_found">On-device job not found</string>
