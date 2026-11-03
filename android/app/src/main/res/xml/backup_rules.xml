@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and lower: the imported cookies.txt (account session tokens) is never backed up. -->
+<full-backup-content>
+    <exclude domain="file" path="cookies/" />
+</full-backup-content>

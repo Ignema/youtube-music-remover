@@ -24,6 +24,18 @@ class UrlNormalizerTest {
     }
 
     @Test
+    fun nonYouTubeUrlsKeepPathQueryAndFragment() {
+        for (u in listOf(
+            "https://www.instagram.com/reel/DaI91choaNb/?igsh=cWFhN3R1enA3bjg0",
+            "https://www.instagram.com/reels/Cop84x6u7CP/",
+            "https://instagram.com/p/aye83DjauH/?foo=bar#abc",
+            "https://www.tiktok.com/@user/video/7300000000000000000?lang=en",
+        )) {
+            assertEquals(u, UrlNormalizer.normalize(u))
+        }
+    }
+
+    @Test
     fun partialYouTubeUrlsBecomeWatchUrls() {
         assertEquals(watch, UrlNormalizer.normalize("youtu.be/dQw4w9WgXcQ"))
         assertEquals(watch, UrlNormalizer.normalize("www.youtube.com/watch?v=dQw4w9WgXcQ&t=42"))

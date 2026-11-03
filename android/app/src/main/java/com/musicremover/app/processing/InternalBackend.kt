@@ -22,7 +22,10 @@ import com.musicremover.app.processing.internal.YtDlpDownloader
 import com.musicremover.app.processing.internal.YtDlpErrors
 import com.musicremover.app.processing.internal.YtDlpException
 import com.musicremover.app.processing.internal.YtDlpRuntime
-import com.musicremover.app.processing.internal.ytDlpKindText
+import com.musicremover.app.processing.internal.CookieStore
+import com.musicremover.app.processing.internal.withJobCookies
+import com.musicremover.app.processing.internal.ytDlpErrorText
+import com.musicremover.app.processing.internal.ytDlpVersionOrNull
 import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
@@ -87,11 +90,27 @@ class InternalBackend(context: Context, private val cache: ResultCache) : Proces
     override suspend fun info(url: String): VideoInfo = withContext(Dispatchers.IO) {
         val normalized = UrlNormalizer.normalize(url)
             ?: throw IllegalArgumentException(appContext.getString(R.string.internal_url_invalid))
+        val id = "preview-${UUID.randomUUID()}"
+        // Per-call cookie copy in cacheDir (not under workRoot, which cleanStaleWork may empty)
+        val tmp = File(appContext.cacheDir, id)
         try {
             YtDlpRuntime.ensureInit(appContext)
-            YtDlpDownloader(appContext).info(normalized, "preview-${UUID.randomUUID()}").videoInfo
+            withJobCookies(CookieStore(appContext), tmp) { cookies ->
+                try {
+                    YtDlpDownloader(appContext).info(normalized, id, cookies).videoInfo
+                } catch (e: YtDlpException) {
+                    val text = ytDlpErrorText(
+                        appContext, e.kind, YtDlpErrors.neededMb(0, null), cookies != null,
+                        ytDlpVersionOrNull(appContext), e.message.orEmpty(),
+                    )
+                    throw IllegalStateException(text, e)
+                }
+            }
         } catch (e: YtDlpException) {
-            throw IllegalStateException(ytDlpKindText(appContext, e.kind, YtDlpErrors.neededMb(0, null)), e)
+            // ensureInit
+            throw IllegalStateException(ytDlpErrorText(appContext, e.kind, 0), e)
+        } finally {
+            tmp.deleteRecursively()
         }
     }
 

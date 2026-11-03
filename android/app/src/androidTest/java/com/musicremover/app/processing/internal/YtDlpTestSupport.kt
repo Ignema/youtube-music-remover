@@ -17,6 +17,8 @@ import kotlinx.coroutines.runBlocking
  * - `muremTestUrl`: link to test instead of "Me at the zoo" (fallback when YouTube blocks the emulator).
  * - `muremUpdateYtDlp=true`: run "Update yt-dlp" once before the first test of the run. AGP uninstalls the
  *   app after the run, so the update only lasts for that run.
+ * - `muremProxy=http://127.0.0.1:<port>`: HTTPS proxy for yt-dlp, see [applyProxy]. Needed for Instagram on
+ *   the emulator.
  */
 object YtDlpTestSupport {
     const val TAG = "MuremYtDlpTest"
@@ -49,8 +51,23 @@ object YtDlpTestSupport {
 
     private var updated = false
 
+    /**
+     * Sets `https_proxy` for the yt-dlp child processes when `muremProxy` is given (e.g.
+     * `http://127.0.0.1:8899` after `adb reverse tcp:8899 tcp:8899` to a CONNECT proxy on the host). The
+     * emulator's NAT truncates HTTPS responses that end with a server close, which breaks Instagram pages.
+     */
+    @Synchronized
+    fun applyProxy() {
+        val p = args.getString("muremProxy")?.takeIf { it.isNotBlank() } ?: return
+        android.system.Os.setenv("https_proxy", p, true)
+        android.system.Os.setenv("HTTPS_PROXY", p, true)
+        Log.i(TAG, "proxy $p")
+    }
+
+    /** [applyProxy], then "Update yt-dlp" once per run if `muremUpdateYtDlp=true`. */
     @Synchronized
     fun maybeUpdate(ctx: Context) {
+        applyProxy()
         if (updated || args.getString("muremUpdateYtDlp") != "true") return
         updated = true
         val r = runBlocking { YtDlpRuntime.update(ctx) }

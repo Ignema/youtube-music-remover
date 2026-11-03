@@ -43,6 +43,36 @@ class YtDlpRequestsTest {
     }
 
     @Test
+    fun noCookiesMeansNoCookiesOption() {
+        assertFalse("--cookies" in YtDlpRequests.infoArgs("https://x.test/a"))
+        assertFalse("--cookies" in YtDlpRequests.downloadArgs(infoJson, outDir, audioOnly = false))
+    }
+
+    @Test
+    fun cookiesGoBeforeTheSeparatorInInfoArgs() {
+        val cookies = File(work, "cookies/cookies.txt")
+        val url = "https://www.instagram.com/reel/DaI91choaNb/"
+        val args = YtDlpRequests.infoArgs(url, cookies)
+        val i = args.indexOf("--cookies")
+        assertTrue(i >= 0)
+        assertEquals(cookies.path, args[i + 1])
+        assertTrue("--cookies after --", i < args.indexOf("--"))
+        assertEquals(listOf("--", url), args.takeLast(2))
+        assertEquals(1, args.count { it == "--" })
+    }
+
+    @Test
+    fun cookiesGoBeforeTheSeparatorInDownloadArgs() {
+        val cookies = File(work, "cookies/cookies.txt")
+        for (audioOnly in listOf(false, true)) {
+            val args = YtDlpRequests.downloadArgs(infoJson, outDir, audioOnly, cookies)
+            assertTrue(args.hasPair("--cookies", cookies.path))
+            assertEquals("--", args.last())
+            assertEquals(1, args.count { it == "--" })
+        }
+    }
+
+    @Test
     fun downloadArgsAudioOnlySelector() {
         val args = YtDlpRequests.downloadArgs(infoJson, outDir, audioOnly = true)
         assertTrue(args.hasPair("-f", YtDlpFormats.AUDIO_ONLY))
