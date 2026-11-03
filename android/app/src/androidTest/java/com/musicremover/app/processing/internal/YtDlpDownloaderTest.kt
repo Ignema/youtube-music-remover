@@ -45,7 +45,7 @@ class YtDlpDownloaderTest {
     }
 
     @Test
-    fun infoHasTitleAndDuration() = runBlocking {
+    fun infoHasTitleAndDuration() = runBlocking<Unit> {
         val info = YtDlpDownloader(ctx).info(url, "test-info-${UUID.randomUUID()}")
         val v = info.videoInfo
         Log.i(TAG, "info: title='${v.title}' duration=${v.duration} live=${info.isLive} knownBytes=${info.knownBytes}")
@@ -55,7 +55,7 @@ class YtDlpDownloaderTest {
     }
 
     @Test
-    fun audioOnlyDownloadHasAudio() = runBlocking {
+    fun audioOnlyDownloadHasAudio() = runBlocking<Unit> {
         val dl = YtDlpDownloader(ctx)
         val info = dl.info(url, "test-info-${UUID.randomUUID()}")
         var last = -1
@@ -68,7 +68,7 @@ class YtDlpDownloaderTest {
     }
 
     @Test
-    fun videoDownloadHasAudioAndVideo() = runBlocking {
+    fun videoDownloadHasAudioAndVideo() = runBlocking<Unit> {
         val dl = YtDlpDownloader(ctx)
         val info = dl.info(url, "test-info-${UUID.randomUUID()}")
         var last = -1
@@ -86,7 +86,7 @@ class YtDlpDownloaderTest {
      * logcat (tag MuremYtDlpTest). Fails only if yt-dlp cannot run at all.
      */
     @Test
-    fun stderrWarningsAreLogged() = runBlocking {
+    fun stderrWarningsAreLogged() = runBlocking<Unit> {
         YtDlpRuntime.ensureInit(ctx)
         val id = "test-sim-${UUID.randomUUID()}"
         val req = YoutubeDLRequest(emptyList())

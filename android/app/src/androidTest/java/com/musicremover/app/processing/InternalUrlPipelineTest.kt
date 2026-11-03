@@ -40,7 +40,7 @@ class InternalUrlPipelineTest {
     private val ctx = instr.targetContext
 
     @Test
-    fun linkBecomesMp4WithOneVideoAndOneAacTrack() = runBlocking {
+    fun linkBecomesMp4WithOneVideoAndOneAacTrack() = runBlocking<Unit> {
         assumeTrue("device below on-device thresholds: ${InternalCapability.current(ctx)}", InternalCapability.current(ctx) == null)
         assumeTrue("no internet", YtDlpTestSupport.internetAvailable())
         YtDlpTestSupport.maybeUpdate(ctx)
