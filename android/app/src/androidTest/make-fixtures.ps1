@@ -9,8 +9,8 @@ $src = @('-f', 'lavfi', '-i', 'testsrc2=size=320x240:rate=24:duration=2',
          '-f', 'lavfi', '-i', 'sine=frequency=440:sample_rate=44100:duration=2')
 $aac = @('-c:a', 'aac', '-ac', '2', '-b:a', '96k', '-shortest', '-movflags', '+faststart')
 
-function Make([string]$name, [string[]]$video) {
-    & $Ffmpeg -y -hide_banner -loglevel error @src @video @aac (Join-Path $out $name)
+function Make([string]$name, [string[]]$video, [string[]]$source = $src) {
+    & $Ffmpeg -y -hide_banner -loglevel error @source @video @aac (Join-Path $out $name)
     if ($LASTEXITCODE -ne 0) { throw "ffmpeg failed for $name" }
 }
 
@@ -19,6 +19,8 @@ Make 'h264_bframes.mp4' @('-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-bf', '3', 
 Make 'hevc.mp4'         @('-c:v', 'libx265', '-pix_fmt', 'yuv420p', '-tag:v', 'hvc1', '-x265-params', 'log-level=error')
 Make 'vp9.mp4'          @('-c:v', 'libvpx-vp9', '-pix_fmt', 'yuv420p', '-b:v', '300k')
 Make 'av1.mp4'          @('-c:v', 'libaom-av1', '-pix_fmt', 'yuv420p', '-cpu-used', '8', '-b:v', '200k')
+# 20 s, long enough to cancel a forced transcode while it runs (cancelDuringTranscodeIsClean)
+Make 'h264_long.mp4'    @('-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-bf', '0') -source @('-f', 'lavfi', '-i', 'testsrc2=size=640x480:rate=24:duration=20', '-f', 'lavfi', '-i', 'sine=frequency=440:sample_rate=44100:duration=20')
 
 & $Ffmpeg -y -hide_banner -loglevel error -display_rotation:v:0 90 -i (Join-Path $out 'h264.mp4') -c copy (Join-Path $out 'h264_rot90.mp4')
 if ($LASTEXITCODE -ne 0) { throw 'ffmpeg failed for h264_rot90.mp4' }
