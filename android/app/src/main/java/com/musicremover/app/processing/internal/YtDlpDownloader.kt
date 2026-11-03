@@ -50,8 +50,13 @@ class YtDlpDownloader(context: Context) {
         outDir.mkdirs()
         val progress = DownloadProgress(if (audioOnly) 1 else 2)
         val req = YoutubeDLRequest(emptyList()).addCommands(YtDlpRequests.downloadArgs(infoFile, outDir, audioOnly, cookies?.file))
-        // The library's Float is sticky; only the line is used
-        execute(req, processId, cookies) { _, _, line -> progress.onLine(line)?.let(onProgress) }
+        try {
+            // The library's Float is sticky; only the line is used
+            execute(req, processId, cookies) { _, _, line -> progress.onLine(line)?.let(onProgress) }
+        } finally {
+            // With cookies, yt-dlp's JSON holds their values in each format's "cookies" field
+            infoFile.delete()
+        }
         val files = outDir.listFiles()?.filter { it.isFile && !isPartial(it.name) }.orEmpty()
         val probes = files.map(::probe)
         for (p in probes) Log.i(TAG, "$processId: ${p.file.name} ${p.size} bytes audio=${p.hasAudio} video=${p.hasVideo}")
