@@ -50,8 +50,7 @@
     <string name="internal_url_network">Could not reach the site. Check your internet connection.</string>
     <string name="internal_url_download_failed">Could not download this link on-device. Try Server mode.</string>
     <string name="internal_url_download_failed_detail">Could not download this link on-device (%1$s). Try Server mode.</string>
-    <string name="internal_url_login_required">This post requires login. Import cookies in Settings or update yt-dlp.</string>
-    <string name="internal_url_login_cookies_failed">This post requires login and the imported cookies did not work. They may have expired: export them again and import them in Settings.</string>
+    <string name="internal_url_login_required">The site did not share this post without login. Tap Settings → Update yt-dlp and try again, or use Server mode.</string>
     <string name="internal_url_no_audio">This video has no audio track, so there is no music to remove.</string>
     <string name="internal_ytdlp_outdated_hint">yt-dlp %1$s is out of date: tap Settings → Update yt-dlp and try again.</string>
     <string name="internal_ytdlp_init_failed">Could not prepare the link downloader. Free some storage space and try again.</string>
@@ -66,26 +65,4 @@
     <string name="ytdlp_up_to_date">Already up to date (%1$s)</string>
     <string name="ytdlp_update_failed">Update failed. Check your internet connection.</string>
     <string name="ytdlp_update_busy">Wait until the current download has finished</string>
-
-    <!-- Settings: cookies for on-device links -->
-    <string name="cookies_title">Instagram / site cookies</string>
-    <string name="cookies_none">No cookies imported</string>
-    <plurals name="cookies_status">
-        <item quantity="one">%1$d cookie for %2$s</item>
-        <item quantity="other">%1$d cookies for %2$s</item>
-    </plurals>
-    <plurals name="cookies_more_domains">
-        <item quantity="one">%1$s and %2$d more site</item>
-        <item quantity="other">%1$s and %2$d more sites</item>
-    </plurals>
-    <string name="cookies_import">Import</string>
-    <string name="cookies_remove">Remove</string>
-    <string name="cookies_imported">Cookies imported</string>
-    <string name="cookies_removed">Cookies removed</string>
-    <string name="cookies_help">Some posts can only be downloaded while logged in. On a computer, log in to the site in your browser, export a cookies.txt file (Netscape format) with a cookies.txt export extension, copy it to this phone and import it here. Murem only uses it for on-device links. Anyone who has this file can use your account: export only the sites you need, never share it, and remove it here when you are done.</string>
-    <string name="cookies_invalid_too_large">This file is too large for a cookies.txt (over 1 MB)</string>
-    <string name="cookies_invalid_empty">This cookies.txt contains no cookies</string>
-    <string name="cookies_invalid_format">This is not a cookies.txt file. Export the cookies in Netscape format.</string>
-    <string name="cookies_invalid_line">This is not a valid cookies.txt file (line %1$d is not in Netscape format)</string>
-    <string name="cookies_unreadable">Could not read the selected file</string>
 </resources>

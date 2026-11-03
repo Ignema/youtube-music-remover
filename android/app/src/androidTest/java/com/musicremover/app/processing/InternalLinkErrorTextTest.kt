@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.musicremover.app.R
-import com.musicremover.app.processing.internal.CookieStore
 import com.musicremover.app.processing.internal.YtDlpTestSupport
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
@@ -23,11 +22,10 @@ class InternalLinkErrorTextTest {
     private val ctx = InstrumentationRegistry.getInstrumentation().targetContext
 
     @Test
-    fun loginRequiredWithoutCookiesSaysImportCookiesOrUpdate() = runBlocking<Unit> {
+    fun loginRequiredSaysUpdateOrServerMode() = runBlocking<Unit> {
         val url = InstrumentationRegistry.getArguments().getString("muremLoginUrl")
         assumeTrue("no muremLoginUrl", !url.isNullOrBlank())
         YtDlpTestSupport.applyProxy()
-        CookieStore(ctx).remove()
         val expected = ctx.getString(R.string.internal_url_login_required)
         try {
             BackendProvider(ctx).internal.info(url!!)

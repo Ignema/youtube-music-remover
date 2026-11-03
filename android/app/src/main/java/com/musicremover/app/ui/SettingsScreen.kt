@@ -57,7 +57,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.musicremover.app.MainViewModel
@@ -298,8 +297,6 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
                     InternalModelCard(vm)
                     Spacer(Modifier.height(12.dp))
                     YtDlpCard(vm)
-                    Spacer(Modifier.height(12.dp))
-                    CookiesCard(vm)
                 }
             }
 
@@ -754,74 +751,6 @@ private fun YtDlpCard(vm: MainViewModel) {
         }
     }
 }
-
-/** cookies.txt for on-device links: count and domains (never values), Import (SAF) and Remove. */
-@Composable
-private fun CookiesCard(vm: MainViewModel) {
-    val ui by vm.ui.collectAsState()
-    LaunchedEffect(Unit) { vm.loadCookies() }
-    val picker = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
-    ) { uri -> vm.importCookies(uri) }
-    val cookies = ui.cookies
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-        ),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                stringResource(R.string.cookies_title),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Spacer(Modifier.height(8.dp))
-            val status = if (cookies == null) {
-                stringResource(R.string.cookies_none)
-            } else {
-                val shown = cookies.domains.take(MAX_DOMAINS).joinToString(", ")
-                val more = cookies.domains.size - MAX_DOMAINS
-                val domains = if (more > 0) {
-                    pluralStringResource(R.plurals.cookies_more_domains, more, shown, more)
-                } else shown
-                pluralStringResource(R.plurals.cookies_status, cookies.count, cookies.count, domains)
-            }
-            Text(
-                status,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(12.dp))
-            Row {
-                FilledTonalButton(
-                    // cookies.txt has no registered MIME type; the file is validated on import
-                    onClick = { picker.launch(arrayOf("*/*")) },
-                    shape = RoundedCornerShape(12.dp),
-                ) {
-                    Text(stringResource(R.string.cookies_import))
-                }
-                if (cookies != null) {
-                    Spacer(Modifier.width(8.dp))
-                    OutlinedButton(onClick = vm::removeCookies, shape = RoundedCornerShape(12.dp)) {
-                        Icon(Icons.Outlined.DeleteOutline, null, Modifier.size(16.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(stringResource(R.string.cookies_remove))
-                    }
-                }
-            }
-            Spacer(Modifier.height(12.dp))
-            Text(
-                stringResource(R.string.cookies_help),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-private const val MAX_DOMAINS = 4
 
 @Composable
 private fun TermuxNotInstalled() {

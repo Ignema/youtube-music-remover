@@ -25,8 +25,6 @@ import com.musicremover.app.processing.ModelSelection
 import com.musicremover.app.processing.ProcessOptions
 import com.musicremover.app.processing.ProcessingBackend
 import com.musicremover.app.processing.RemoteServerBackend
-import com.musicremover.app.processing.internal.CookieStore
-import com.musicremover.app.processing.internal.CookiesTxt
 import com.musicremover.app.processing.internal.ModelCatalog
 import com.musicremover.app.processing.internal.ModelFailure
 import com.musicremover.app.processing.internal.ModelManager
@@ -145,8 +143,6 @@ data class MainUiState(
     // On-device links (yt-dlp); null until loaded, the first load unzips Python
     val ytDlpVersion: String? = null,
     val ytDlpUpdate: YtDlpUpdateState = YtDlpUpdateState.Idle,
-    /** Imported cookies.txt for on-device links (count and domains only), null if none. */
-    val cookies: CookiesTxt.Summary? = null,
 )
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -353,43 +349,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 "?"
             }
             _ui.value = _ui.value.copy(ytDlpVersion = v)
-        }
-    }
-
-    /** Settings cookies row: reads the count and domains of the imported cookies.txt. */
-    fun loadCookies() {
-        bgScope.launch {
-            _ui.value = _ui.value.copy(cookies = CookieStore(getApplication()).summary())
-        }
-    }
-
-    /** Settings "Import" (SAF document); invalid files are rejected with a message and leave the old file. */
-    fun importCookies(uri: android.net.Uri?) {
-        if (uri == null) return
-        bgScope.launch {
-            val app = getApplication<Application>()
-            val msg = when (val r = CookieStore(app).import(uri)) {
-                is CookieStore.ImportResult.Imported -> {
-                    _ui.value = _ui.value.copy(cookies = r.summary)
-                    str(R.string.cookies_imported)
-                }
-                is CookieStore.ImportResult.Rejected -> when (r.reason) {
-                    CookiesTxt.Invalid.TOO_LARGE -> str(R.string.cookies_invalid_too_large)
-                    CookiesTxt.Invalid.EMPTY -> str(R.string.cookies_invalid_empty)
-                    CookiesTxt.Invalid.BINARY, CookiesTxt.Invalid.NOT_COOKIES_TXT -> str(R.string.cookies_invalid_format)
-                    CookiesTxt.Invalid.MALFORMED_LINE -> app.getString(R.string.cookies_invalid_line, r.line)
-                }
-                CookieStore.ImportResult.Unreadable -> str(R.string.cookies_unreadable)
-            }
-            showTransientError(msg)
-        }
-    }
-
-    fun removeCookies() {
-        bgScope.launch {
-            CookieStore(getApplication()).remove()
-            _ui.value = _ui.value.copy(cookies = null)
-            showTransientError(str(R.string.cookies_removed))
         }
     }
 

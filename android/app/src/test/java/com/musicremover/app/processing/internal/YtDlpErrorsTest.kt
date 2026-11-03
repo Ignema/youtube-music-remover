@@ -57,36 +57,34 @@ class YtDlpErrorsTest {
     }
 
     @Test
-    fun loginTextDependsOnCookies() {
-        assertEquals(YtDlpErrors.Text.LOGIN_NO_COOKIES, YtDlpErrors.message(Kind.LOGIN_REQUIRED, false, 1).text)
-        assertEquals(YtDlpErrors.Text.LOGIN_COOKIES_FAILED, YtDlpErrors.message(Kind.LOGIN_REQUIRED, true, 1).text)
-        // The no-cookies text already says "update yt-dlp"
-        assertEquals(false, YtDlpErrors.message(Kind.LOGIN_REQUIRED, false, 400).updateHint)
-        assertEquals(true, YtDlpErrors.message(Kind.LOGIN_REQUIRED, true, 400).updateHint)
+    fun loginRequiredText() {
+        assertEquals(YtDlpErrors.Text.LOGIN_REQUIRED, YtDlpErrors.message(Kind.LOGIN_REQUIRED, 1).text)
+        // The text already says "Update yt-dlp"
+        assertEquals(false, YtDlpErrors.message(Kind.LOGIN_REQUIRED, 400).updateHint)
     }
 
     @Test
     fun updateHintOnlyWhenOlderThan14Days() {
-        assertEquals(false, YtDlpErrors.message(Kind.OTHER, false, 14).updateHint)
-        assertEquals(true, YtDlpErrors.message(Kind.OTHER, false, 15).updateHint)
-        assertEquals(false, YtDlpErrors.message(Kind.OTHER, false, null).updateHint)
-        assertEquals(true, YtDlpErrors.message(Kind.UNSUPPORTED, false, 30).updateHint)
-        assertEquals(true, YtDlpErrors.message(Kind.NETWORK, false, 30).updateHint)
+        assertEquals(false, YtDlpErrors.message(Kind.OTHER, 14).updateHint)
+        assertEquals(true, YtDlpErrors.message(Kind.OTHER, 15).updateHint)
+        assertEquals(false, YtDlpErrors.message(Kind.OTHER, null).updateHint)
+        assertEquals(true, YtDlpErrors.message(Kind.UNSUPPORTED, 30).updateHint)
+        assertEquals(true, YtDlpErrors.message(Kind.NETWORK, 30).updateHint)
         for (k in listOf(Kind.NO_SPACE, Kind.INIT, Kind.LIVE, Kind.NO_MEDIA, Kind.BLOCKED)) {
-            assertEquals("$k", false, YtDlpErrors.message(k, false, 400).updateHint)
+            assertEquals("$k", false, YtDlpErrors.message(k, 400).updateHint)
         }
     }
 
     @Test
     fun noMediaIsNoAudioText() {
-        assertEquals(YtDlpErrors.Text.NO_AUDIO, YtDlpErrors.message(Kind.NO_MEDIA, false, null).text)
+        assertEquals(YtDlpErrors.Text.NO_AUDIO, YtDlpErrors.message(Kind.NO_MEDIA, null).text)
     }
 
     @Test
     fun otherCarriesShortDetail() {
         val stderr = "WARNING: x\nERROR: [Foo] 12: Something broke; please report this issue on  https://github.com/yt-dlp/yt-dlp/issues?q= , filling out the appropriate issue template. Confirm you are on the latest version using  yt-dlp -U"
-        assertEquals("[Foo] 12: Something broke", YtDlpErrors.message(Kind.OTHER, false, null, stderr).detail)
-        assertEquals(null, YtDlpErrors.message(Kind.NETWORK, false, null, stderr).detail)
+        assertEquals("[Foo] 12: Something broke", YtDlpErrors.message(Kind.OTHER, null, stderr).detail)
+        assertEquals(null, YtDlpErrors.message(Kind.NETWORK, null, stderr).detail)
         assertEquals(null, YtDlpErrors.summary("no error line"))
         assertEquals(160, YtDlpErrors.summary("ERROR: " + "x".repeat(500))!!.length)
     }
@@ -99,16 +97,6 @@ class YtDlpErrorsTest {
         assertEquals(128L, YtDlpErrors.versionAgeDays("2026.06.28.234618", today))
         assertEquals(null, YtDlpErrors.versionAgeDays("?", today))
         assertEquals(null, YtDlpErrors.versionAgeDays("2026.13.40", today))
-    }
-
-    @Test
-    fun redactRemovesCookieHeadersAndValues() {
-        val s = "[debug] Cookie: sessionid=abc123456; csrftoken=zzz\nERROR: failed for SECRETVALUE99 here\nset-cookie=foo"
-        val r = YtDlpErrors.redact(s, setOf("SECRETVALUE99"))
-        assertEquals(false, r.contains("abc123456"))
-        assertEquals(false, r.contains("SECRETVALUE99"))
-        assertEquals(false, r.contains("foo"))
-        assertEquals(true, r.contains("ERROR: failed for <redacted> here"))
     }
 
     @Test
