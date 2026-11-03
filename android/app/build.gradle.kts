@@ -100,6 +100,8 @@ dependencies {
     // Video player
     implementation("androidx.media3:media3-exoplayer:1.5.1")
     implementation("androidx.media3:media3-ui:1.5.1")
+    // On-device fallback: re-encode a video track MediaMuxer cannot copy to H.264
+    implementation("androidx.media3:media3-transformer:1.5.1")
 
     // WorkManager
     implementation("androidx.work:work-runtime-ktx:2.10.0")

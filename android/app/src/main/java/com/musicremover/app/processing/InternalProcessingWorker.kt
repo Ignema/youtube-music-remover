@@ -29,7 +29,7 @@ import com.musicremover.app.processing.internal.OrtSpectrogramModel
 import com.musicremover.app.processing.internal.PcmFileReader
 import com.musicremover.app.processing.internal.PcmFileWriter
 import com.musicremover.app.processing.internal.PrimarySink
-import com.musicremover.app.processing.internal.VocalsEncoder
+import com.musicremover.app.processing.internal.VideoResultWriter
 import com.musicremover.app.processing.internal.VocalsSink
 import java.io.File
 import java.io.IOException
@@ -87,7 +87,7 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
         } catch (e: CancellationException) {
             throw e
         } catch (e: InternalJobException) {
-            Log.w(TAG, "$jobId failed", e.cause)
+            Log.w(TAG, "$jobId failed: ${e.message}", e.cause)
             fail(e.message ?: ctx.getString(R.string.internal_processing_failed))
         } catch (e: OutOfMemoryError) {
             Log.e(TAG, "$jobId: out of memory", e)
@@ -207,14 +207,15 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
             val outName = if (decoded.videoTrack != null) "$stem-vocals-only.mp4" else "$stem-vocals-only.m4a"
             val out = withContext(Dispatchers.IO) { cache.tempFile(jobId) }
             tmp = out
-            VocalsEncoder(ctx).encode(
+            VideoResultWriter(ctx).write(
                 pcm = vocalsFile,
                 gain = gain,
                 bitrateBps = bitrate,
                 audioStartUs = decoded.audioStartUs,
                 video = decoded.videoTrack,
-                videoSource = if (decoded.videoTrack != null) uri else null,
+                source = if (decoded.videoTrack != null) uri else null,
                 out = out,
+                workDir = workDir,
             ) { p -> report("merging", 90 + p * 9 / 100) }
 
             // 7. Commit; a finished job keeps its result even if cancelled now
@@ -232,7 +233,10 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
             withContext(NonCancellable + Dispatchers.IO) {
                 try { model?.close() } catch (e: Exception) { Log.w(TAG, "$jobId: close failed", e) }
                 workDir.deleteRecursively()
-                if (!committed) tmp?.delete()
+                if (!committed) tmp?.takeIf { it.exists() }?.let { f ->
+                    Log.w(TAG, "$jobId: deleting uncommitted output ${f.path} (${f.length()} bytes)")
+                    f.delete()
+                }
             }
         }
     }
