@@ -36,6 +36,8 @@ import com.musicremover.app.processing.internal.YtDlpDownloader
 import com.musicremover.app.processing.internal.YtDlpErrors
 import com.musicremover.app.processing.internal.YtDlpException
 import com.musicremover.app.processing.internal.YtDlpInfo
+import com.musicremover.app.processing.internal.CookieStore
+import com.musicremover.app.processing.internal.withJobCookies
 import com.musicremover.app.processing.internal.ytDlpErrorText
 import com.musicremover.app.processing.internal.ytDlpVersionOrNull
 import java.io.File
@@ -165,22 +167,25 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
             if (url != null) {
                 report("downloading", modelEnd)
                 val downloader = YtDlpDownloader(ctx)
-                val i = try {
-                    downloader.info(url, "$jobId-info-$runAttemptCount")
-                } catch (e: YtDlpException) {
-                    throw linkError(e, null)
-                }
-                if (i.isLive) {
-                    Log.i(TAG, "$jobId: live stream refused")
-                    throw jobError(R.string.internal_url_live)
-                }
-                info = i
-                val media = try {
-                    downloader.download(i, workDir, audioOnly, "$jobId-dl-$runAttemptCount") { p ->
-                        report("downloading", modelEnd + p / 10)
+                // A per-job copy of the imported cookies (yt-dlp rewrites it), deleted right after the download
+                val media = withJobCookies(CookieStore(ctx), File(workDir, "cookies")) { cookies ->
+                    val i = try {
+                        downloader.info(url, "$jobId-info-$runAttemptCount", cookies)
+                    } catch (e: YtDlpException) {
+                        throw linkError(e, null, cookies != null)
                     }
-                } catch (e: YtDlpException) {
-                    throw linkError(e, i)
+                    if (i.isLive) {
+                        Log.i(TAG, "$jobId: live stream refused")
+                        throw jobError(R.string.internal_url_live)
+                    }
+                    info = i
+                    try {
+                        downloader.download(i, workDir, audioOnly, "$jobId-dl-$runAttemptCount", cookies) { p ->
+                            report("downloading", modelEnd + p / 10)
+                        }
+                    } catch (e: YtDlpException) {
+                        throw linkError(e, i, cookies != null)
+                    }
                 }
                 audioUri = Uri.fromFile(media.audio)
                 videoUri = media.video?.let(Uri::fromFile)
@@ -314,10 +319,10 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
      * Localized error for a failed link step; NO_SPACE names the MB from the info, if any. Reads the yt-dlp
      * version for the "Update yt-dlp" hint (cached after the first read).
      */
-    private suspend fun linkError(e: YtDlpException, info: YtDlpInfo?): InternalJobException {
+    private suspend fun linkError(e: YtDlpException, info: YtDlpInfo?, cookiesImported: Boolean): InternalJobException {
         val mb = YtDlpErrors.neededMb(info?.videoInfo?.duration ?: 0, info?.knownBytes)
         val version = if (e.kind == YtDlpErrors.Kind.NO_MEDIA) null else ytDlpVersionOrNull(ctx)
-        return InternalJobException(ytDlpErrorText(ctx, e.kind, mb, version, e.message.orEmpty()), e)
+        return InternalJobException(ytDlpErrorText(ctx, e.kind, mb, cookiesImported, version, e.message.orEmpty()), e)
     }
 
     private fun fail(message: String): Result {

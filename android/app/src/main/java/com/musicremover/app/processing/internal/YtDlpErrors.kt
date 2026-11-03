@@ -12,7 +12,8 @@ object YtDlpErrors {
 
     /** Which string the user sees; mapped to resources in `YtDlpMessages.kt`. */
     enum class Text {
-        INIT, NO_SPACE, UNSUPPORTED, UNAVAILABLE, BLOCKED, NETWORK, LIVE, NO_AUDIO, DOWNLOAD_FAILED, LOGIN_REQUIRED,
+        INIT, NO_SPACE, UNSUPPORTED, UNAVAILABLE, BLOCKED, NETWORK, LIVE, NO_AUDIO, DOWNLOAD_FAILED,
+        LOGIN_NO_COOKIES, LOGIN_COOKIES_FAILED,
     }
 
     /** [text] plus whether to append "tap Settings → Update yt-dlp" and the short yt-dlp [detail] (OTHER only). */
@@ -45,6 +46,7 @@ object YtDlpErrors {
         Kind.FORMAT to listOf("Requested format is not available"),
     )
 
+    private val COOKIE_HEADER = Regex("(?i)\\b(set-cookie|cookie)(\\s*[:=]\\s*)[^\\r\\n]*")
     private val BOILERPLATE = listOf("; please report this issue on", " Confirm you are on the latest version", " Use --cookies")
 
     /**
@@ -62,24 +64,25 @@ object YtDlpErrors {
     }
 
     /**
-     * What to show for [kind]. [versionAgeDays]: age of the installed yt-dlp, null if unknown. [stderr] gives
-     * the detail for OTHER.
+     * What to show for [kind]. [cookiesImported]: a cookies.txt was passed to yt-dlp. [versionAgeDays]: age of
+     * the installed yt-dlp, null if unknown. [stderr] gives the detail for OTHER.
      */
-    fun message(kind: Kind, versionAgeDays: Long?, stderr: String = ""): Message {
+    fun message(kind: Kind, cookiesImported: Boolean, versionAgeDays: Long?, stderr: String = ""): Message {
         val text = when (kind) {
             Kind.INIT -> Text.INIT
             Kind.NO_SPACE -> Text.NO_SPACE
             Kind.UNSUPPORTED -> Text.UNSUPPORTED
             Kind.UNAVAILABLE -> Text.UNAVAILABLE
             Kind.BLOCKED -> Text.BLOCKED
-            Kind.LOGIN_REQUIRED -> Text.LOGIN_REQUIRED
+            Kind.LOGIN_REQUIRED -> if (cookiesImported) Text.LOGIN_COOKIES_FAILED else Text.LOGIN_NO_COOKIES
             Kind.NETWORK -> Text.NETWORK
             Kind.LIVE -> Text.LIVE
             Kind.NO_MEDIA -> Text.NO_AUDIO
             Kind.FORMAT, Kind.OTHER -> Text.DOWNLOAD_FAILED
         }
-        // Kinds where a newer extractor can help; the LOGIN_REQUIRED text already says so
-        val canHelp = kind in setOf(Kind.UNSUPPORTED, Kind.UNAVAILABLE, Kind.NETWORK, Kind.FORMAT, Kind.OTHER)
+        // Kinds where a newer extractor can help; LOGIN_NO_COOKIES and BLOCKED already say so
+        val canHelp = kind in setOf(Kind.UNSUPPORTED, Kind.UNAVAILABLE, Kind.NETWORK, Kind.FORMAT, Kind.OTHER) ||
+            text == Text.LOGIN_COOKIES_FAILED
         val outdated = versionAgeDays != null && versionAgeDays > OUTDATED_DAYS
         val detail = if (kind == Kind.OTHER) summary(stderr) else null
         return Message(text, canHelp && outdated, detail)
@@ -99,6 +102,7 @@ object YtDlpErrors {
 
     /**
      * The last `ERROR:` line without the prefix and yt-dlp's boilerplate, at most 160 chars, or null.
+     * [stderr] must already be [redact]ed.
      */
     fun summary(stderr: String): String? {
         var s = stderr.lines().lastOrNull { it.trimStart().startsWith("ERROR:") }?.trim()?.removePrefix("ERROR:")?.trim()
@@ -109,6 +113,15 @@ object YtDlpErrors {
         }
         s = s.trim().trimEnd('.', ';', ',').trim()
         return s.takeIf { it.isNotEmpty() }?.take(SUMMARY_CHARS)
+    }
+
+    /** [text] with cookie headers and every value in [secrets] replaced by `<redacted>`. */
+    fun redact(text: String, secrets: Collection<String> = emptyList()): String {
+        var s = COOKIE_HEADER.replace(text) { "${it.groupValues[1]}${it.groupValues[2]}<redacted>" }
+        for (v in secrets.sortedByDescending { it.length }) {
+            if (v.isNotEmpty()) s = s.replace(v, "<redacted>")
+        }
+        return s
     }
 
     /**

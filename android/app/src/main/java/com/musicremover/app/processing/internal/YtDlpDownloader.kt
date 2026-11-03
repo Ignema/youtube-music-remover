@@ -21,11 +21,14 @@ import kotlinx.coroutines.withContext
 class YtDlpDownloader(context: Context) {
     private val ctx = context.applicationContext
 
-    /** `--dump-json` for [url] (already normalized). [processId] must be unique. Throws [YtDlpException]. */
-    suspend fun info(url: String, processId: String): YtDlpInfo = withContext(Dispatchers.IO) {
+    /**
+     * `--dump-json` for [url] (already normalized). [processId] must be unique. [cookies] is a per-job copy
+     * of the imported cookies.txt, or null. Throws [YtDlpException].
+     */
+    suspend fun info(url: String, processId: String, cookies: JobCookies? = null): YtDlpInfo = withContext(Dispatchers.IO) {
         YtDlpRuntime.ensureInit(ctx)
-        val req = YoutubeDLRequest(emptyList()).addCommands(YtDlpRequests.infoArgs(url))
-        YtDlpJson.parse(execute(req, processId, null))
+        val req = YoutubeDLRequest(emptyList()).addCommands(YtDlpRequests.infoArgs(url, cookies?.file))
+        YtDlpJson.parse(execute(req, processId, cookies, null))
     }
 
     /**
@@ -37,6 +40,7 @@ class YtDlpDownloader(context: Context) {
         workDir: File,
         audioOnly: Boolean,
         processId: String,
+        cookies: JobCookies? = null,
         onProgress: (Int) -> Unit,
     ): DownloadedMedia = withContext(Dispatchers.IO) {
         YtDlpRuntime.ensureInit(ctx)
@@ -45,24 +49,35 @@ class YtDlpDownloader(context: Context) {
         val outDir = File(workDir, "dl")
         outDir.mkdirs()
         val progress = DownloadProgress(if (audioOnly) 1 else 2)
-        val req = YoutubeDLRequest(emptyList()).addCommands(YtDlpRequests.downloadArgs(infoFile, outDir, audioOnly))
-        // The library's Float is sticky; only the line is used
-        execute(req, processId) { _, _, line -> progress.onLine(line)?.let(onProgress) }
+        val req = YoutubeDLRequest(emptyList()).addCommands(YtDlpRequests.downloadArgs(infoFile, outDir, audioOnly, cookies?.file))
+        try {
+            // The library's Float is sticky; only the line is used
+            execute(req, processId, cookies) { _, _, line -> progress.onLine(line)?.let(onProgress) }
+        } finally {
+            // With cookies, yt-dlp's JSON holds their values in each format's "cookies" field
+            infoFile.delete()
+        }
         val files = outDir.listFiles()?.filter { it.isFile && !isPartial(it.name) }.orEmpty()
         val probes = files.map(::probe)
         for (p in probes) Log.i(TAG, "$processId: ${p.file.name} ${p.size} bytes audio=${p.hasAudio} video=${p.hasVideo}")
         DownloadedMedia.choose(probes, audioOnly)
     }
 
-    private suspend fun execute(req: YoutubeDLRequest, processId: String, callback: ((Float, Long, String) -> Unit)?): String =
+    private suspend fun execute(
+        req: YoutubeDLRequest,
+        processId: String,
+        cookies: JobCookies?,
+        callback: ((Float, Long, String) -> Unit)?,
+    ): String =
         try {
             runYtDlp(processId) { YoutubeDL.getInstance().execute(req, processId, callback).out }
         } catch (e: YoutubeDLException) {
-            // 0.18.1 puts the process's full stderr into the message
-            val stderr = e.message.orEmpty()
+            // 0.18.1 puts the process's full stderr into the message. Cookie values never reach the log or
+            // the exception; the cause is dropped because its message is the unredacted stderr.
+            val stderr = YtDlpErrors.redact(e.message.orEmpty(), cookies?.secrets.orEmpty())
             val kind = YtDlpErrors.classify(stderr)
             Log.w(TAG, "yt-dlp $processId failed ($kind): ${YtDlpErrors.tail(stderr)}")
-            throw YtDlpException(kind, YtDlpErrors.tail(stderr), e)
+            throw YtDlpException(kind, YtDlpErrors.tail(stderr))
         } catch (e: YoutubeDL.CanceledException) {
             // Only while still active (runYtDlp turns it into cancellation otherwise)
             Log.w(TAG, "yt-dlp $processId stopped without a cancel", e)
