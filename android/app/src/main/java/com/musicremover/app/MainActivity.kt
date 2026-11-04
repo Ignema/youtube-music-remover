@@ -151,6 +151,11 @@ class MainActivity : AppCompatActivity() {
                         if (site == null) {
                             androidx.compose.runtime.LaunchedEffect(Unit) { navController.popBackStack() }
                         } else {
+                            // Counts as a Settings screen, so the save result shows once (Accounts Snackbar), not also as a Toast
+                            androidx.compose.runtime.DisposableEffect(Unit) {
+                                vm.settingsVisible++
+                                onDispose { vm.settingsVisible-- }
+                            }
                             CookieLoginScreen(vm = vm, site = site, onBack = { navController.popBackStack() })
                         }
                     }

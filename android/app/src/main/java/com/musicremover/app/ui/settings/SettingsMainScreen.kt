@@ -94,7 +94,7 @@ fun SettingsMainScreen(vm: MainViewModel, onBack: () -> Unit, onNavigate: (route
         NavRow(
             Icons.Outlined.Palette,
             stringResource(R.string.appearance),
-            themeLabel(ui.themeMode) + " · " + languageLabel(ui.language),
+            appearanceSummary(ui),
         ) { onNavigate(SettingsRoutes.APPEARANCE) }
         NavRow(
             Icons.Outlined.History,
@@ -124,6 +124,15 @@ private fun SettingsDivider() {
     Spacer(Modifier.height(12.dp))
     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     Spacer(Modifier.height(16.dp))
+}
+
+/** Theme, plus the language only when one is chosen; "System default" when both follow the system. */
+@Composable
+private fun appearanceSummary(ui: MainUiState): String {
+    val systemTheme = themeLabel(ui.themeMode) == themeLabel("system")
+    if (systemTheme && ui.language.isEmpty()) return stringResource(R.string.system_default)
+    val theme = themeLabel(ui.themeMode)
+    return if (ui.language.isEmpty()) theme else theme + " · " + languageLabel(ui.language)
 }
 
 @Composable

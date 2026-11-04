@@ -78,7 +78,7 @@
     <string name="internal_ytdlp_init_failed">Could not prepare the link downloader. Free some storage space and try again.</string>
 
     <!-- Settings: yt-dlp -->
-    <string name="ytdlp_title">yt-dlp (links)</string>
+    <string name="ytdlp_title">Update yt-dlp</string>
     <string name="ytdlp_version">Version %1$s</string>
     <string name="ytdlp_version_loading">Loading version…</string>
     <string name="ytdlp_update">Update yt-dlp</string>
