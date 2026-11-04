@@ -269,6 +269,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val settingsStore = SettingsStore(application)
     private val notif = NotificationHelper(application)
     private val cache = ResultCache(application)
+
+    /** True if the job's result is stored on this device (on-device jobs, or a downloaded server result). */
+    fun isResultOnDevice(jobId: String): Boolean = jobId.isNotEmpty() && cache.isCached(jobId)
     private val backends = BackendProvider(application)
     private fun backend() = backends.current()
     private val modelManager = ModelManager.get(application)

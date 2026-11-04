@@ -25,6 +25,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.animation.animateContentSize
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -261,7 +264,7 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
         ) {
             val item = vm.currentInfoItem
             if (item != null) {
-                ItemInfoSheet(item, ui)
+                ItemInfoSheet(item, ui, onDevice = remember(item.jobId) { vm.isResultOnDevice(item.jobId) })
                 SheetActions(item = item, vm = vm, context = context)
             }
         }
@@ -346,16 +349,29 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
         }
         Spacer(Modifier.height(12.dp))
 
+        // Both pages get the height of the taller one, so switching Link/File doesn't move the content below.
+        // Natural heights are measured on the inner Column (unaffected by the outer min height).
+        val pageHeights = remember { androidx.compose.runtime.mutableStateListOf(0, 0) }
+        val density = androidx.compose.ui.platform.LocalDensity.current
+        val pageMinHeight = with(density) { (pageHeights.maxOrNull() ?: 0).toDp() }
         androidx.compose.foundation.pager.HorizontalPager(
             state = pagerState,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().animateContentSize(),
             verticalAlignment = Alignment.Top,
             pageSpacing = 16.dp,
+            // Keep the other page composed so its height is known before the first switch
+            beyondViewportPageCount = 1,
         ) { page ->
-            Column(modifier = Modifier.fillMaxWidth()) {
-                when (page) {
-                    0 -> LinkInputTab(ui, vm, urlFilePicker)
-                    1 -> FileInputTab(ui, vm, filePicker)
+            Box(modifier = Modifier.fillMaxWidth().heightIn(min = pageMinHeight)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onSizeChanged { if (pageHeights[page] != it.height) pageHeights[page] = it.height },
+                ) {
+                    when (page) {
+                        0 -> LinkInputTab(ui, vm, urlFilePicker)
+                        1 -> FileInputTab(ui, vm, filePicker)
+                    }
                 }
             }
         }
@@ -1141,7 +1157,9 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                     InfoChip(item.model.removeSuffix(".onnx").removeSuffix(".ckpt"))
                     val ageMs = System.currentTimeMillis() - item.timestamp
                     val ageDays = ageMs / (1000 * 60 * 60 * 24)
-                    if (ageDays >= 5) {
+                    // The 7-day limit is the server's; a result stored on the device does not expire
+                    val onDevice = remember(item.jobId) { vm.isResultOnDevice(item.jobId) }
+                    if (ageDays >= 5 && !onDevice) {
                         val daysLeft = (7 - ageDays).coerceAtLeast(0)
                         Card(
                             shape = RoundedCornerShape(8.dp),
@@ -1327,7 +1345,7 @@ private fun InfoChip(text: String) {
 
 
 @Composable
-private fun ItemInfoSheet(item: HistoryItem, ui: MainUiState) {
+private fun ItemInfoSheet(item: HistoryItem, ui: MainUiState, onDevice: Boolean) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -1442,17 +1460,19 @@ private fun ItemInfoSheet(item: HistoryItem, ui: MainUiState) {
             )
         }
 
-        // Expiry notice
-        val ageMs = System.currentTimeMillis() - item.timestamp
-        val ageDays = ageMs / (1000 * 60 * 60 * 24)
-        val daysLeft = (7 - ageDays).coerceAtLeast(0)
-        Spacer(Modifier.height(8.dp))
-        Text(
-            if (daysLeft <= 0) stringResource(R.string.server_expired_note)
-            else stringResource(R.string.server_expiry_note, daysLeft),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.outline,
-        )
+        // Server expiry notice, only when the result is not stored on this device
+        if (!onDevice) {
+            val ageMs = System.currentTimeMillis() - item.timestamp
+            val ageDays = ageMs / (1000 * 60 * 60 * 24)
+            val daysLeft = (7 - ageDays).coerceAtLeast(0)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                if (daysLeft <= 0) stringResource(R.string.server_expired_note)
+                else stringResource(R.string.server_expiry_note, daysLeft),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.outline,
+            )
+        }
     }
 }
 
