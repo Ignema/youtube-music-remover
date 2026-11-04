@@ -78,7 +78,7 @@ Download the latest APK from [Releases](https://github.com/Ignema/youtube-music-
 ```bash
 git clone https://github.com/Ignema/youtube-music-remover.git
 cd youtube-music-remover
-uvx --with fastapi --with yt-dlp --with python-multipart --with "audio-separator[gpu]" --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000
+uvx --with fastapi --with yt-dlp --with python-multipart --with "audio-separator[gpu]" --with audioread --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000
 ```
 
 3. In the app, go to Settings → Custom → tap "Auto-discover on network" (or enter your PC's IP)

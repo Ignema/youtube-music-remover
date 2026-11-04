@@ -69,6 +69,12 @@ object TermuxHelper {
      */
     internal const val TORCH_CPU_STEP = "pip install torch --index-url https://download.pytorch.org/whl/cpu"
 
+    /**
+     * audio-separator imports audioread but does not declare it; it came through librosa,
+     * which dropped it in 1.0. Without it every separation fails.
+     */
+    internal const val AUDIOREAD = "audioread"
+
     internal fun installScript(): String = buildString {
         // Use proot-distro with Ubuntu to get a full Linux environment
         // where onnxruntime wheels work natively
@@ -81,7 +87,7 @@ object TermuxHelper {
         append("python3 -m venv ~/venv && ")
         append(". ~/venv/bin/activate && ")
         append(TORCH_CPU_STEP + " && ")
-        append("pip install fastapi uvicorn \"yt-dlp[default]\" python-multipart \"audio-separator[cpu]\" && ")
+        append("pip install fastapi uvicorn \"yt-dlp[default]\" python-multipart \"audio-separator[cpu]\" $AUDIOREAD && ")
         append(DENO_STEP)
         append(" && ")
         append("if [ -d ~/music-remover ]; then cd ~/music-remover && git fetch && git reset --hard origin/master; ")
@@ -98,7 +104,7 @@ object TermuxHelper {
         append(APT_STEP)
         append(" && ")
         append(TORCH_CPU_STEP + " && ")
-        append("pip install --upgrade fastapi uvicorn \"yt-dlp[default]\" python-multipart \"audio-separator[cpu]\" && ")
+        append("pip install --upgrade fastapi uvicorn \"yt-dlp[default]\" python-multipart \"audio-separator[cpu]\" $AUDIOREAD && ")
         append(DENO_STEP)
         append(" && ")
         append("echo && ")

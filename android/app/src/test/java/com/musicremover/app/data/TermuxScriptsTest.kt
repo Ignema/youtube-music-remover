@@ -64,6 +64,13 @@ class TermuxScriptsTest {
     }
 
     @Test
+    fun everyScriptInstallsAudioreadWithAudioSeparator() {
+        // audio-separator imports audioread without declaring it; without it every job fails
+        val line = Regex("pip install [^&;\\n]*\"audio-separator\\[cpu]\" audioread")
+        for ((name, text) in scripts()) assertTrue("$name: audioread missing from the audio-separator pip line", line.containsMatchIn(text))
+    }
+
+    @Test
     fun torchCpuStepHasNoSingleQuotes() {
         assertFalse(torchCpu.contains('\''))
     }

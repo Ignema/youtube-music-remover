@@ -39,7 +39,8 @@ proot-distro login ubuntu -- bash -c '
     . ~/venv/bin/activate
     echo "→ Installing CPU-only PyTorch (no CUDA downloads)..."
     pip install torch --index-url https://download.pytorch.org/whl/cpu
-    pip install fastapi uvicorn "yt-dlp[default]" python-multipart "audio-separator[cpu]"
+    # audioread: audio-separator imports it but does not declare it (librosa 1.0 dropped it)
+    pip install fastapi uvicorn "yt-dlp[default]" python-multipart "audio-separator[cpu]" audioread
 
     # deno: JS runtime yt-dlp uses for YouTube challenges (non-fatal)
     { ( arch=$(uname -m) && cd /tmp && f=deno-$arch-unknown-linux-gnu.zip && curl -fsSLO https://github.com/denoland/deno/releases/latest/download/$f && curl -fsSLO https://github.com/denoland/deno/releases/latest/download/$f.sha256sum && sha256sum -c $f.sha256sum && unzip -o -q $f -d /usr/local/bin && chmod +x /usr/local/bin/deno && rm -f $f $f.sha256sum && /usr/local/bin/deno --version ) || echo "⚠ deno could not be installed. YouTube links may fail; other sites still work."; }

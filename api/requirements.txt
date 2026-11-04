@@ -5,4 +5,6 @@ websockets>=12.0
 slowapi>=0.1.9
 yt-dlp>=2023.10.13
 audio-separator[gpu]>=0.17.0
+# Imported by audio-separator but not declared; librosa 1.0 no longer brings it
+audioread>=3.0
 zeroconf>=0.131.0
