@@ -81,9 +81,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -100,6 +97,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material.icons.outlined.ArrowDropDown
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material.icons.outlined.PhoneAndroid
+import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -281,7 +292,7 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
 private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
     val context = LocalContext.current
     val filePicker = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent(),
+        contract = GetMediaContent(),
     ) { uri ->
         if (uri != null) vm.importFile(uri, persist = true)
     }
@@ -335,110 +346,64 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
             }
         }
 
-        // Labeled mode switcher; follows the page under the finger, a tap animates the pager via ui.inputTab
-        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-            listOf(
-                Icons.Outlined.Link to R.string.home_mode_link,
-                Icons.Outlined.VideoFile to R.string.home_mode_file,
-            ).forEachIndexed { index, (icon, label) ->
-                SegmentedButton(
-                    selected = pagerState.currentPage == index,
-                    onClick = { vm.setInputTab(index) },
-                    shape = SegmentedButtonDefaults.itemShape(index = index, count = 2),
-                    // The label is the accessible name; the icon is decorative
-                    icon = { Icon(icon, null, Modifier.size(SegmentedButtonDefaults.IconSize)) },
-                ) {
-                    Text(stringResource(label))
-                }
-            }
-        }
-        Spacer(Modifier.height(12.dp))
-
-        // Both pages get the height of the taller one, so switching Link/File doesn't move the content below.
-        // Natural heights are measured on the inner Column (unaffected by the outer min height).
-        val pageHeights = remember { androidx.compose.runtime.mutableStateListOf(0, 0) }
-        val density = androidx.compose.ui.platform.LocalDensity.current
-        val pageMinHeight = with(density) { (pageHeights.maxOrNull() ?: 0).toDp() }
-        androidx.compose.foundation.pager.HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxWidth().animateContentSize(),
-            verticalAlignment = Alignment.Top,
-            pageSpacing = 16.dp,
-            // Keep the other page composed so its height is known before the first switch
-            beyondViewportPageCount = 1,
-        ) { page ->
-            Box(modifier = Modifier.fillMaxWidth().heightIn(min = pageMinHeight)) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .onSizeChanged { if (pageHeights[page] != it.height) pageHeights[page] = it.height },
-                ) {
-                    when (page) {
-                        0 -> LinkInputTab(ui, vm, urlFilePicker)
-                        1 -> FileInputTab(ui, vm, filePicker)
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        // Options — centered chip row
-        Row(
+        // One card holds the mode tabs, the input pages and the options
+        val homeColors = homeCardColors()
+        androidx.compose.material3.Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = homeColors.card,
+            border = androidx.compose.foundation.BorderStroke(1.dp, homeColors.cardBorder),
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                // Model chip — opens bottom sheet
-                androidx.compose.material3.FilterChip(
-                    selected = true,
-                    onClick = vm::toggleModelPicker,
-                    label = { Text(modelShortName(ui.selectedModel), maxLines = 1) },
-                    leadingIcon = { Icon(Icons.Outlined.Tune, null, Modifier.size(16.dp)) },
-                    shape = RoundedCornerShape(12.dp),
+            // Less bottom padding: the chips' 48dp touch targets already add space under them
+            Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp)) {
+                // Pill tabs; the thumb follows the pager (drag included), a tap animates the pager via ui.inputTab
+                ModeTabs(
+                    pagerState = pagerState,
+                    trackColor = homeColors.field,
+                    thumbColor = homeColors.thumb,
+                    onSelect = { vm.setInputTab(it) },
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 )
-                // Audio only
-                androidx.compose.material3.FilterChip(
-                    selected = ui.audioOnly,
-                    onClick = { vm.setAudioOnly(!ui.audioOnly) },
-                    label = { Text(stringResource(R.string.audio_only)) },
-                    shape = RoundedCornerShape(12.dp),
-                )
-                // Bitrate — tap for dropdown
-                var showBitrateMenu by remember { mutableStateOf(false) }
-                Box {
-                    androidx.compose.material3.FilterChip(
-                        selected = true,
-                        onClick = { showBitrateMenu = true },
-                        label = { Text(ui.bitrate) },
-                        shape = RoundedCornerShape(12.dp),
-                    )
-                    androidx.compose.material3.DropdownMenu(
-                        expanded = showBitrateMenu,
-                        onDismissRequest = { showBitrateMenu = false },
-                    ) {
-                        Text(
-                            stringResource(R.string.bitrate),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.outline,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                        )
-                        listOf("128k", "192k", "320k").forEach { br ->
-                            androidx.compose.material3.DropdownMenuItem(
-                                text = { Text(br) },
-                                onClick = { vm.setBitrate(br); showBitrateMenu = false },
-                                trailingIcon = {
-                                    if (ui.bitrate == br) Icon(Icons.Outlined.CheckCircle, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
-                                },
-                            )
+                Spacer(Modifier.height(16.dp))
+
+                // Both pages get the height of the taller one, so switching Link/File doesn't move the content below.
+                // Natural heights are measured on the inner Column (unaffected by the outer min height).
+                val pageHeights = remember { androidx.compose.runtime.mutableStateListOf(0, 0) }
+                val density = androidx.compose.ui.platform.LocalDensity.current
+                val pageMinHeight = with(density) { (pageHeights.maxOrNull() ?: 0).toDp() }
+                androidx.compose.foundation.pager.HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxWidth().animateContentSize(),
+                    verticalAlignment = Alignment.Top,
+                    // Pages slide to the card edge; the spacing keeps the neighbour hidden at rest
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),
+                    pageSpacing = 16.dp,
+                    // Keep the other page composed so its height is known before the first switch
+                    beyondViewportPageCount = 1,
+                ) { page ->
+                    Box(modifier = Modifier.fillMaxWidth().heightIn(min = pageMinHeight)) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onSizeChanged { if (pageHeights[page] != it.height) pageHeights[page] = it.height },
+                        ) {
+                            when (page) {
+                                0 -> LinkInputTab(ui, vm, urlFilePicker, homeColors.field)
+                                1 -> FileInputTab(ui, vm, filePicker, homeColors.field)
+                            }
                         }
                     }
                 }
-                // The audio-only format (M4A/MP3) lives on Settings → Output
+
+                Spacer(Modifier.height(12.dp))
+                HorizontalDivider(
+                    color = homeColors.cardBorder,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+                Spacer(Modifier.height(4.dp))
+
+                // Options footer: quiet chips, start-aligned
+                OptionsRow(ui, vm, Modifier.padding(horizontal = 12.dp))
             }
         }
 
@@ -599,11 +564,17 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
             }
         }
 
-        // CTA
+        // CTA: dimmed with a hint while Process would find nothing (same rule as MainViewModel.process)
         val isQueueMode = ui.state == UiState.Processing && ui.processingMinimized
+        val hasSource = HomeInput.pickSource(ui.inputTab, ui.links, ui.url, ui.selectedFileUri != null) != HomeInput.Source.None
         Button(
             onClick = { vm.hapticTick(); vm.process() },
-            shape = RoundedCornerShape(16.dp),
+            enabled = hasSource,
+            shape = CircleShape,
+            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
+                disabledContentColor = homeColors.ctaDisabledContent,
+            ),
             modifier = Modifier.fillMaxWidth().height(56.dp),
         ) {
             Icon(Icons.Outlined.MusicOff, null, Modifier.size(20.dp))
@@ -618,6 +589,192 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                 style = MaterialTheme.typography.titleMedium,
             )
         }
+        if (!hasSource) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                stringResource(
+                    if (HomeInput.normalizeInputTab(ui.inputTab) == HomeInput.TAB_FILE) R.string.home_cta_hint_file
+                    else R.string.home_cta_hint_link,
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+
+/** Theme-derived colors for the Home input card (light, dark, black and dynamic schemes). */
+private data class HomeCardColors(
+    val card: Color,
+    val cardBorder: Color,
+    val field: Color,
+    val thumb: Color,
+    val ctaDisabledContent: Color,
+)
+
+@Composable
+private fun homeCardColors(): HomeCardColors {
+    val cs = MaterialTheme.colorScheme
+    val light = cs.surface.luminance() > 0.5f
+    return HomeCardColors(
+        // Light: a white card on the tinted page; dark: the page surface, set off by the outline
+        card = if (light) cs.surfaceContainerLowest else cs.surface,
+        cardBorder = cs.outlineVariant.copy(alpha = if (light) 0.6f else 0.5f),
+        field = cs.surfaceContainerHigh,
+        // Dark: a tonal thumb, since the neutral containers are too close to the track to read
+        thumb = if (light) cs.surfaceContainerLowest else cs.secondaryContainer,
+        ctaDisabledContent = if (light) cs.onPrimary.copy(alpha = 0.9f) else cs.onSurface.copy(alpha = 0.6f),
+    )
+}
+
+/** Link/File pill tabs. The thumb position is the pager's current page plus the drag fraction. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ModeTabs(
+    pagerState: androidx.compose.foundation.pager.PagerState,
+    trackColor: Color,
+    thumbColor: Color,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val tabs = listOf(
+        Icons.Outlined.Link to R.string.home_mode_link,
+        Icons.Outlined.VideoFile to R.string.home_mode_file,
+    )
+    val position = (pagerState.currentPage + pagerState.currentPageOffsetFraction).coerceIn(0f, (tabs.size - 1).toFloat())
+    androidx.compose.foundation.layout.BoxWithConstraints(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .clip(CircleShape)
+            .background(trackColor),
+    ) {
+        val tabWidth = maxWidth / tabs.size
+        // Thumb: placed in the layout phase, so dragging the pager doesn't recompose it
+        Box(
+            modifier = Modifier
+                .offset {
+                    val p = (pagerState.currentPage + pagerState.currentPageOffsetFraction).coerceIn(0f, (tabs.size - 1).toFloat())
+                    androidx.compose.ui.unit.IntOffset((tabWidth.toPx() * p).roundToInt(), 0)
+                }
+                .width(tabWidth)
+                .fillMaxHeight()
+                .padding(4.dp)
+                .shadow(1.dp, CircleShape)
+                .background(thumbColor, CircleShape),
+        )
+        Row(modifier = Modifier.fillMaxSize().selectableGroup()) {
+            tabs.forEachIndexed { index, (icon, label) ->
+                val selected = pagerState.currentPage == index
+                // 1 when the thumb is fully on this tab
+                val nearness = (1f - kotlin.math.abs(position - index)).coerceIn(0f, 1f)
+                val color = androidx.compose.ui.graphics.lerp(
+                    MaterialTheme.colorScheme.onSurfaceVariant,
+                    MaterialTheme.colorScheme.onSurface,
+                    nearness,
+                )
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clip(CircleShape)
+                        .selectable(selected = selected, role = Role.Tab, onClick = { onSelect(index) }),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // The label is the accessible name; the icon is decorative
+                    Icon(icon, null, Modifier.size(18.dp), tint = color)
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        stringResource(label),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                        color = color,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Model, Audio only and bitrate: quiet chips in the input card's footer. */
+@Composable
+private fun OptionsRow(ui: MainUiState, vm: MainViewModel, modifier: Modifier = Modifier) {
+    val chipBorder = androidx.compose.material3.AssistChipDefaults.assistChipBorder(
+        enabled = true,
+        borderColor = MaterialTheme.colorScheme.outlineVariant,
+    )
+    val chipColors = androidx.compose.material3.AssistChipDefaults.assistChipColors(
+        labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        leadingIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        trailingIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Row(
+        modifier = modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // Model chip — opens bottom sheet
+        androidx.compose.material3.AssistChip(
+            onClick = vm::toggleModelPicker,
+            label = { Text(modelShortName(ui.selectedModel), maxLines = 1) },
+            leadingIcon = { Icon(Icons.Outlined.Tune, null, Modifier.size(16.dp)) },
+            shape = CircleShape,
+            border = chipBorder,
+            colors = chipColors,
+        )
+        // Audio only
+        androidx.compose.material3.FilterChip(
+            selected = ui.audioOnly,
+            onClick = { vm.setAudioOnly(!ui.audioOnly) },
+            label = { Text(stringResource(R.string.audio_only)) },
+            leadingIcon = if (ui.audioOnly) {
+                { Icon(Icons.Outlined.Check, null, Modifier.size(16.dp)) }
+            } else null,
+            shape = CircleShape,
+            border = androidx.compose.material3.FilterChipDefaults.filterChipBorder(
+                enabled = true,
+                selected = ui.audioOnly,
+                borderColor = MaterialTheme.colorScheme.outlineVariant,
+            ),
+            colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
+        )
+        // Bitrate — tap for dropdown
+        var showBitrateMenu by remember { mutableStateOf(false) }
+        Box {
+            androidx.compose.material3.AssistChip(
+                onClick = { showBitrateMenu = true },
+                label = { Text(ui.bitrate) },
+                trailingIcon = { Icon(Icons.Outlined.ArrowDropDown, null, Modifier.size(18.dp)) },
+                shape = CircleShape,
+                border = chipBorder,
+                colors = chipColors,
+            )
+            androidx.compose.material3.DropdownMenu(
+                expanded = showBitrateMenu,
+                onDismissRequest = { showBitrateMenu = false },
+            ) {
+                Text(
+                    stringResource(R.string.bitrate),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                )
+                listOf("128k", "192k", "320k").forEach { br ->
+                    androidx.compose.material3.DropdownMenuItem(
+                        text = { Text(br) },
+                        onClick = { vm.setBitrate(br); showBitrateMenu = false },
+                        trailingIcon = {
+                            if (ui.bitrate == br) Icon(Icons.Outlined.CheckCircle, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                        },
+                    )
+                }
+            }
+        }
+        // The audio-only format (M4A/MP3) lives on Settings → Output
     }
 }
 
@@ -1123,11 +1280,11 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
     val dateStr = dateFormat.format(Date(item.timestamp))
     val hasUrl = item.url.isNotEmpty()
 
+    val homeColors = homeCardColors()
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-        ),
+        colors = CardDefaults.cardColors(containerColor = homeColors.card),
+        border = androidx.compose.foundation.BorderStroke(1.dp, homeColors.cardBorder),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(
@@ -1142,16 +1299,26 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                         vm.showVideoInfoSheet(item)
                     },
                 )
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(start = 12.dp, top = 12.dp, bottom = 12.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Play icon
-            Icon(
-                Icons.Outlined.PlayArrow, null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(22.dp),
-            )
+            // Play icon on a tonal tile
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Outlined.PlayArrow, null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
             Spacer(Modifier.width(12.dp))
+            // The 7-day limit is the server's; a result stored on the device does not expire
+            val onDevice = remember(item.jobId) { vm.isResultOnDevice(item.jobId) }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = displayTitle(item.filename),
@@ -1160,13 +1327,32 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                     overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(Modifier.height(4.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+                androidx.compose.foundation.layout.FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    // Where the result lives
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.align(Alignment.CenterVertically),
+                    ) {
+                        Icon(
+                            if (onDevice) Icons.Outlined.PhoneAndroid else Icons.Outlined.Cloud, null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(14.dp),
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            stringResource(if (onDevice) R.string.history_source_device else R.string.history_source_server),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                     InfoChip(dateStr)
                     InfoChip(item.model.removeSuffix(".onnx").removeSuffix(".ckpt"))
                     val ageMs = System.currentTimeMillis() - item.timestamp
                     val ageDays = ageMs / (1000 * 60 * 60 * 24)
-                    // The 7-day limit is the server's; a result stored on the device does not expire
-                    val onDevice = remember(item.jobId) { vm.isResultOnDevice(item.jobId) }
                     if (ageDays >= 5 && !onDevice) {
                         val daysLeft = (7 - ageDays).coerceAtLeast(0)
                         Card(
@@ -1762,34 +1948,80 @@ private fun ModelOption(
 
 /** Link mode: one link in the field (as before), or a list once several links are pasted, shared or imported. */
 @Composable
-private fun LinkInputTab(ui: MainUiState, vm: MainViewModel, urlFilePicker: androidx.activity.result.ActivityResultLauncher<String>) {
+private fun LinkInputTab(ui: MainUiState, vm: MainViewModel, urlFilePicker: androidx.activity.result.ActivityResultLauncher<String>, fieldColor: Color) {
     if (ui.links.isEmpty()) {
-        SingleLinkField(ui, vm)
+        SingleLinkField(ui, vm, fieldColor)
     } else {
-        LinkList(ui, vm)
+        LinkList(ui, vm, fieldColor)
     }
+    Spacer(Modifier.height(LinkFieldButtonsGap))
+    // Small pill buttons under the field: Paste while the field is empty, Add another once it holds a link
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (ui.links.isEmpty() && HomeInput.extractLinks(ui.url).isNotEmpty()) {
-            TextButton(onClick = vm::addFieldLinkToList) {
-                Icon(Icons.Outlined.Add, null, Modifier.size(18.dp))
+        val pillPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp)
+        if (ui.url.isEmpty()) {
+            val clip = androidx.compose.ui.platform.LocalClipboardManager.current
+            FilledTonalButton(
+                onClick = {
+                    val text = clip.getText()?.text.orEmpty()
+                    if (ui.links.isEmpty()) {
+                        if (text.isNotEmpty()) vm.onUrlChange(text)
+                    } else {
+                        val found = HomeInput.extractLinks(text)
+                        if (found.isNotEmpty()) vm.addLinks(found) else if (text.isNotEmpty()) vm.onUrlChange(text)
+                    }
+                },
+                shape = CircleShape,
+                contentPadding = pillPadding,
+            ) {
+                Icon(Icons.Outlined.ContentPaste, null, Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.paste), style = MaterialTheme.typography.labelLarge)
+            }
+        } else if (HomeInput.extractLinks(ui.url).isNotEmpty()) {
+            FilledTonalButton(
+                onClick = vm::addFieldLinkToList,
+                shape = CircleShape,
+                contentPadding = pillPadding,
+            ) {
+                Icon(Icons.Outlined.Add, null, Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
                 Text(stringResource(R.string.link_add_another), style = MaterialTheme.typography.labelLarge)
             }
         }
-        TextButton(onClick = { urlFilePicker.launch("text/*") }) {
-            Icon(Icons.Outlined.UploadFile, null, Modifier.size(18.dp))
+        OutlinedButton(
+            onClick = { urlFilePicker.launch("text/*") },
+            shape = CircleShape,
+            contentPadding = pillPadding,
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        ) {
+            Icon(Icons.Outlined.UploadFile, null, Modifier.size(16.dp))
             Spacer(Modifier.width(6.dp))
             Text(stringResource(R.string.link_import_txt), style = MaterialTheme.typography.labelLarge)
         }
     }
 }
 
+// The File drop zone matches the Link page's field + gap + pill row (40dp pills in a 48dp touch target)
+private val LinkFieldHeight = 56.dp
+private val LinkFieldButtonsGap = 8.dp
+private val FileDropZoneHeight = LinkFieldHeight + LinkFieldButtonsGap + 48.dp
+
 @Composable
-private fun LinkList(ui: MainUiState, vm: MainViewModel) {
+private fun filledFieldColors(fieldColor: Color) = androidx.compose.material3.TextFieldDefaults.colors(
+    focusedContainerColor = fieldColor,
+    unfocusedContainerColor = fieldColor,
+    disabledContainerColor = fieldColor,
+    focusedIndicatorColor = Color.Transparent,
+    unfocusedIndicatorColor = Color.Transparent,
+    disabledIndicatorColor = Color.Transparent,
+)
+
+@Composable
+private fun LinkList(ui: MainUiState, vm: MainViewModel, fieldColor: Color) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(
             stringResource(R.string.link_count, ui.links.size),
@@ -1806,8 +2038,8 @@ private fun LinkList(ui: MainUiState, vm: MainViewModel) {
         ui.links.forEachIndexed { i, link ->
             key(link) {
                 Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = fieldColor),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Row(
@@ -1832,68 +2064,58 @@ private fun LinkList(ui: MainUiState, vm: MainViewModel) {
         }
     }
     Spacer(Modifier.height(8.dp))
-    OutlinedTextField(
+    // Next link; Add (trailing, IME Done or the pill below) moves it into the list
+    androidx.compose.material3.TextField(
         value = ui.url,
         onValueChange = { vm.onUrlChange(it) },
-        label = { Text(stringResource(R.string.link_add_another)) },
+        placeholder = { Text(stringResource(R.string.link_add_another)) },
         singleLine = true,
         shape = RoundedCornerShape(16.dp),
+        colors = filledFieldColors(fieldColor),
         modifier = Modifier.fillMaxWidth(),
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = { vm.addFieldLinkToList() }),
-        trailingIcon = {
-            if (ui.url.isNotEmpty()) {
-                IconButton(onClick = vm::addFieldLinkToList) {
-                    Icon(Icons.Outlined.Add, stringResource(R.string.link_add_another), Modifier.size(20.dp))
-                }
-            } else {
-                val clip = androidx.compose.ui.platform.LocalClipboardManager.current
-                IconButton(onClick = {
-                    val text = clip.getText()?.text.orEmpty()
-                    val found = HomeInput.extractLinks(text)
-                    if (found.isNotEmpty()) vm.addLinks(found) else if (text.isNotEmpty()) vm.onUrlChange(text)
-                }) {
-                    Icon(Icons.Outlined.ContentPaste, stringResource(R.string.paste), Modifier.size(18.dp))
-                }
+        leadingIcon = { Icon(Icons.Outlined.Add, null, Modifier.size(20.dp)) },
+        trailingIcon = if (ui.url.isNotEmpty()) {
+            {
+                IconButton(onClick = { vm.onUrlChange("") }) { Icon(Icons.Outlined.Close, "Clear", Modifier.size(18.dp)) }
             }
-        },
+        } else null,
     )
 }
 
-/** The single-link field and its preview card, unchanged from the old URL mode. */
+/** The single-link field and its preview card. */
 @Composable
-private fun SingleLinkField(ui: MainUiState, vm: MainViewModel) {
-    OutlinedTextField(
+private fun SingleLinkField(ui: MainUiState, vm: MainViewModel, fieldColor: Color) {
+    androidx.compose.material3.TextField(
         value = ui.url,
         onValueChange = { vm.onUrlChange(it) },
-        label = { Text(stringResource(R.string.url_label)) },
-        placeholder = { Text(stringResource(R.string.url_placeholder)) },
+        placeholder = { Text(stringResource(R.string.home_link_placeholder)) },
         singleLine = true,
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth(),
-        trailingIcon = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (ui.loadingPreview) {
-                    androidx.compose.material3.CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-                    Spacer(Modifier.width(4.dp))
-                }
-                if (ui.url.isNotEmpty()) {
-                    IconButton(onClick = { vm.onUrlChange("") }) { Icon(Icons.Outlined.Close, "Clear", Modifier.size(18.dp)) }
-                } else {
-                    val clip = androidx.compose.ui.platform.LocalClipboardManager.current
-                    IconButton(onClick = { clip.getText()?.text?.let { if (it.isNotEmpty()) vm.onUrlChange(it) } }) {
-                        Icon(Icons.Outlined.ContentPaste, stringResource(R.string.paste), Modifier.size(18.dp))
+        colors = filledFieldColors(fieldColor),
+        modifier = Modifier.fillMaxWidth().heightIn(min = LinkFieldHeight),
+        leadingIcon = { Icon(Icons.Outlined.Link, null, Modifier.size(20.dp)) },
+        trailingIcon = if (ui.loadingPreview || ui.url.isNotEmpty()) {
+            {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (ui.loadingPreview) {
+                        androidx.compose.material3.CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                        Spacer(Modifier.width(4.dp))
+                    }
+                    if (ui.url.isNotEmpty()) {
+                        IconButton(onClick = { vm.onUrlChange("") }) { Icon(Icons.Outlined.Close, "Clear", Modifier.size(18.dp)) }
                     }
                 }
             }
-        },
+        } else null,
     )
     val preview = ui.urlPreview
     if (preview != null && preview.thumbnail.isNotEmpty()) {
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(8.dp))
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+            colors = CardDefaults.cardColors(containerColor = fieldColor),
             modifier = Modifier.fillMaxWidth(),
         ) {
             Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -1915,31 +2137,89 @@ private fun SingleLinkField(ui: MainUiState, vm: MainViewModel) {
 }
 
 @Composable
-private fun FileInputTab(ui: MainUiState, vm: MainViewModel, filePicker: androidx.activity.result.ActivityResultLauncher<String>) {
+private fun FileInputTab(ui: MainUiState, vm: MainViewModel, filePicker: androidx.activity.result.ActivityResultLauncher<String>, fieldColor: Color) {
     if (ui.selectedFileUri != null) {
+        val context = LocalContext.current
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)),
+            colors = CardDefaults.cardColors(containerColor = fieldColor),
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Outlined.VideoFile, null, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
+            Row(modifier = Modifier.fillMaxWidth().padding(start = 12.dp, top = 10.dp, bottom = 10.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Outlined.VideoFile, null, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                }
                 Spacer(Modifier.width(12.dp))
-                Text(ui.selectedFileName ?: "Selected file", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(ui.selectedFileName ?: "Selected file", style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    val size = ui.selectedFileSize
+                    if (size != null && size > 0) {
+                        Text(
+                            android.text.format.Formatter.formatShortFileSize(context, size),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
                 IconButton(onClick = vm::clearFile) { Icon(Icons.Outlined.Close, "Remove", Modifier.size(18.dp)) }
             }
         }
     } else {
-        OutlinedButton(
-            onClick = { filePicker.launch("video/*") },
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth().height(52.dp),
+        // Dashed drop zone; the whole zone opens the picker
+        val dashColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(FileDropZoneHeight)
+                .clip(RoundedCornerShape(16.dp))
+                .background(fieldColor)
+                .drawBehind {
+                    val stroke = 1.5.dp.toPx()
+                    drawRoundRect(
+                        color = dashColor,
+                        topLeft = androidx.compose.ui.geometry.Offset(stroke / 2, stroke / 2),
+                        size = androidx.compose.ui.geometry.Size(size.width - stroke, size.height - stroke),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(16.dp.toPx() - stroke / 2),
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(
+                            width = stroke,
+                            pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 5.dp.toPx())),
+                        ),
+                    )
+                }
+                .clickable(role = Role.Button) { filePicker.launch("*/*") }
+                .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
-            Icon(Icons.Outlined.VideoFile, null, Modifier.size(20.dp))
-            Spacer(Modifier.width(10.dp))
-            Text(stringResource(R.string.pick_video), style = MaterialTheme.typography.bodyLarge)
+            Icon(Icons.Outlined.UploadFile, null, Modifier.size(28.dp), tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                stringResource(R.string.home_file_title),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                stringResource(R.string.home_file_formats),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
         }
     }
+}
+
+/** System picker for one video or audio file (GetContent takes one MIME type; the extra adds the second). */
+private class GetMediaContent : androidx.activity.result.contract.ActivityResultContracts.GetContent() {
+    override fun createIntent(context: android.content.Context, input: String): android.content.Intent =
+        super.createIntent(context, input)
+            .putExtra(android.content.Intent.EXTRA_MIME_TYPES, arrayOf("video/*", "audio/*"))
 }
 
 @Composable

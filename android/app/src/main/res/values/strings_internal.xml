@@ -262,4 +262,13 @@
     <string name="cookies_invalid_format">This is not a cookies.txt file. Export the cookies in Netscape format.</string>
     <string name="cookies_invalid_line">This is not a valid cookies.txt file (line %1$d is not in Netscape format)</string>
     <string name="cookies_unreadable">Could not read the selected file</string>
+
+    <!-- Home input card -->
+    <string name="home_link_placeholder">Paste a video link…</string>
+    <string name="home_file_title">Choose a video or audio file</string>
+    <string name="home_file_formats">MP4, MKV, WebM, MP3, M4A…</string>
+    <string name="home_cta_hint_link">Paste a link to start</string>
+    <string name="home_cta_hint_file">Pick a file to start</string>
+    <string name="history_source_device">On device</string>
+    <string name="history_source_server">Server</string>
 </resources>
