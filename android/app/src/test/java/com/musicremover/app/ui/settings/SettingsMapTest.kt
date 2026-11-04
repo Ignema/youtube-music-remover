@@ -69,7 +69,7 @@ class SettingsMapTest {
 
     private companion object {
         val MASTER = listOf(
-            "theme_mode", "dynamic_color", "language", "widget_theme", "processing_mode", "server_url",
+            "theme_mode", "dynamic_color", "color_palette", "language", "widget_theme", "processing_mode", "server_url",
             "discover_server", "termux_install", "termux_start", "termux_stop", "termux_update",
             "model_download", "model_delete", "ytdlp_update", "cookies_login", "cookies_import",
             "clear_history", "clear_cache", "export_history", "permissions", "about", "help",

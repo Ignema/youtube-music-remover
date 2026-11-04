@@ -190,10 +190,6 @@
     <string name="no_results">No se encontraron resultados</string>
     <string name="empty_history_title">Aún no hay videos procesados</string>
     <string name="empty_history_desc">Pega una URL o elige un archivo para empezar</string>
-    <string name="expires_in">%d días restantes</string>
-    <string name="expired">Expirado</string>
-    <string name="server_expiry_note">Resultado disponible en el servidor por %d días más. Guárdalo para conservarlo.</string>
-    <string name="server_expired_note">El resultado puede que ya no esté disponible en el servidor. Guarda una copia para conservarlo.</string>
     <string name="widget_paste_process">Pegar y procesar</string>
     <string name="widget_open">Abrir Murem</string>
     <string name="widget_file">Subir video</string>

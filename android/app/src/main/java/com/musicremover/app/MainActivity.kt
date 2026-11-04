@@ -73,6 +73,7 @@ class MainActivity : AppCompatActivity() {
             MusicRemoverTheme(
                 themeMode = ui.themeMode,
                 dynamicColor = ui.dynamicColor,
+                colorPalette = ui.colorPalette,
             ) {
                 val navController = rememberNavController()
 

@@ -15,6 +15,7 @@ import com.musicremover.app.data.NotificationHelper
 import com.musicremover.app.data.PersistedUi
 import com.musicremover.app.data.ResultCache
 import com.musicremover.app.data.SettingsStore
+import com.musicremover.app.ui.theme.ColorPalettes
 import com.musicremover.app.data.TermuxHelper
 import com.musicremover.app.data.VideoInfo
 import com.musicremover.app.data.displayTitle
@@ -169,6 +170,7 @@ internal fun resetState(prev: MainUiState, p: PersistedUi): MainUiState = MainUi
     outputFormat = p.outputFormat,
     themeMode = p.themeMode,
     dynamicColor = p.dynamicColor,
+    colorPalette = p.colorPalette,
     language = p.language,
     widgetTheme = p.widgetTheme,
 )
@@ -230,6 +232,7 @@ data class MainUiState(
     // Appearance
     val themeMode: String = "system",
     val dynamicColor: Boolean = true,
+    val colorPalette: String = ColorPalettes.DEFAULT_ID,
     val language: String = "",
     val widgetTheme: String = "orange",
     // Processing mode: "internal", "termux" or "server"
@@ -312,6 +315,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             termuxInstalled = TermuxHelper.isTermuxInstalled(application),
             themeMode = settingsStore.themeMode,
             dynamicColor = settingsStore.dynamicColor,
+            colorPalette = settingsStore.colorPalette,
             language = settingsStore.language,
             widgetTheme = settingsStore.widgetTheme,
             processingMode = settingsStore.processingMode,
@@ -938,6 +942,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setDynamicColor(enabled: Boolean) {
         _ui.value = _ui.value.copy(dynamicColor = enabled)
         settingsStore.dynamicColor = enabled
+    }
+
+    fun setColorPalette(id: String) {
+        if (id !in ColorPalettes.IDS) return
+        _ui.value = _ui.value.copy(colorPalette = id)
+        settingsStore.colorPalette = id
     }
 
     fun setLanguage(code: String) {

@@ -190,10 +190,6 @@
     <string name="no_results">Tiada padanan ditemui</string>
     <string name="empty_history_title">Belum ada video diproses</string>
     <string name="empty_history_desc">Tampal URL atau pilih fail untuk bermula</string>
-    <string name="expires_in">%d hari lagi</string>
-    <string name="expired">Tamat tempoh</string>
-    <string name="server_expiry_note">Keputusan tersedia di pelayan selama %d hari lagi. Simpan untuk menyimpannya.</string>
-    <string name="server_expired_note">Keputusan mungkin tidak lagi tersedia di pelayan. Simpan salinan untuk menyimpannya.</string>
     <string name="widget_paste_process">Tampal &amp; Proses</string>
     <string name="widget_open">Buka Murem</string>
     <string name="widget_file">Muat Naik Video</string>

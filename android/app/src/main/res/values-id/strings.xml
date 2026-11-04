@@ -190,10 +190,6 @@
     <string name="no_results">Tidak ada hasil ditemukan</string>
     <string name="empty_history_title">Belum ada video yang diproses</string>
     <string name="empty_history_desc">Tempel URL atau pilih file untuk memulai</string>
-    <string name="expires_in">%d hari tersisa</string>
-    <string name="expired">Kedaluwarsa</string>
-    <string name="server_expiry_note">Hasil tersedia di server selama %d hari lagi. Simpan untuk menyimpannya.</string>
-    <string name="server_expired_note">Hasil mungkin sudah tidak tersedia di server. Simpan salinan untuk menyimpannya.</string>
     <string name="widget_paste_process">Tempel &amp; Proses</string>
     <string name="widget_open">Buka Murem</string>
     <string name="widget_file">Unggah Video</string>

@@ -190,10 +190,6 @@
     <string name="no_results">一致する結果がありません</string>
     <string name="empty_history_title">処理済みの動画はまだありません</string>
     <string name="empty_history_desc">URLを貼り付けるかファイルを選択して始めましょう</string>
-    <string name="expires_in">残り %d 日</string>
-    <string name="expired">期限切れ</string>
-    <string name="server_expiry_note">結果はサーバーにあと %d 日間利用可能です。保存して残しましょう。</string>
-    <string name="server_expired_note">結果はサーバー上で利用できなくなっている可能性があります。コピーを保存して残しましょう。</string>
     <string name="widget_paste_process">貼り付けて処理</string>
     <string name="widget_open">Murem を開く</string>
     <string name="widget_file">動画をアップロード</string>

@@ -190,10 +190,6 @@
     <string name="no_results">Aucun résultat trouvé</string>
     <string name="empty_history_title">Aucune vidéo traitée</string>
     <string name="empty_history_desc">Collez une URL ou choisissez un fichier pour commencer</string>
-    <string name="expires_in">%d jours restants</string>
-    <string name="expired">Expiré</string>
-    <string name="server_expiry_note">Résultat disponible sur le serveur pendant encore %d jours. Enregistrez-le pour le conserver.</string>
-    <string name="server_expired_note">Le résultat n\'est peut-être plus disponible sur le serveur. Enregistrez une copie pour le conserver.</string>
     <string name="widget_paste_process">Coller &amp; Traiter</string>
     <string name="widget_open">Ouvrir Murem</string>
     <string name="widget_file">Envoyer une vidéo</string>

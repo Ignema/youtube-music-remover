@@ -1,5 +1,6 @@
 package com.musicremover.app.ui.settings
 
+import android.os.Build
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
@@ -31,6 +32,7 @@ import com.musicremover.app.R
 import com.musicremover.app.processing.BackendProvider
 import com.musicremover.app.processing.internal.ModelState
 import com.musicremover.app.processing.internal.PerformanceSettings
+import com.musicremover.app.ui.theme.ColorPalettes
 
 /**
  * Top-level Settings list. Summaries come from the UI state only: nothing here starts network work or
@@ -126,13 +128,20 @@ private fun SettingsDivider() {
     Spacer(Modifier.height(16.dp))
 }
 
-/** Theme, plus the language only when one is chosen; "System default" when both follow the system. */
+/**
+ * Theme, plus the palette when it is not the default and Material You is off, plus the language when
+ * one is chosen; "System default" when all of them are defaults.
+ */
 @Composable
 private fun appearanceSummary(ui: MainUiState): String {
     val systemTheme = themeLabel(ui.themeMode) == themeLabel("system")
-    if (systemTheme && ui.language.isEmpty()) return stringResource(R.string.system_default)
-    val theme = themeLabel(ui.themeMode)
-    return if (ui.language.isEmpty()) theme else theme + " · " + languageLabel(ui.language)
+    val dynamicActive = ui.dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    val paletteShown = ui.colorPalette != ColorPalettes.DEFAULT_ID && !dynamicActive
+    if (systemTheme && ui.language.isEmpty() && !paletteShown) return stringResource(R.string.system_default)
+    val parts = mutableListOf(themeLabel(ui.themeMode))
+    if (paletteShown) parts += stringResource(ColorPalettes.byId(ui.colorPalette).nameRes)
+    if (ui.language.isNotEmpty()) parts += languageLabel(ui.language)
+    return parts.joinToString(" · ")
 }
 
 @Composable

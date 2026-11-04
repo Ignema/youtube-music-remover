@@ -3,6 +3,7 @@ package com.musicremover.app.data
 import android.content.Context
 import com.musicremover.app.BuildConfig
 import com.musicremover.app.processing.internal.ModelCatalog
+import com.musicremover.app.ui.theme.ColorPalettes
 
 /** Output and appearance prefs that "Process another" keeps (see resetState). */
 data class PersistedUi(
@@ -11,6 +12,7 @@ data class PersistedUi(
     val outputFormat: String,
     val themeMode: String,
     val dynamicColor: Boolean,
+    val colorPalette: String,
     val language: String,
     val widgetTheme: String,
 )
@@ -36,7 +38,7 @@ class SettingsStore(context: Context) {
             prefs.edit().putString(KEY_PROCESSING_MODE, value).apply()
         }
 
-    /** "system", "light", or "dark" */
+    /** "system", "light", "dark" or "black" */
     var themeMode: String
         get() = prefs.getString(KEY_THEME_MODE, "system") ?: "system"
         set(value) = prefs.edit().putString(KEY_THEME_MODE, value).apply()
@@ -45,6 +47,14 @@ class SettingsStore(context: Context) {
     var dynamicColor: Boolean
         get() = prefs.getBoolean(KEY_DYNAMIC_COLOR, true)
         set(value) = prefs.edit().putBoolean(KEY_DYNAMIC_COLOR, value).apply()
+
+    /** Color palette id from [ColorPalettes]; applies when Material You is off or unavailable. */
+    var colorPalette: String
+        get() = ColorPalettes.resolveId(prefs.getString(KEY_COLOR_PALETTE, null))
+        set(value) {
+            require(value in ColorPalettes.IDS) { "Invalid color palette: $value" }
+            prefs.edit().putString(KEY_COLOR_PALETTE, value).apply()
+        }
 
     /** Language code, e.g. "en", "ar", "fr". Empty = system default */
     var language: String
@@ -111,6 +121,7 @@ class SettingsStore(context: Context) {
         outputFormat = outputFormat,
         themeMode = themeMode,
         dynamicColor = dynamicColor,
+        colorPalette = colorPalette,
         language = language,
         widgetTheme = widgetTheme,
     )
@@ -128,6 +139,7 @@ class SettingsStore(context: Context) {
 
         const val KEY_THEME_MODE = "theme_mode"
         const val KEY_DYNAMIC_COLOR = "dynamic_color"
+        const val KEY_COLOR_PALETTE = "color_palette"
         const val KEY_LANGUAGE = "language"
         const val KEY_WIDGET_THEME = "widget_theme"
         const val KEY_PROCESSING_MODE = "processing_mode"
@@ -145,7 +157,7 @@ class SettingsStore(context: Context) {
 
         /** Every user-facing key; each one has a Settings entry. */
         val USER_KEYS: Set<String> = setOf(
-            KEY_THEME_MODE, KEY_DYNAMIC_COLOR, KEY_LANGUAGE, KEY_WIDGET_THEME, KEY_PROCESSING_MODE,
+            KEY_THEME_MODE, KEY_DYNAMIC_COLOR, KEY_COLOR_PALETTE, KEY_LANGUAGE, KEY_WIDGET_THEME, KEY_PROCESSING_MODE,
             KEY_SERVER_URL, KEY_OUTPUT_FORMAT, KEY_BITRATE, KEY_AUDIO_ONLY, KEY_PERF_THREADS,
             KEY_PERF_QUALITY, KEY_PERF_BATCH, KEY_INTERNAL_MODEL,
         )

@@ -190,10 +190,6 @@
     <string name="no_results">Ничего не найдено</string>
     <string name="empty_history_title">Обработанных видео пока нет</string>
     <string name="empty_history_desc">Вставьте URL или выберите файл, чтобы начать</string>
-    <string name="expires_in">Осталось %d дн.</string>
-    <string name="expired">Истёк</string>
-    <string name="server_expiry_note">Результат доступен на сервере ещё %d дн. Сохраните, чтобы не потерять.</string>
-    <string name="server_expired_note">Результат может быть уже недоступен на сервере. Сохраните копию, чтобы не потерять.</string>
     <string name="widget_paste_process">Вставить и обработать</string>
     <string name="widget_open">Открыть Murem</string>
     <string name="widget_file">Загрузить видео</string>

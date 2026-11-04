@@ -31,6 +31,7 @@ object SettingsMap {
     val ENTRIES: Map<String, String> = mapOf(
         SettingsStore.KEY_THEME_MODE to SettingsRoutes.APPEARANCE,
         SettingsStore.KEY_DYNAMIC_COLOR to SettingsRoutes.APPEARANCE,
+        SettingsStore.KEY_COLOR_PALETTE to SettingsRoutes.APPEARANCE,
         SettingsStore.KEY_LANGUAGE to SettingsRoutes.APPEARANCE,
         SettingsStore.KEY_WIDGET_THEME to SettingsRoutes.APPEARANCE,
         SettingsStore.KEY_PROCESSING_MODE to SettingsRoutes.PROCESSING,

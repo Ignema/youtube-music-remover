@@ -190,10 +190,6 @@
     <string name="no_results">Sonuç bulunamadı</string>
     <string name="empty_history_title">Henüz işlenmiş video yok</string>
     <string name="empty_history_desc">Başlamak için bir URL yapıştırın veya dosya seçin</string>
-    <string name="expires_in">%d gün kaldı</string>
-    <string name="expired">Süresi doldu</string>
-    <string name="server_expiry_note">Sonuç sunucuda %d gün daha mevcut. Saklamak için kaydedin.</string>
-    <string name="server_expired_note">Sonuç artık sunucuda mevcut olmayabilir. Saklamak için bir kopyasını kaydedin.</string>
     <string name="widget_paste_process">Yapıştır ve İşle</string>
     <string name="widget_open">Murem\'i Aç</string>
     <string name="widget_file">Video Yükle</string>

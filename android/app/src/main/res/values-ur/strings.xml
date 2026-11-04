@@ -190,10 +190,6 @@
     <string name="no_results">کوئی نتیجہ نہیں ملا</string>
     <string name="empty_history_title">ابھی تک کوئی پروسیس شدہ ویڈیو نہیں</string>
     <string name="empty_history_desc">شروع کرنے کے لیے URL پیسٹ کریں یا فائل منتخب کریں</string>
-    <string name="expires_in">%d دن باقی</string>
-    <string name="expired">میعاد ختم</string>
-    <string name="server_expiry_note">نتیجہ سرور پر مزید %d دن دستیاب ہے۔ رکھنے کے لیے محفوظ کریں۔</string>
-    <string name="server_expired_note">نتیجہ اب سرور پر دستیاب نہیں ہو سکتا۔ رکھنے کے لیے ایک کاپی محفوظ کریں۔</string>
     <string name="widget_paste_process">پیسٹ کریں اور پروسیس کریں</string>
     <string name="widget_open">Murem کھولیں</string>
     <string name="widget_file">ویڈیو اپلوڈ</string>

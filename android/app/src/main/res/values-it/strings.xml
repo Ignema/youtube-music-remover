@@ -190,10 +190,6 @@
     <string name="no_results">Nessun risultato trovato</string>
     <string name="empty_history_title">Nessun video elaborato</string>
     <string name="empty_history_desc">Incolla un URL o scegli un file per iniziare</string>
-    <string name="expires_in">%d giorni rimanenti</string>
-    <string name="expired">Scaduto</string>
-    <string name="server_expiry_note">Risultato disponibile sul server per altri %d giorni. Salvalo per conservarlo.</string>
-    <string name="server_expired_note">Il risultato potrebbe non essere più disponibile sul server. Salva una copia per conservarlo.</string>
     <string name="widget_paste_process">Incolla ed elabora</string>
     <string name="widget_open">Apri Murem</string>
     <string name="widget_file">Carica video</string>

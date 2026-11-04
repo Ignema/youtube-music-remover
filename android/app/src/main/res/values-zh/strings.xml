@@ -190,10 +190,6 @@
     <string name="no_results">未找到匹配结果</string>
     <string name="empty_history_title">还没有处理过的视频</string>
     <string name="empty_history_desc">粘贴链接或选择文件开始使用</string>
-    <string name="expires_in">剩余 %d 天</string>
-    <string name="expired">已过期</string>
-    <string name="server_expiry_note">结果在服务器上还可保留 %d 天。请保存以留存。</string>
-    <string name="server_expired_note">结果可能已不在服务器上。请保存副本以留存。</string>
     <string name="widget_paste_process">粘贴并处理</string>
     <string name="widget_open">打开 Murem</string>
     <string name="widget_file">上传视频</string>

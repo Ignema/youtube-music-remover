@@ -282,7 +282,7 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
         ) {
             val item = vm.currentInfoItem
             if (item != null) {
-                ItemInfoSheet(item, ui, onDevice = remember(item.jobId) { vm.isResultOnDevice(item.jobId) })
+                ItemInfoSheet(item, ui)
                 SheetActions(item = item, vm = vm, context = context)
             }
         }
@@ -1323,7 +1323,6 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                 )
             }
             Spacer(Modifier.width(12.dp))
-            // The 7-day limit is the server's; a result stored on the device does not expire
             val onDevice = remember(item.jobId) { vm.isResultOnDevice(item.jobId) }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -1333,50 +1332,25 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                     overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(Modifier.height(4.dp))
-                @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
-                androidx.compose.foundation.layout.FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    // Where the result lives
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.align(Alignment.CenterVertically),
-                    ) {
-                        Icon(
-                            if (onDevice) Icons.Outlined.PhoneAndroid else Icons.Outlined.Cloud, null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(14.dp),
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
+                // Where the result lives · date · model, on one line
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        if (onDevice) Icons.Outlined.PhoneAndroid else Icons.Outlined.Cloud, null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = listOf(
                             stringResource(if (onDevice) R.string.history_source_device else R.string.history_source_server),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    InfoChip(dateStr)
-                    InfoChip(item.model.removeSuffix(".onnx").removeSuffix(".ckpt"))
-                    val ageMs = System.currentTimeMillis() - item.timestamp
-                    val ageDays = ageMs / (1000 * 60 * 60 * 24)
-                    if (ageDays >= 5 && !onDevice) {
-                        val daysLeft = (7 - ageDays).coerceAtLeast(0)
-                        Card(
-                            shape = RoundedCornerShape(8.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f),
-                            ),
-                            modifier = Modifier.align(Alignment.CenterVertically),
-                        ) {
-                            Text(
-                                if (daysLeft <= 0) stringResource(R.string.expired)
-                                else stringResource(R.string.expires_in, daysLeft),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onErrorContainer,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                            )
-                        }
-                    }
+                            dateStr,
+                            modelShortName(item.model),
+                        ).joinToString(" · "),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
             }
             IconButton(onClick = {
@@ -1546,7 +1520,7 @@ private fun InfoChip(text: String) {
 
 
 @Composable
-private fun ItemInfoSheet(item: HistoryItem, ui: MainUiState, onDevice: Boolean) {
+private fun ItemInfoSheet(item: HistoryItem, ui: MainUiState) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -1658,20 +1632,6 @@ private fun ItemInfoSheet(item: HistoryItem, ui: MainUiState, onDevice: Boolean)
                     val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(item.url))
                     context.startActivity(intent)
                 },
-            )
-        }
-
-        // Server expiry notice, only when the result is not stored on this device
-        if (!onDevice) {
-            val ageMs = System.currentTimeMillis() - item.timestamp
-            val ageDays = ageMs / (1000 * 60 * 60 * 24)
-            val daysLeft = (7 - ageDays).coerceAtLeast(0)
-            Spacer(Modifier.height(8.dp))
-            Text(
-                if (daysLeft <= 0) stringResource(R.string.server_expired_note)
-                else stringResource(R.string.server_expiry_note, daysLeft),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.outline,
             )
         }
     }

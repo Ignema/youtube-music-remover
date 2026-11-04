@@ -18,7 +18,7 @@ class ResetStateTest {
     )
     private val persisted = PersistedUi(
         audioOnly = true, bitrate = "320k", outputFormat = "mp3", themeMode = "dark",
-        dynamicColor = false, language = "fr", widgetTheme = "blue",
+        dynamicColor = false, colorPalette = "teal", language = "fr", widgetTheme = "blue",
     )
 
     private val prev = MainUiState(
@@ -59,6 +59,7 @@ class ResetStateTest {
         assertEquals("mp3", r.outputFormat)
         assertEquals("dark", r.themeMode)
         assertEquals(false, r.dynamicColor)
+        assertEquals("teal", r.colorPalette)
         assertEquals("fr", r.language)
         assertEquals("blue", r.widgetTheme)
     }
