@@ -63,6 +63,8 @@ class CookieStore(context: Context) {
         data class Saved(val captured: CookiesTxt.Summary, val summary: CookiesTxt.Summary) : SaveResult
         data class Rejected(val reason: CookiesTxt.Invalid) : SaveResult
         data object NoCookies : SaveResult
+        /** Cookies were captured but the site's session cookie is missing; nothing was saved. */
+        data object NotLoggedIn : SaveResult
         data object Unwritable : SaveResult
     }
 

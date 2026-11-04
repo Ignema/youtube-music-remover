@@ -16,6 +16,14 @@ class LoginSitesTest {
     }
 
     @Test
+    fun instagramNeedsSessionidButCustomSitesDoNot() {
+        val ig = LoginSites.INSTAGRAM
+        assertFalse(LoginSites.isLoggedIn(ig, listOf("csrftoken", "mid", "ig_did")))
+        assertTrue(LoginSites.isLoggedIn(ig, listOf("csrftoken", "sessionid")))
+        assertTrue(LoginSites.isLoggedIn(LoginSites.custom("https://example.com/")!!, listOf("anything")))
+    }
+
+    @Test
     fun customHttpsUrlIsAccepted() {
         val s = LoginSites.custom("  https://www.Example.com/login?next=/x  ")!!
         assertEquals("https://www.Example.com/login?next=/x", s.startUrl)

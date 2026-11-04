@@ -17,7 +17,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.lifecycle.lifecycleScope
 import com.musicremover.app.processing.internal.LoginSites
+import com.musicremover.app.processing.internal.WebLoginCookies
+import kotlinx.coroutines.launch
 import com.musicremover.app.ui.CookieLoginScreen
 import com.musicremover.app.ui.HelpScreen
 import com.musicremover.app.ui.HomeScreen
@@ -42,6 +45,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Wipe a login session left behind if the process died on the login screen
+        lifecycleScope.launch { WebLoginCookies.wipeLeftoverSession(applicationContext) }
         handleShareIntent(intent)
         handlePlayIntent(intent)
         handleShareAction(intent)

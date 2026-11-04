@@ -65,6 +65,19 @@ object WebLoginCookies {
         }
     }
 
+    @Volatile private var leftoverChecked = false
+
+    /**
+     * Once per process: if a WebView data dir exists (e.g. the process died mid-login, so no wipe ran),
+     * clear it. Skipped when the WebView was never used, so normal starts don't pay for WebView init.
+     */
+    suspend fun wipeLeftoverSession(context: android.content.Context) {
+        if (leftoverChecked) return
+        leftoverChecked = true
+        val dataDir = java.io.File(context.applicationInfo.dataDir, "app_webview")
+        if (dataDir.exists()) clearAll(null)
+    }
+
     /**
      * Saves the WebView's cookies for [site] (plus the [currentUrl] host if it is on the site's domain)
      * into [store], then clears the WebView in any case.
@@ -78,6 +91,10 @@ object WebLoginCookies {
                     .flatMap { CookiesTxt.fromCookieHeader(cm.getCookie(it), site.cookieDomain, now) }
                     // The first URL wins for a name (www before i. for Instagram)
                     .distinctBy { it.name }
+            }
+            // Anonymous cookies (e.g. Instagram's csrftoken/mid without sessionid) are not a login
+            if (entries.isNotEmpty() && !LoginSites.isLoggedIn(site, entries.map { it.name })) {
+                return CookieStore.SaveResult.NotLoggedIn
             }
             return withContext(Dispatchers.IO) { store.saveCaptured(entries) }
         } finally {

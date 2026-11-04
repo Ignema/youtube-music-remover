@@ -6,9 +6,15 @@ import java.net.URI
 object LoginSites {
     /**
      * Login starts at [startUrl]; the cookies the WebView holds for [cookieUrls] are saved for
-     * [cookieDomain] (leading dot, so they cover every subdomain).
+     * [cookieDomain] (leading dot, so they cover every subdomain). If [sessionCookie] is set, Save stores
+     * nothing unless a cookie with that name was captured (the user really logged in).
      */
-    data class Site(val startUrl: String, val cookieUrls: List<String>, val cookieDomain: String)
+    data class Site(
+        val startUrl: String,
+        val cookieUrls: List<String>,
+        val cookieDomain: String,
+        val sessionCookie: String? = null,
+    )
 
     /**
      * yt-dlp's Instagram extractor checks `sessionid` on www.instagram.com and reads `csrftoken` there;
@@ -18,7 +24,12 @@ object LoginSites {
         startUrl = "https://www.instagram.com/accounts/login/",
         cookieUrls = listOf("https://www.instagram.com", "https://i.instagram.com"),
         cookieDomain = ".instagram.com",
+        sessionCookie = "sessionid",
     )
+
+    /** True if [site] has no session cookie, or [names] contains it. */
+    fun isLoggedIn(site: Site, names: Collection<String>): Boolean =
+        site.sessionCookie == null || site.sessionCookie in names
 
     /** A site from a user-typed https URL, or null if it is not https or has no host. */
     fun custom(url: String): Site? {

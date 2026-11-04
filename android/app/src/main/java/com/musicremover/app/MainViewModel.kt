@@ -418,6 +418,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 else -> str(R.string.cookies_invalid_format)
             }
             CookieStore.SaveResult.NoCookies -> str(R.string.cookies_login_none)
+            CookieStore.SaveResult.NotLoggedIn -> str(R.string.cookies_login_not_logged_in)
             CookieStore.SaveResult.Unwritable -> str(R.string.cookies_login_save_failed)
         }
         showTransientError(msg)

@@ -70,6 +70,10 @@ fun CookieLoginScreen(vm: MainViewModel, site: LoginSites.Site, onBack: () -> Un
         onDispose {
             webView?.apply {
                 stopLoading()
+                // clearAll(null) below cannot reach the HTTP cache once the view is destroyed
+                clearCache(true)
+                clearHistory()
+                clearFormData()
                 removeAllViews()
                 destroy()
             }
