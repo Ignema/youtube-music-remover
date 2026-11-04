@@ -109,6 +109,88 @@ class TestDbOperations:
             m.db_set("test-789", malicious_field="drop table")
 
 
+@pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg not installed")
+class TestUploadEndpoint:
+    """POST /api/upload copies the file in bounded chunks (#3); inputs without video run audio only (#1)."""
+
+    CHUNK = 1024 * 1024
+
+    def setup_method(self):
+        import api.main as m
+        self._orig_path = m.DB_PATH
+        m.DB_PATH = type(m.DB_PATH)("test_upload_jobs.db")
+        m.init_db()
+
+    def teardown_method(self):
+        import api.main as m
+        if m.DB_PATH.exists():
+            m.DB_PATH.unlink()
+        m.DB_PATH = self._orig_path
+
+    def _upload(self, monkeypatch, path, content_type):
+        """Uploads [path]; separation is replaced by a recorder, so no model runs."""
+        import threading
+        from fastapi.testclient import TestClient
+        # The form parser creates Starlette's UploadFile, not FastAPI's subclass
+        from starlette.datastructures import UploadFile
+        import api.main as m
+
+        reads = []
+        orig_read = UploadFile.read
+
+        async def spy_read(self, size=-1):
+            reads.append(size)
+            return await orig_read(self, size)
+
+        monkeypatch.setattr(UploadFile, "read", spy_read)
+
+        seen = {}
+        done = threading.Event()
+
+        def fake_separate(job_id, video_file, audio_file, model, batch_size, title,
+                          temp_dir, output_dir, audio_only=False, bitrate="192k"):
+            seen.update(stored=video_file.read_bytes(), wav=audio_file.is_file(),
+                        audio_only=audio_only, title=title)
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            done.set()
+            return True
+
+        monkeypatch.setattr(m, "separate_and_merge", fake_separate)
+        with open(path, "rb") as f:
+            resp = TestClient(m.app).post(
+                "/api/upload", files={"file": (path.name, f, content_type)}, data={"bitrate": "192k"})
+        assert resp.status_code == 200
+        assert done.wait(60), "process_upload did not reach separate_and_merge"
+        return seen, reads
+
+    def test_mp3_upload_is_streamed_and_audio_only(self, tmp_path, monkeypatch):
+        song = tmp_path / "song.mp3"
+        # ~1.2 MB, so the copy needs more than one chunk
+        _ffmpeg("-f", "lavfi", "-i", "sine=frequency=440:duration=30",
+                "-c:a", "libmp3lame", "-b:a", "320k", str(song))
+        assert song.stat().st_size > self.CHUNK
+
+        seen, reads = self._upload(monkeypatch, song, "audio/mpeg")
+
+        assert seen["stored"] == song.read_bytes()
+        assert seen["wav"] is True
+        assert seen["audio_only"] is True
+        assert seen["title"] == "song"
+        assert len(reads) > 1
+        assert all(0 < size <= self.CHUNK for size in reads)
+
+    def test_video_upload_keeps_video(self, tmp_path, monkeypatch):
+        clip = tmp_path / "clip.mp4"
+        _ffmpeg("-f", "lavfi", "-i", "testsrc=size=64x64:rate=10",
+                "-f", "lavfi", "-i", "sine=frequency=440",
+                "-t", "1", "-pix_fmt", "yuv420p", "-shortest", str(clip))
+
+        seen, _ = self._upload(monkeypatch, clip, "video/mp4")
+
+        assert seen["stored"] == clip.read_bytes()
+        assert seen["audio_only"] is False
+
+
 class TestHealthEndpoint:
     def test_health(self):
         from fastapi.testclient import TestClient
