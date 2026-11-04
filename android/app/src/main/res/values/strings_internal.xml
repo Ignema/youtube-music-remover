@@ -284,4 +284,5 @@
     <string name="home_cta_hint_file">Pick a file to start</string>
     <string name="history_source_device">On device</string>
     <string name="history_source_server">Server</string>
+    <string name="history_source_termux">Termux</string>
 </resources>

@@ -63,7 +63,7 @@ object InternalHistory {
             ytUploadDate = info.upload_date,
             ytDescription = info.description,
         )
-    }
+    }.copy(processedBy = BackendProvider.MODE_INTERNAL)
 
     private fun titleFromOutName(outName: String): String =
         RESULT_SUFFIXES.fold(outName) { name, suffix -> name.removeSuffix(suffix) }

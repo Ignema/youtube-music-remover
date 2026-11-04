@@ -141,8 +141,8 @@
     <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\n끝입니다 — Python이나 ffmpeg를 설치할 필요가 없습니다.</string>
 
     <!-- Notifications -->
-    <string name="notif_done">완료 — %s</string>
-    <string name="notif_error">오류 — %s</string>
+    <string name="notif_done">완료: %s</string>
+    <string name="notif_error">오류: %s</string>
 
     <!-- Termux status -->
     <string name="installing_termux">Termux에 설치 중… 완료되면 돌아오세요.</string>

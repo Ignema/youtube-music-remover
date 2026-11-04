@@ -64,9 +64,9 @@ fun ProcessingSettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             listOf(
-                Triple(BackendProvider.MODE_INTERNAL, Icons.Outlined.Memory, R.string.mode_internal),
-                Triple(BackendProvider.MODE_TERMUX, Icons.Outlined.PhoneAndroid, R.string.local_termux),
-                Triple(BackendProvider.MODE_SERVER, Icons.Outlined.Cloud, R.string.mode_server),
+                Triple(BackendProvider.MODE_INTERNAL, com.musicremover.app.ui.ProcessingSources.INTERNAL.icon, R.string.mode_internal),
+                Triple(BackendProvider.MODE_TERMUX, com.musicremover.app.ui.ProcessingSources.TERMUX.icon, R.string.local_termux),
+                Triple(BackendProvider.MODE_SERVER, com.musicremover.app.ui.ProcessingSources.SERVER.icon, R.string.mode_server),
             ).forEach { (mode, icon, label) ->
                 FilterChip(
                     selected = ui.processingMode == mode,

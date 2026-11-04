@@ -141,8 +141,8 @@
     <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\nPronto — não é preciso configurar Python nem ffmpeg.</string>
 
     <!-- Notifications -->
-    <string name="notif_done">Concluído — %s</string>
-    <string name="notif_error">Erro — %s</string>
+    <string name="notif_done">Concluído: %s</string>
+    <string name="notif_error">Erro: %s</string>
 
     <!-- Termux status -->
     <string name="installing_termux">Instalando no Termux… Volte quando terminar.</string>

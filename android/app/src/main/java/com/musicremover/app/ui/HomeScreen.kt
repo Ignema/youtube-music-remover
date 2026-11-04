@@ -1323,7 +1323,8 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                 )
             }
             Spacer(Modifier.width(12.dp))
-            val onDevice = remember(item.jobId) { vm.isResultOnDevice(item.jobId) }
+            // Which mode made the result; items saved before this was recorded show no source
+            val source = item.processedBy?.let { processingSourceOf(it) }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = displayTitle(item.filename),
@@ -1332,17 +1333,19 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                     overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(Modifier.height(4.dp))
-                // Where the result lives · date · model, on one line
+                // Processing source · date · model, on one line
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        if (onDevice) Icons.Outlined.PhoneAndroid else Icons.Outlined.Cloud, null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(14.dp),
-                    )
-                    Spacer(Modifier.width(4.dp))
+                    if (source != null) {
+                        Icon(
+                            source.icon, null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(14.dp),
+                        )
+                        Spacer(Modifier.width(4.dp))
+                    }
                     Text(
-                        text = listOf(
-                            stringResource(if (onDevice) R.string.history_source_device else R.string.history_source_server),
+                        text = listOfNotNull(
+                            source?.let { stringResource(it.label) },
                             dateStr,
                             modelShortName(item.model),
                         ).joinToString(" · "),

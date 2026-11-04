@@ -55,7 +55,8 @@ fun SettingsMainScreen(vm: MainViewModel, onBack: () -> Unit, onNavigate: (route
         SectionLabel(stringResource(R.string.settings_group_processing))
         Spacer(Modifier.height(4.dp))
         NavRow(
-            Icons.Outlined.Memory,
+            // The current mode's icon (chip = on-device, terminal = Termux, cloud = server)
+            com.musicremover.app.ui.processingSourceOf(ui.processingMode)?.icon ?: Icons.Outlined.Memory,
             stringResource(R.string.processing_mode),
             modeSummary(ui),
         ) { onNavigate(SettingsRoutes.PROCESSING) }

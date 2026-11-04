@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material.icons.outlined.Computer
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.MusicOff
@@ -88,13 +89,13 @@ fun HelpScreen(onBack: () -> Unit) {
             TipCard(Icons.Outlined.Memory, stringResource(R.string.help_on_device),
                 stringResource(R.string.help_on_device_desc))
             Spacer(Modifier.height(8.dp))
-            TipCard(Icons.Outlined.PhoneAndroid, stringResource(R.string.help_local_termux),
+            TipCard(Icons.Outlined.Terminal, stringResource(R.string.help_local_termux),
                 stringResource(R.string.help_local_termux_desc))
             Spacer(Modifier.height(8.dp))
             TipCard(Icons.Outlined.Cloud, stringResource(R.string.help_remote_server),
                 stringResource(R.string.help_remote_server_desc))
             Spacer(Modifier.height(8.dp))
-            TipCard(Icons.Outlined.Terminal, stringResource(R.string.help_start_pc),
+            TipCard(Icons.Outlined.Computer, stringResource(R.string.help_start_pc),
                 stringResource(R.string.help_start_pc_desc))
             Spacer(Modifier.height(8.dp))
             TipCard(Icons.Outlined.Cloud, stringResource(R.string.help_docker),

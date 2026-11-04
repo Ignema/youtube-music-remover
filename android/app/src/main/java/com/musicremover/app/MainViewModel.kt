@@ -1682,6 +1682,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val ytDescription: String? = null,
         /** Requested audio-only format of the built [ProcessOptions], for the MP3 fallback notice */
         val outputFormat: String = "m4a",
+        /** Processing mode at job start (Termux and Server share the remote backend) */
+        val mode: String? = null,
     )
     private var activeJobMeta: JobMeta? = null
 
@@ -1692,6 +1694,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             sourceFileName = _ui.value.selectedFileName,
             sourceFileSize = _ui.value.selectedFileSize,
             sourceFilePath = _ui.value.originalFileUri,
+            mode = _ui.value.processingMode,
         )
         val backend = backend()
         val managed = backend.managesNotifications
@@ -1715,6 +1718,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             url = url, model = _ui.value.selectedModel,
             isFileUpload = false,
             sourceFileName = null, sourceFileSize = null,
+            mode = _ui.value.processingMode,
         )
         val backend = backend()
         val managed = backend.managesNotifications
@@ -1809,6 +1813,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             ytViewCount = ytMeta?.view_count ?: meta?.ytViewCount ?: 0,
                             ytUploadDate = ytMeta?.upload_date ?: meta?.ytUploadDate,
                             ytDescription = ytMeta?.description ?: meta?.ytDescription,
+                            processedBy = meta?.mode ?: _ui.value.processingMode,
                         ))
                         _ui.value = _ui.value.copy(history = historyStore.getAll())
                     }

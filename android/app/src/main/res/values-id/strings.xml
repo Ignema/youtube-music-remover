@@ -141,8 +141,8 @@
     <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\nSelesai — tidak perlu menyiapkan Python atau ffmpeg.</string>
 
     <!-- Notifications -->
-    <string name="notif_done">Selesai — %s</string>
-    <string name="notif_error">Error — %s</string>
+    <string name="notif_done">Selesai: %s</string>
+    <string name="notif_error">Error: %s</string>
 
     <!-- Termux status -->
     <string name="installing_termux">Menginstal di Termux… Kembali saat selesai.</string>

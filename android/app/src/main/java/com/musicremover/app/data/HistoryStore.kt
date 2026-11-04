@@ -22,6 +22,8 @@ data class HistoryItem(
     val ytViewCount: Long = 0,
     val ytUploadDate: String? = null,
     val ytDescription: String? = null,
+    /** Processing mode that made the result (BackendProvider.MODE_*); null for items saved before it was recorded */
+    val processedBy: String? = null,
 )
 
 class HistoryStore(context: Context) {

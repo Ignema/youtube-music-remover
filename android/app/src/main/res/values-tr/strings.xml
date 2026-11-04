@@ -141,8 +141,8 @@
     <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\nBu kadar — Python veya ffmpeg kurulumu gerekmez.</string>
 
     <!-- Notifications -->
-    <string name="notif_done">Tamamlandı — %s</string>
-    <string name="notif_error">Hata — %s</string>
+    <string name="notif_done">Tamamlandı: %s</string>
+    <string name="notif_error">Hata: %s</string>
 
     <!-- Termux status -->
     <string name="installing_termux">Termux\'a yükleniyor… Bitince geri dönün.</string>
