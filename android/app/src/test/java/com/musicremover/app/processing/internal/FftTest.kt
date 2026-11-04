@@ -30,7 +30,7 @@ class FftTest {
     @Test
     fun forwardMatchesNaiveDft() {
         val rnd = Random(1234)
-        for (n in listOf(12, 48, 6144)) {
+        for (n in listOf(12, 48, 60, 750, 5120, 6144, 7680)) {
             val x = DoubleArray(2 * n) { rnd.nextDouble(-1.0, 1.0) }
             val expected = naiveDft(x, n)
             val actual = x.copyOf()
@@ -43,7 +43,7 @@ class FftTest {
     @Test
     fun inverseOfForwardIsIdentity() {
         val rnd = Random(99)
-        for (n in listOf(12, 48, 6144)) {
+        for (n in listOf(12, 48, 60, 750, 5120, 6144, 7680)) {
             val x = DoubleArray(2 * n) { rnd.nextDouble(-1.0, 1.0) }
             val y = x.copyOf()
             val fft = Fft(n)
@@ -56,7 +56,9 @@ class FftTest {
 
     @Test
     fun rejectsUnsupportedSize() {
-        assertThrows(IllegalArgumentException::class.java) { Fft(112) }
-        assertFalse(Fft.isSupportedSize(7680))
+        assertThrows(IllegalArgumentException::class.java) { Fft(7 * 16) }
+        assertFalse(Fft.isSupportedSize(7 * 16))
+        assertTrue(Fft.isSupportedSize(7680))
+        assertTrue(Fft.isSupportedSize(5120))
     }
 }

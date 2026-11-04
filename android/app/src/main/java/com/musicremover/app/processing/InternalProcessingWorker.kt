@@ -28,7 +28,7 @@ import com.musicremover.app.processing.internal.ModelStorageException
 import com.musicremover.app.processing.internal.OrtSpectrogramModel
 import com.musicremover.app.processing.internal.PcmFileReader
 import com.musicremover.app.processing.internal.PcmFileWriter
-import com.musicremover.app.processing.internal.PrimarySink
+import com.musicremover.app.processing.internal.PrimaryStemSink
 import com.musicremover.app.processing.internal.VideoResultWriter
 import com.musicremover.app.processing.internal.UrlNormalizer
 import com.musicremover.app.processing.internal.VocalsSink
@@ -42,7 +42,6 @@ import com.musicremover.app.processing.internal.ytDlpErrorText
 import com.musicremover.app.processing.internal.ytDlpVersionOrNull
 import java.io.File
 import java.io.IOException
-import kotlin.math.abs
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
@@ -358,19 +357,6 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
     private fun neededMb(durationUs: Long, bitrate: Int): Int {
         val s = durationUs / 1_000_000.0
         return ((s * 705_600 + s * bitrate / 8) / 1_000_000 + 50).toInt()
-    }
-
-    /** Sink for a model whose primary stem is already the vocals. */
-    private class PrimaryStemSink(private val out: PcmFileWriter) : PrimarySink {
-        var peak = 0f
-            private set
-
-        override fun accept(pos: Long, primaryL: FloatArray, primaryR: FloatArray, count: Int) {
-            var p = peak
-            for (j in 0 until count) p = maxOf(p, abs(primaryL[j]), abs(primaryR[j]))
-            peak = p
-            out.write(primaryL, primaryR, 0, count)
-        }
     }
 
     companion object {

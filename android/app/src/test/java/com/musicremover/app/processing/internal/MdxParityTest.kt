@@ -1,5 +1,7 @@
 package com.musicremover.app.processing.internal
 
+import com.google.gson.Gson
+import com.google.gson.annotations.SerializedName
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -14,15 +16,36 @@ import org.junit.Assume
 import org.junit.Test
 
 /**
- * Numerical parity against the torch-backed audio-separator reference (design.md §8.2).
- * Skipped unless run with `-Pmurem.parityDir=<dir>` holding input.f32, the HQ_3 model and the
- * reference outputs written by run_ref.py.
+ * Numerical parity against the torch-backed audio-separator 0.48.0 reference (phase4 design.md §1a.5).
+ * Skipped unless run with `-Pmurem.parityDir=<dir>`. The dir holds input.f32, manifest.json and the
+ * reference files written by run_ref.py; models are resolved as `File(File(dir, models_dir), model)`.
  */
 class MdxParityTest {
-    private val modelName = "UVR-MDX-NET-Inst_HQ_3.onnx"
-    private val params = MdxParams(nFft = 6144, dimF = 3072, dimT = 256, hop = 1024, compensate = 1.022f, overlap = 0.25)
+    private class Manifest(
+        @SerializedName("models_dir") val modelsDir: String?,
+        @SerializedName("cases") val cases: List<Case>?,
+    )
+
+    private class Case(
+        @SerializedName("tag") val tag: String?,
+        @SerializedName("model") val model: String?,
+        @SerializedName("n_fft") val nFft: Int?,
+        @SerializedName("dim_f") val dimF: Int?,
+        @SerializedName("compensate") val compensate: Float?,
+        @SerializedName("primary") val primary: String?,
+        @SerializedName("overlap") val overlap: Double?,
+        @SerializedName("batch") val batch: Int?,
+        @SerializedName("ref_primary") val refPrimary: String?,
+        @SerializedName("ref_vocals") val refVocals: String?,
+        @SerializedName("ref_spec0") val refSpec0: String?,
+        @SerializedName("cli_vocals") val cliVocals: String?,
+        @SerializedName("cli_instrumental") val cliInstrumental: String?,
+        @SerializedName("compare_to") val compareTo: String?,
+    )
 
     private class Stereo(val l: FloatArray, val r: FloatArray)
+
+    private class KtResult(val primary: Stereo, val vocals: Stereo)
 
     private fun readStereo(file: File): Stereo = PcmFileReader(file).use { rd ->
         val n = rd.frames.toInt()
@@ -96,95 +119,140 @@ class MdxParityTest {
         val dirName = System.getProperty("murem.parityDir").orEmpty()
         Assume.assumeTrue("murem.parityDir not set", dirName.isNotEmpty())
         val dir = File(dirName)
+        val manifest = Gson().fromJson(File(dir, "manifest.json").readText(), Manifest::class.java)
+        val modelsDir = File(dir, manifest.modelsDir ?: error("manifest: models_dir missing"))
+        val cases = manifest.cases ?: error("manifest: cases missing")
+        assertTrue("manifest has no cases", cases.isNotEmpty())
 
-        val mix = readStereo(File(dir, "input.f32"))
+        val inputFile = File(dir, "input.f32")
+        val mix = readStereo(inputFile)
         val n = mix.l.size
         var peak = 0f
         for (i in 0 until n) peak = maxOf(peak, abs(mix.l[i]), abs(mix.r[i]))
         val s = if (peak > 0.9f) 0.9f / peak else 1f
+        println("PARITY N=$n peak=$peak s=$s cases=${cases.size}")
 
-        val primary = Stereo(FloatArray(n), FloatArray(n))
-        var spec0: FloatArray? = null
-        val runMillis = ArrayList<Long>()
-        val ktPrimaryFile = File(dir, "kt_primary.f32")
-        val ktVocalsFile = File(dir, "kt_vocals.f32")
-        var chunks = 0
-        val t0 = System.nanoTime()
-        OrtSpectrogramModel(File(dir, modelName), params.dimF, params.dimT).use { ort ->
-            val model = object : SpectrogramModel {
-                override val input: FloatBuffer get() = ort.input
-                override val output: FloatBuffer get() = ort.output
-                override suspend fun run(input: FloatBuffer, output: FloatBuffer) {
-                    if (spec0 == null) spec0 = FloatArray(input.capacity()) { input.get(it) }
-                    val r0 = System.nanoTime()
-                    ort.run(input, output)
-                    runMillis.add((System.nanoTime() - r0) / 1_000_000)
+        val results = HashMap<String, KtResult>()
+        val failures = ArrayList<String>()
+        val summary = StringBuilder("case\tprimaryA\tvocalsA\tprimary0\tsecondary0\tcorrPrimaryA\tmaxDiffPrimaryA\tspec0MaxDiff\tchunks\tms\n")
+        for (c in cases) {
+            val tag = c.tag ?: error("manifest: case without tag")
+            fun need(v: String?, field: String): String = v ?: error("manifest: $field missing for $tag")
+            val primaryStem = c.primary
+            if (primaryStem != "Instrumental" && primaryStem != "Vocals") error("manifest: primary missing or unknown for $tag: $primaryStem")
+            val params = MdxParams(
+                nFft = c.nFft ?: error("manifest: n_fft missing for $tag"),
+                dimF = c.dimF ?: error("manifest: dim_f missing for $tag"),
+                dimT = 256, hop = 1024,
+                compensate = c.compensate ?: error("manifest: compensate missing for $tag"),
+                overlap = c.overlap ?: error("manifest: overlap missing for $tag"),
+            )
+            val batch = c.batch ?: 1
+            val modelFile = File(modelsDir, need(c.model, "model"))
+            val slot = 4 * params.dimF * params.dimT
+
+            val primary = Stereo(FloatArray(n), FloatArray(n))
+            var spec0: FloatArray? = null
+            val runMillis = ArrayList<Long>()
+            val ktVocalsFile = File(dir, "kt_${tag}_vocals.f32")
+            var chunks = 0
+            var total = 0
+            val t0 = System.nanoTime()
+            OrtSpectrogramModel(modelFile, params.dimF, params.dimT, threads = 4, batch = batch).use { ort ->
+                val model = object : SpectrogramModel {
+                    override val batch: Int get() = ort.batch
+                    override val input: FloatBuffer get() = ort.input
+                    override val output: FloatBuffer get() = ort.output
+                    override suspend fun run(input: FloatBuffer, output: FloatBuffer) {
+                        if (spec0 == null) spec0 = FloatArray(slot) { input.get(it) }
+                        val r0 = System.nanoTime()
+                        ort.run(input, output)
+                        runMillis.add((System.nanoTime() - r0) / 1_000_000)
+                    }
+                    override fun close() {}
                 }
-                override fun close() {}
-            }
-            PcmFileReader(File(dir, "input.f32")).use { src ->
-                PcmFileReader(File(dir, "input.f32")).use { mixForSink ->
-                    PcmFileWriter(ktVocalsFile).use { vocalsOut ->
-                        PcmFileWriter(ktPrimaryFile).use { primaryOut ->
-                            val vocals = VocalsSink(mixForSink, vocalsOut, s, params.compensate)
+                PcmFileReader(inputFile).use { src ->
+                    PcmFileReader(inputFile).use { mixForSink ->
+                        PcmFileWriter(ktVocalsFile).use { vocalsOut ->
+                            val vocals: PrimarySink = if (primaryStem == "Vocals") PrimaryStemSink(vocalsOut)
+                            else VocalsSink(mixForSink, vocalsOut, s, params.compensate)
                             val sink = PrimarySink { pos, pl, pr, count ->
                                 System.arraycopy(pl, 0, primary.l, pos.toInt(), count)
                                 System.arraycopy(pr, 0, primary.r, pos.toInt(), count)
-                                primaryOut.write(pl, pr, 0, count)
                                 vocals.accept(pos, pl, pr, count)
                             }
-                            MdxSeparator(params, model).demix(src, s, sink) { done, _ -> chunks = done }
+                            val sep = MdxSeparator(params, model)
+                            total = sep.chunkCount(n.toLong())
+                            sep.demix(src, s, sink) { done, _ -> chunks = done }
                         }
                     }
                 }
             }
-        }
-        val totalMillis = (System.nanoTime() - t0) / 1_000_000
-        val ktVocals = readStereo(ktVocalsFile)
+            val totalMillis = (System.nanoTime() - t0) / 1_000_000
+            val ktVocals = readStereo(ktVocalsFile)
+            ktVocalsFile.delete()
+            results[tag] = KtResult(primary, ktVocals)
+            println("PARITY [$tag] model=${modelFile.name} nFft=${params.nFft} dimF=${params.dimF} primary=$primaryStem " +
+                "overlap=${params.overlap} batch=$batch chunks=$chunks/$total ortRunMs=$runMillis totalMs=$totalMillis")
+            fun expect(ok: Boolean, what: String) { if (!ok) failures.add("[$tag] $what") }
+            expect(chunks == total, "chunks $chunks != $total")
 
-        val refPrimary = readStereo(File(dir, "ref_primary.f32"))
-        val refVocals = readStereo(File(dir, "ref_vocals.f32"))
-        val mp = metrics(refPrimary, primary)
-        val mv = metrics(refVocals, ktVocals)
-        println("PARITY N=$n peak=$peak s=$s chunks=$chunks ortRunMs=$runMillis totalMs=$totalMillis")
-        println("PARITY primary (Tier A float): $mp")
-        println("PARITY vocals  (Tier A float): $mv")
+            if (primaryStem == "Vocals") {
+                var same = true
+                for (i in 0 until n) if (ktVocals.l[i] != primary.l[i] || ktVocals.r[i] != primary.r[i]) { same = false; break }
+                expect(same, "vocals-primary output must equal the primary exactly")
+            }
 
-        val spec0File = File(dir, "ref_spec0.f32")
-        var specDiff = -1.0
-        if (spec0File.exists()) {
-            val ref = readFloats(spec0File)
+            // Tier A (float, before output normalization).
+            val mp = metrics(readStereo(File(dir, need(c.refPrimary, "ref_primary"))), primary)
+            val mv = metrics(readStereo(File(dir, need(c.refVocals, "ref_vocals"))), ktVocals)
+            println("PARITY [$tag] primary (Tier A float): $mp")
+            println("PARITY [$tag] vocals  (Tier A float): $mv")
+            expect(mp.snrDb > 30, "Tier A primary $mp")
+            expect(mv.snrDb > 30, "Tier A vocals $mv")
+
+            // Chunk-0 model input (slot 0) vs upstream.
+            val refSpec = readFloats(File(dir, need(c.refSpec0, "ref_spec0")))
             val kt = spec0!!
-            assertEquals(ref.size, kt.size)
-            var d = 0.0
+            assertEquals("[$tag] spec0 size", refSpec.size, kt.size)
+            var specDiff = 0.0
             var refMax = 0.0
-            for (i in ref.indices) { d = maxOf(d, abs(ref[i] - kt[i]).toDouble()); refMax = maxOf(refMax, abs(ref[i]).toDouble()) }
-            specDiff = d
-            println("PARITY chunk-0 spectrogram maxDiff=%.3e (ref max |x| = %.1f)".format(d, refMax))
-        }
+            for (i in refSpec.indices) {
+                specDiff = maxOf(specDiff, abs(refSpec[i] - kt[i]).toDouble())
+                refMax = maxOf(refMax, abs(refSpec[i]).toDouble())
+            }
+            println("PARITY [$tag] chunk-0 spectrogram maxDiff=%.3e (ref max |x| = %.1f)".format(specDiff, refMax))
+            expect(specDiff < 1e-3, "chunk-0 spectrogram maxDiff=$specDiff")
 
-        val cliVocalsFile = File(dir, "ref_cli_vocals.wav")
-        val cliInstFile = File(dir, "ref_cli_instrumental.wav")
-        var cliResults: Pair<Metrics, Metrics>? = null
-        if (cliVocalsFile.exists() && cliInstFile.exists()) {
-            // Upstream separate(): primary = demix(s·mix)·peak; vocals = −primary·compensate + s·mix.
-            val inst = Stereo(FloatArray(n) { primary.l[it] * peak }, FloatArray(n) { primary.r[it] * peak })
-            val voc = Stereo(FloatArray(n) { s * mix.l[it] - params.compensate * inst.l[it] },
-                FloatArray(n) { s * mix.r[it] - params.compensate * inst.r[it] })
-            val mi = metrics(readWav16(cliInstFile), toCliInt16(inst))
-            val mvc = metrics(readWav16(cliVocalsFile), toCliInt16(voc))
-            println("PARITY instrumental (Tier 0 CLI int16): $mi")
-            println("PARITY vocals       (Tier 0 CLI int16): $mvc")
-            cliResults = mi to mvc
-        }
+            // Tier 0 (CLI int16). Upstream separate(): primary_source = demix(s·mix)·peak,
+            // secondary = s·mix − compensate·primary_source (mdx_separator.py L172, L195).
+            val src0 = Stereo(FloatArray(n) { primary.l[it] * peak }, FloatArray(n) { primary.r[it] * peak })
+            val sec0 = Stereo(FloatArray(n) { s * mix.l[it] - params.compensate * src0.l[it] },
+                FloatArray(n) { s * mix.r[it] - params.compensate * src0.r[it] })
+            val cliVocals = readWav16(File(dir, need(c.cliVocals, "cli_vocals")))
+            val cliInst = readWav16(File(dir, need(c.cliInstrumental, "cli_instrumental")))
+            val (cliPrimary, cliSecondary) = if (primaryStem == "Instrumental") cliInst to cliVocals else cliVocals to cliInst
+            val m0p = metrics(cliPrimary, toCliInt16(src0))
+            val m0s = metrics(cliSecondary, toCliInt16(sec0))
+            println("PARITY [$tag] primary   ($primaryStem, Tier 0 CLI int16): $m0p")
+            println("PARITY [$tag] secondary (Tier 0 CLI int16): $m0s")
+            expect(m0p.snrDb > 30, "Tier 0 primary $m0p")
+            expect(m0s.snrDb > 30, "Tier 0 secondary $m0s")
 
-        assertEquals(3, chunks)
-        assertTrue("primary $mp", mp.snrDb > 30)
-        assertTrue("vocals $mv", mv.snrDb > 30)
-        cliResults?.let { (mi, mvc) ->
-            assertTrue("CLI instrumental $mi", mi.snrDb > 30)
-            assertTrue("CLI vocals $mvc", mvc.snrDb > 30)
+            c.compareTo?.let { other ->
+                val o = results[other] ?: error("manifest: compare_to $other must come before $tag")
+                val bp = metrics(o.primary, primary)
+                val bv = metrics(o.vocals, ktVocals)
+                println("PARITY [$tag] vs Kotlin [$other] primary: $bp")
+                println("PARITY [$tag] vs Kotlin [$other] vocals:  $bv")
+                expect(bp.snrDb > 80, "vs $other primary $bp")
+                expect(bv.snrDb > 80, "vs $other vocals $bv")
+            }
+            summary.append("$tag\t%.2f\t%.2f\t%.2f\t%.2f\t%.8f\t%.3e\t%.3e\t$chunks\t$totalMillis\n".format(
+                mp.snrDb, mv.snrDb, m0p.snrDb, m0s.snrDb, mp.corr, mp.maxDiff, specDiff))
         }
-        if (specDiff >= 0) assertTrue("chunk-0 spectrogram maxDiff=$specDiff", specDiff < 1e-3)
+        File(dir, "kt_summary.tsv").writeText(summary.toString())
+        println("PARITY summary:\n$summary")
+        assertEquals(emptyList<String>(), failures)
     }
 }

@@ -2,11 +2,49 @@
   "version": 1,
   "models": [{
     "name": "UVR-MDX-NET-Inst_HQ_3.onnx",
+    "label": "hq3",
     "url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/UVR-MDX-NET-Inst_HQ_3.onnx",
     "size": 66759214,
     "sha256": "317554b07fe1ea5279a77f2b1520a41ea4b93432560c4ffd08792c30fddf9adc",
     "n_fft": 6144, "dim_f": 3072, "dim_t": 256, "hop": 1024,
     "compensate": 1.022, "primary_stem": "Instrumental",
+    "segment_size": 256, "overlap": 0.25
+  }, {
+    "name": "UVR-MDX-NET-Voc_FT.onnx",
+    "label": "voc_ft",
+    "url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/UVR-MDX-NET-Voc_FT.onnx",
+    "size": 66762490,
+    "sha256": "534b2070fcc7df514b13ef660dc8cbb328679c2374d04354a5c42bb14ecce111",
+    "n_fft": 7680, "dim_f": 3072, "dim_t": 256, "hop": 1024,
+    "compensate": 1.021, "primary_stem": "Vocals",
+    "segment_size": 256, "overlap": 0.25
+  }, {
+    "name": "UVR_MDXNET_3_9662.onnx",
+    "label": "mdx3",
+    "url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/UVR_MDXNET_3_9662.onnx",
+    "size": 29704436,
+    "sha256": "e02220e80d8253f4c2209f8924298b2b686bbdf2868b788ff5500fb9bd94aadc",
+    "n_fft": 6144, "dim_f": 2048, "dim_t": 256, "hop": 1024,
+    "compensate": 1.035, "primary_stem": "Vocals",
+    "segment_size": 256, "overlap": 0.25
+  }, {
+    "name": "UVR_MDXNET_KARA_2.onnx",
+    "label": "kara2",
+    "url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/UVR_MDXNET_KARA_2.onnx",
+    "size": 52786726,
+    "sha256": "bf32e15105a09c0f7dddd2b67346146334d6f3ecb399ed7638eba2ab07cbf5f4",
+    "n_fft": 5120, "dim_f": 2048, "dim_t": 256, "hop": 1024,
+    "compensate": 1.065, "primary_stem": "Instrumental",
+    "segment_size": 256, "overlap": 0.25
+  }, {
+    "name": "Kim_Vocal_2.onnx",
+    "label": "kim2",
+    "license_notice": true,
+    "url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/Kim_Vocal_2.onnx",
+    "size": 66759214,
+    "sha256": "ce74ef3b6a6024ce44211a07be9cf8bc6d87728cc852a68ab34eb8e58cde9c8b",
+    "n_fft": 7680, "dim_f": 3072, "dim_t": 256, "hop": 1024,
+    "compensate": 1.009, "primary_stem": "Vocals",
     "segment_size": 256, "overlap": 0.25
   }]
 }

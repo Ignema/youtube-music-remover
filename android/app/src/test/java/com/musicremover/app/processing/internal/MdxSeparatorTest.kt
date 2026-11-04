@@ -44,8 +44,12 @@ class MdxSeparatorTest {
         }
     }
 
-    private open class MockModel(p: MdxParams, val f: (FloatBuffer, FloatBuffer, Int) -> Unit) : SpectrogramModel {
-        val size = 4 * p.dimF * p.dimT
+    private open class MockModel(
+        p: MdxParams,
+        override val batch: Int = 1,
+        val f: (FloatBuffer, FloatBuffer, Int) -> Unit,
+    ) : SpectrogramModel {
+        val size = batch * 4 * p.dimF * p.dimT
         override val input: FloatBuffer = OrtSpectrogramModel.allocTensorBuffer(size)
         override val output: FloatBuffer = OrtSpectrogramModel.allocTensorBuffer(size)
         var runs = 0
@@ -202,6 +206,65 @@ class MdxSeparatorTest {
         val outL = FloatArray(n) { result[0][trim + it] / divider[0][trim + it] }
         val outR = FloatArray(n) { result[1][trim + it] / divider[1][trim + it] }
         return outL to outR
+    }
+
+    @Test
+    fun batchTwoEqualsBatchOneExactly() = runBlocking {
+        for (n in listOf(1, gen + 1, 441_000)) {
+            val l = signal(n, 0.3)
+            val r = signal(n, 1.7)
+            val one = Collector(n)
+            val sep1 = MdxSeparator(identityParams, identity(identityParams))
+            sep1.demix(ArraySource(l, r), 0.9f, one) { _, _ -> }
+            val total = sep1.chunkCount(n.toLong())
+
+            val unusedSlotNonZero = ArrayList<Int>()
+            val slot = 4 * params.dimF * params.dimT
+            var run = 0
+            val model2 = MockModel(identityParams, batch = 2) { i, o, size ->
+                run++
+                for (k in 0 until size) o.put(k, i.get(k))
+                if (run * 2 > total) for (k in slot until size) if (i.get(k) != 0f) { unusedSlotNonZero.add(k); break }
+            }
+            val two = Collector(n)
+            val calls = ArrayList<Pair<Int, Int>>()
+            MdxSeparator(identityParams, model2).demix(ArraySource(l, r), 0.9f, two) { done, t -> calls.add(done to t) }
+
+            assertEquals("runs for n=$n", (total + 1) / 2, model2.runs)
+            assertEquals((1..total).map { it to total }, calls)
+            assertEquals(n.toLong(), two.written)
+            for (i in 0 until n) {
+                assertEquals("L n=$n i=$i", one.l[i], two.l[i], 0f)
+                assertEquals("R n=$n i=$i", one.r[i], two.r[i], 0f)
+            }
+            if (total % 2 == 1) assertEquals("unused slot of the partial group must be zero", emptyList<Int>(), unusedSlotNonZero)
+            println("MDX batch 2 n=$n chunks=$total runs=${model2.runs}: identical to batch 1")
+        }
+    }
+
+    @Test
+    fun primaryStemSinkWritesPrimaryAndTracksPeak() {
+        val n = 1000
+        val l = FloatArray(n) { (0.5 * sin(it * 0.01)).toFloat() }
+        val r = FloatArray(n) { (-0.75 * cos(it * 0.02)).toFloat() }
+        val file = File(tmp.root, "primary.f32")
+        var peak = -1f
+        PcmFileWriter(file).use { out ->
+            val sink = PrimaryStemSink(out)
+            sink.accept(0, l, r, 600)
+            sink.accept(600, l.copyOfRange(600, n), r.copyOfRange(600, n), n - 600)
+            peak = sink.peak
+        }
+        val gotL = FloatArray(n)
+        val gotR = FloatArray(n)
+        PcmFileReader(file).use { assertEquals(n.toLong(), it.frames); it.read(0, gotL, gotR, 0, n) }
+        var expectedPeak = 0f
+        for (i in 0 until n) {
+            assertEquals(l[i], gotL[i], 0f)
+            assertEquals(r[i], gotR[i], 0f)
+            expectedPeak = maxOf(expectedPeak, abs(l[i]), abs(r[i]))
+        }
+        assertEquals(expectedPeak, peak, 0f)
     }
 
     @Test

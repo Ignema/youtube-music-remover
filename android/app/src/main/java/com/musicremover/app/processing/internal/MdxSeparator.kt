@@ -18,11 +18,13 @@ data class MdxParams(
     val zeroLowBins: Boolean = true,
 )
 
-/** A model mapping a `[1, 4, dimF, dimT]` spectrogram to one of the same shape. */
+/** A model mapping a `[batch, 4, dimF, dimT]` spectrogram to one of the same shape. */
 interface SpectrogramModel : Closeable {
-    /** Input buffer owned by the model, reused for every chunk. */
+    /** Chunks per run; slot `s` occupies floats `s·4·dimF·dimT until (s+1)·4·dimF·dimT` of each buffer. */
+    val batch: Int get() = 1
+    /** Input buffer owned by the model, reused for every run. */
     val input: FloatBuffer
-    /** Output buffer owned by the model, reused for every chunk. */
+    /** Output buffer owned by the model, reused for every run. */
     val output: FloatBuffer
     suspend fun run(input: FloatBuffer, output: FloatBuffer)
 }
@@ -86,62 +88,78 @@ class MdxSeparator(private val p: MdxParams, private val model: SpectrogramModel
         val output = model.output
         val dimF = p.dimF
         val dimT = p.dimT
+        val batch = model.batch
+        val slotSize = 4 * dimF * dimT
 
         var base = 0L // mixture position of acc[0]
-        for (k in 0 until total) {
-            val start = k.toLong() * step
-            val end = minOf(start + chunk, m)
-            val actual = (end - start).toInt()
-            readMixture(src, n, inputScale, start, actual, chunkL, chunkR)
-
-            stft.forward(chunkL, chunkR, input)
-            if (p.zeroLowBins) {
-                for (c in 0 until 4) for (f in 0 until minOf(3, dimF)) {
-                    val row = (c * dimF + f) * dimT
-                    for (t in 0 until dimT) input.put(row + t, 0f)
+        for (group in 0 until total step batch) {
+            // Fill slots 0..batch-1 with consecutive chunks; unused slots of a final partial group are zeroed.
+            for (slot in 0 until batch) {
+                val k = group + slot
+                val offset = slot * slotSize
+                if (k >= total) {
+                    for (i in offset until offset + slotSize) input.put(i, 0f)
+                    continue
+                }
+                val start = k.toLong() * step
+                val actual = (minOf(start + chunk, m) - start).toInt()
+                readMixture(src, n, inputScale, start, actual, chunkL, chunkR)
+                stft.forward(chunkL, chunkR, input, offset)
+                if (p.zeroLowBins) {
+                    for (c in 0 until 4) for (f in 0 until minOf(3, dimF)) {
+                        val row = offset + (c * dimF + f) * dimT
+                        for (t in 0 until dimT) input.put(row + t, 0f)
+                    }
                 }
             }
             model.run(input, output)
-            stft.inverse(output, outL, outR)
 
-            // start == base: every chunk starts where the previous one stopped being final.
-            val off = (start - base).toInt()
-            if (p.overlap != 0.0) {
-                val w = window(actual)
-                for (j in 0 until actual) {
-                    accL[off + j] += outL[j] * w[j]
-                    accR[off + j] += outR[j] * w[j]
-                    div[off + j] += w[j]
+            // iSTFT + overlap-add each used slot in chunk order, so emission is the same as with batch 1.
+            for (k in group until minOf(group + batch, total)) {
+                val start = k.toLong() * step
+                val end = minOf(start + chunk, m)
+                val actual = (end - start).toInt()
+                stft.inverse(output, (k - group) * slotSize, outL, outR)
+
+                // start == base: every chunk starts where the previous one stopped being final.
+                val off = (start - base).toInt()
+                if (p.overlap != 0.0) {
+                    val w = window(actual)
+                    for (j in 0 until actual) {
+                        accL[off + j] += outL[j] * w[j]
+                        accR[off + j] += outR[j] * w[j]
+                        div[off + j] += w[j]
+                    }
+                } else {
+                    for (j in 0 until actual) {
+                        accL[off + j] += outL[j]
+                        accR[off + j] += outR[j]
+                        div[off + j] += 1f
+                    }
                 }
-            } else {
-                for (j in 0 until actual) {
-                    accL[off + j] += outL[j]
-                    accR[off + j] += outR[j]
-                    div[off + j] += 1f
+
+                val next = minOf(start + step, m)
+                val from = maxOf(trim.toLong(), base)
+                val until = minOf(next, trim + n)
+                if (until > from) {
+                    val count = (until - from).toInt()
+                    val o = (from - base).toInt()
+                    for (j in 0 until count) {
+                        val d = div[o + j]
+                        emitL[j] = if (d == 0f) 0f else accL[o + j] / d
+                        emitR[j] = if (d == 0f) 0f else accR[o + j] / d
+                    }
+                    sink.accept(from - trim, emitL, emitR, count)
                 }
+                val shift = (next - base).toInt()
+                shiftLeft(accL, shift)
+                shiftLeft(accR, shift)
+                shiftLeft(div, shift)
+                base = next
+
+                progress(k + 1, total)
+                currentCoroutineContext().ensureActive()
             }
-
-            val next = minOf(start + step, m)
-            val from = maxOf(trim.toLong(), base)
-            val until = minOf(next, trim + n)
-            if (until > from) {
-                val count = (until - from).toInt()
-                val o = (from - base).toInt()
-                for (j in 0 until count) {
-                    val d = div[o + j]
-                    emitL[j] = if (d == 0f) 0f else accL[o + j] / d
-                    emitR[j] = if (d == 0f) 0f else accR[o + j] / d
-                }
-                sink.accept(from - trim, emitL, emitR, count)
-            }
-            val shift = (next - base).toInt()
-            shiftLeft(accL, shift)
-            shiftLeft(accR, shift)
-            shiftLeft(div, shift)
-            base = next
-
-            progress(k + 1, total)
-            currentCoroutineContext().ensureActive()
         }
     }
 

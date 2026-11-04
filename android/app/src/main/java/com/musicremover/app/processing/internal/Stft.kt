@@ -10,7 +10,7 @@ import kotlin.math.cos
  * to the first [dimF] bins.
  *
  * Spectrogram layout is row-major NCHW `[1, 4, dimF, frames]` with channels
- * `[L re, L im, R re, R im]`, i.e. index `((c·dimF) + f)·frames + t`. Buffers are accessed with
+ * `[L re, L im, R re, R im]`, i.e. index `offset + ((c·dimF) + f)·frames + t`. Buffers are accessed with
  * absolute get/put only. Low-bin zeroing is done by the caller, not here.
  */
 class Stft(val nFft: Int, val hop: Int, val dimF: Int) {
@@ -32,16 +32,19 @@ class Stft(val nFft: Int, val hop: Int, val dimF: Int) {
     fun frames(length: Int): Int = 1 + length / hop
 
     /** Writes the spectrogram of the stereo chunk ([chunkL], [chunkR], equal lengths) into [out]. */
-    fun forward(chunkL: FloatArray, chunkR: FloatArray, out: FloatBuffer) {
+    fun forward(chunkL: FloatArray, chunkR: FloatArray, out: FloatBuffer) = forward(chunkL, chunkR, out, 0)
+
+    /** As [forward], writing the `[4, dimF, frames]` block at float index [offset] of [out] (a batch slot). */
+    fun forward(chunkL: FloatArray, chunkR: FloatArray, out: FloatBuffer, offset: Int) {
         val len = chunkL.size
         require(chunkR.size == len) { "channel lengths differ" }
         require(len > half) { "chunk must be longer than nFft/2" }
         val dimT = frames(len)
-        require(out.capacity() >= 4 * dimF * dimT) { "output buffer too small" }
+        require(offset >= 0 && out.capacity() >= offset + 4 * dimF * dimT) { "output buffer too small" }
         for (c in 0 until 2) {
             val x = if (c == 0) chunkL else chunkR
-            val reBase = (2 * c) * dimF * dimT
-            val imBase = (2 * c + 1) * dimF * dimT
+            val reBase = offset + (2 * c) * dimF * dimT
+            val imBase = offset + (2 * c + 1) * dimF * dimT
             for (t in 0 until dimT) {
                 val start = t * hop - half
                 for (k in 0 until nFft) {
@@ -61,19 +64,22 @@ class Stft(val nFft: Int, val hop: Int, val dimF: Int) {
      * Inverse of [forward]: bins `>= dimF` are treated as 0 and the imaginary parts of the DC and
      * Nyquist bins are ignored (irfft semantics). Writes `outL.size` samples per channel.
      */
-    fun inverse(spec: FloatBuffer, outL: FloatArray, outR: FloatArray) {
+    fun inverse(spec: FloatBuffer, outL: FloatArray, outR: FloatArray) = inverse(spec, 0, outL, outR)
+
+    /** As [inverse], reading the `[4, dimF, frames]` block at float index [offset] of [spec] (a batch slot). */
+    fun inverse(spec: FloatBuffer, offset: Int, outL: FloatArray, outR: FloatArray) {
         val len = outL.size
         require(outR.size == len) { "channel lengths differ" }
         require(len > half) { "chunk must be longer than nFft/2" }
         val dimT = frames(len)
-        require(spec.capacity() >= 4 * dimF * dimT) { "spectrogram buffer too small" }
+        require(offset >= 0 && spec.capacity() >= offset + 4 * dimF * dimT) { "spectrogram buffer too small" }
         val total = (dimT - 1) * hop + nFft
         prepareEnvelope(len, dimT, total)
         val scale = 1.0 / nFft
         for (c in 0 until 2) {
             val out = if (c == 0) outL else outR
-            val reBase = (2 * c) * dimF * dimT
-            val imBase = (2 * c + 1) * dimF * dimT
+            val reBase = offset + (2 * c) * dimF * dimT
+            val imBase = offset + (2 * c + 1) * dimF * dimT
             java.util.Arrays.fill(y, 0, total, 0.0)
             for (t in 0 until dimT) {
                 java.util.Arrays.fill(frame, 0.0)

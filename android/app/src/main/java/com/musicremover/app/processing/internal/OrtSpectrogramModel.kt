@@ -11,11 +11,17 @@ import java.nio.ByteOrder
 import java.nio.FloatBuffer
 
 /**
- * ONNX Runtime (CPU) model with input `"input"` and output `"output"`, both `[1, 4, dimF, dimT]`
+ * ONNX Runtime (CPU) model with input `"input"` and output `"output"`, both `[batch, 4, dimF, dimT]`
  * float32. Both tensors wrap direct native-order buffers owned by this class and are created once;
  * the output is a pinned output, so a run allocates no tensor memory of its own.
  */
-class OrtSpectrogramModel(modelFile: File, private val dimF: Int, private val dimT: Int) : SpectrogramModel {
+class OrtSpectrogramModel(
+    modelFile: File,
+    private val dimF: Int,
+    private val dimT: Int,
+    threads: Int = minOf(4, Runtime.getRuntime().availableProcessors()),
+    override val batch: Int = 1,
+) : SpectrogramModel {
     private val env: OrtEnvironment = OrtEnvironment.getEnvironment()
     private val session: OrtSession
     private val runOptions: OrtSession.RunOptions
@@ -28,7 +34,8 @@ class OrtSpectrogramModel(modelFile: File, private val dimF: Int, private val di
     override val output: FloatBuffer
 
     init {
-        val size = 4 * dimF * dimT
+        require(batch >= 1) { "batch must be positive" }
+        val size = batch * 4 * dimF * dimT
         input = allocTensorBuffer(size)
         output = allocTensorBuffer(size)
         requireTensorBuffer(input)
@@ -36,7 +43,7 @@ class OrtSpectrogramModel(modelFile: File, private val dimF: Int, private val di
 
         val opts = OrtSession.SessionOptions()
         val s = try {
-            opts.setIntraOpNumThreads(minOf(4, Runtime.getRuntime().availableProcessors()))
+            opts.setIntraOpNumThreads(threads)
             opts.setCPUArenaAllocator(false)
             opts.setMemoryPatternOptimization(false)
             opts.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.EXTENDED_OPT)
@@ -51,7 +58,7 @@ class OrtSpectrogramModel(modelFile: File, private val dimF: Int, private val di
             checkShape(s.inputInfo["input"]?.info)
             checkShape(s.outputInfo["output"]?.info)
             ro = OrtSession.RunOptions()
-            val shape = longArrayOf(1, 4, dimF.toLong(), dimT.toLong())
+            val shape = longArrayOf(batch.toLong(), 4, dimF.toLong(), dimT.toLong())
             inT = OnnxTensor.createTensor(env, input, shape)
             outT = OnnxTensor.createTensor(env, output, shape)
             check(!inT.ownsBuffer() && !outT.ownsBuffer()) { "ORT copied a tensor buffer" }
@@ -72,7 +79,7 @@ class OrtSpectrogramModel(modelFile: File, private val dimF: Int, private val di
 
     private fun checkShape(info: Any?) {
         val ok = info is TensorInfo && info.type == OnnxJavaType.FLOAT && info.shape.let { sh ->
-            sh.size == 4 && (sh[0] == -1L || sh[0] == 1L) && sh[1] == 4L && sh[2] == dimF.toLong() && sh[3] == dimT.toLong()
+            sh.size == 4 && (sh[0] == -1L || sh[0] == batch.toLong()) && sh[1] == 4L && sh[2] == dimF.toLong() && sh[3] == dimT.toLong()
         }
         if (!ok) throw IllegalStateException("Model does not match its metadata")
     }
