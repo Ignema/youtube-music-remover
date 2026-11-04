@@ -37,6 +37,8 @@ proot-distro login ubuntu -- bash -c '
 
     echo "→ Installing Python packages..."
     . ~/venv/bin/activate
+    echo "→ Installing CPU-only PyTorch (no CUDA downloads)..."
+    pip install torch --index-url https://download.pytorch.org/whl/cpu
     pip install fastapi uvicorn "yt-dlp[default]" python-multipart "audio-separator[cpu]"
 
     # deno: JS runtime yt-dlp uses for YouTube challenges (non-fatal)

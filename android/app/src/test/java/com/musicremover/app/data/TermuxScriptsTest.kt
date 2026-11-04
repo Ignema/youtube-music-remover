@@ -10,6 +10,7 @@ import org.junit.Test
 class TermuxScriptsTest {
     private val deno = TermuxHelper.DENO_STEP
     private val apt = TermuxHelper.APT_STEP
+    private val torchCpu = TermuxHelper.TORCH_CPU_STEP
     private val install = TermuxHelper.installScript()
     private val update = TermuxHelper.updateScript()
 
@@ -54,13 +55,35 @@ class TermuxScriptsTest {
     }
 
     @Test
+    fun everyScriptInstallsCpuTorchBeforeAudioSeparator() {
+        for ((name, text) in scripts()) {
+            val torch = text.indexOf(torchCpu)
+            assertTrue("$name lacks TORCH_CPU_STEP", torch >= 0)
+            assertTrue("$name: TORCH_CPU_STEP must precede \"audio-separator[cpu]\"", torch < text.indexOf("\"audio-separator[cpu]\""))
+        }
+    }
+
+    @Test
+    fun torchCpuStepHasNoSingleQuotes() {
+        assertFalse(torchCpu.contains('\''))
+    }
+
+    @Test
+    fun noScriptInstallsFfmpegFromPip() {
+        for ((name, text) in scripts()) {
+            assertFalse("$name installs ffmpeg with pip", text.contains("pip install ffmpeg"))
+            assertFalse("$name installs ffmpeg-python", text.contains("ffmpeg-python"))
+        }
+    }
+
+    @Test
     fun installScriptOrder() {
-        assertOrdered("installScript()", install, listOf("curl", "pip install", deno, "git clone", "✅"))
+        assertOrdered("installScript()", install, listOf("curl", torchCpu, "pip install fastapi", deno, "git clone", "✅"))
     }
 
     @Test
     fun updateScriptOrder() {
-        assertOrdered("updateScript()", update, listOf("git reset", "apt update", "apt install", "pip install", deno, "✅"))
+        assertOrdered("updateScript()", update, listOf("git reset", "apt update", "apt install", torchCpu, "pip install --upgrade", deno, "✅"))
     }
 
     @Test

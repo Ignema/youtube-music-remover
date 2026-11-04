@@ -63,6 +63,12 @@ object TermuxHelper {
         "{ apt update -y && apt install -y curl unzip ca-certificates || " +
             "echo \"⚠ curl/unzip could not be installed; deno will be skipped.\"; }"
 
+    /**
+     * Installs CPU-only PyTorch first so audio-separator does not pull the PyPI build,
+     * which needs GBs of CUDA packages on Linux. Runs inside `bash -c '…'`: no `'`.
+     */
+    internal const val TORCH_CPU_STEP = "pip install torch --index-url https://download.pytorch.org/whl/cpu"
+
     internal fun installScript(): String = buildString {
         // Use proot-distro with Ubuntu to get a full Linux environment
         // where onnxruntime wheels work natively
@@ -74,6 +80,7 @@ object TermuxHelper {
         append("apt install -y python3 python3-pip python3-venv ffmpeg git curl unzip ca-certificates && ")
         append("python3 -m venv ~/venv && ")
         append(". ~/venv/bin/activate && ")
+        append(TORCH_CPU_STEP + " && ")
         append("pip install fastapi uvicorn \"yt-dlp[default]\" python-multipart \"audio-separator[cpu]\" && ")
         append(DENO_STEP)
         append(" && ")
@@ -90,6 +97,7 @@ object TermuxHelper {
         append("cd ~/music-remover && git fetch && git reset --hard origin/master && ")
         append(APT_STEP)
         append(" && ")
+        append(TORCH_CPU_STEP + " && ")
         append("pip install --upgrade fastapi uvicorn \"yt-dlp[default]\" python-multipart \"audio-separator[cpu]\" && ")
         append(DENO_STEP)
         append(" && ")

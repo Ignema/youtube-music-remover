@@ -93,6 +93,21 @@ uvx --with fastapi --with yt-dlp --with python-multipart --with "audio-separator
 5. Tap Start → the server starts in the background
 6. Go home and process videos
 
+**Manual setup (run it yourself):** if you prefer to run the setup in Termux yourself instead of tapping Install, run:
+
+```bash
+pkg install -y curl
+curl -fsSLO https://raw.githubusercontent.com/Ignema/youtube-music-remover/master/android/termux-setup.sh
+bash termux-setup.sh
+```
+
+Then start the server with `~/start-music-remover.sh`, or tap Start in the app. The setup installs CPU-only PyTorch (no CUDA downloads) and takes ffmpeg from apt, not pip. If an older install already downloaded the CUDA packages, remove its Python environment and run the setup again:
+
+```bash
+proot-distro login ubuntu -- rm -rf /root/venv
+bash termux-setup.sh
+```
+
 ### Docker (Easiest for PC)
 
 ```bash
