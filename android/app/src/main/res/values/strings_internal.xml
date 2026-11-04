@@ -88,13 +88,144 @@
     <string name="ytdlp_update_failed">Update failed. Check your internet connection.</string>
     <string name="ytdlp_update_busy">Wait until the current download has finished</string>
 
-    <!-- Settings: cookies for on-device links -->
-    <string name="cookies_title">Instagram / site cookies</string>
-    <string name="cookies_none">No cookies imported</string>
-    <plurals name="cookies_status">
-        <item quantity="one">%1$d cookie for %2$s</item>
-        <item quantity="other">%1$d cookies for %2$s</item>
+    <plurals name="ytdlp_age_days">
+        <item quantity="one">%d day old</item>
+        <item quantity="other">%d days old</item>
     </plurals>
+    <string name="ytdlp_released_today">released today</string>
+    <string name="ytdlp_never_auto">Murem never updates yt-dlp by itself. Tap Update when links stop working.</string>
+    <string name="ytdlp_update_now">Update now</string>
+    <plurals name="ytdlp_banner_age">
+        <item quantity="one">The built-in yt-dlp is %d day old. Sites like Instagram may need a newer one.</item>
+        <item quantity="other">The built-in yt-dlp is %d days old. Sites like Instagram may need a newer one.</item>
+    </plurals>
+    <string name="banner_first_use_title">On-device processing</string>
+    <string name="banner_first_use">On-device: the first job downloads the model (30–67 MB) and can take longer than the track. Keep the phone charging.</string>
+    <string name="banner_outdated_title">yt-dlp may be out of date</string>
+    <string name="banner_close">Close</string>
+
+    <!-- Settings navigation -->
+    <string name="settings_group_processing">Processing</string>
+    <string name="settings_group_output">Output</string>
+    <string name="settings_group_app">App</string>
+    <string name="settings_row_models">On-device models</string>
+    <string name="settings_row_performance">Performance</string>
+    <string name="settings_row_update_ytdlp">Update yt-dlp</string>
+    <string name="settings_row_output">Output</string>
+    <string name="settings_row_storage">History &amp; storage</string>
+    <string name="settings_row_about">About &amp; help</string>
+    <string name="settings_internal_only">Internal mode · %1$s</string>
+    <string name="settings_internal_only_note">These settings are used only in Internal (on-device) mode.</string>
+    <string name="settings_mode_server">Server · %1$s</string>
+    <plurals name="settings_models_summary">
+        <item quantity="one">%1$s selected · %2$d downloaded</item>
+        <item quantity="other">%1$s selected · %2$d downloaded</item>
+    </plurals>
+    <string name="settings_threads_auto">Auto threads</string>
+    <plurals name="settings_threads_n">
+        <item quantity="one">%d thread</item>
+        <item quantity="other">%d threads</item>
+    </plurals>
+    <plurals name="settings_accounts_on">
+        <item quantity="one">%d site on</item>
+        <item quantity="other">%d sites on</item>
+    </plurals>
+    <string name="settings_ytdlp_tap_to_check">Tap to check</string>
+    <string name="settings_bitrate_kbps">%1$s kbps</string>
+    <string name="settings_audio_only_on">Audio only on</string>
+    <string name="settings_audio_only_off">Audio only off</string>
+    <plurals name="settings_storage_summary">
+        <item quantity="one">%1$d item · %2$s</item>
+        <item quantity="other">%1$d items · %2$s</item>
+    </plurals>
+    <string name="settings_about_summary">Murem %1$s</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_delete">Delete</string>
+    <string name="more_options">More options</string>
+
+    <!-- Settings: on-device models -->
+    <string name="model_name_voc_ft">MDX-NET Voc FT</string>
+    <string name="model_name_mdx3">MDX-NET 3_9662</string>
+    <string name="tag_best_vocals">Best vocals</string>
+    <string name="tag_fastest">Fastest</string>
+    <string name="tag_lead_vocal">Lead vocal</string>
+    <string name="tag_server_default">Server default</string>
+    <string name="model_best_hq3">Removes music well on most songs (vocals SDR 8.8 dB)</string>
+    <string name="model_best_voc_ft">Cleaner vocals on most songs (vocals SDR 10.2 dB)</string>
+    <string name="model_best_mdx3">Half the download and faster, vocals nearly as clean (9.7 dB)</string>
+    <string name="model_best_kara2">Keeps only the lead vocal: backing vocals are removed with the music</string>
+    <string name="model_best_kim2">The server\'s default model, with the cleanest vocals (10.2 dB)</string>
+    <string name="model_state_downloaded">Downloaded</string>
+    <string name="model_state_first_use">Downloads on first use</string>
+    <plurals name="model_speed_hint">
+        <item quantity="one">≈ %d min for a 4-min track</item>
+        <item quantity="other">≈ %d min for a 4-min track</item>
+    </plurals>
+    <string name="models_empty">No models downloaded. The selected model downloads on first use.</string>
+    <string name="model_delete_title">Delete %1$s?</string>
+    <string name="model_delete_text">It downloads again the next time you use it.</string>
+
+    <!-- Settings: output -->
+    <string name="output_format_note">Applies to Audio only results. Videos are always saved as MP4.</string>
+    <string name="output_m4a">M4A (AAC)</string>
+    <string name="output_mp3">MP3</string>
+    <string name="output_audio_only_desc">Save only the vocals audio, without the video</string>
+
+    <!-- Settings: performance -->
+    <string name="perf_threads">Threads</string>
+    <string name="perf_threads_auto">Auto (%1$s)</string>
+    <string name="perf_threads_desc">More threads can be faster but use more battery and get the phone warmer.</string>
+    <string name="perf_quality">Quality</string>
+    <string name="settings_quality_fast">Fast</string>
+    <string name="settings_quality_balanced">Balanced</string>
+    <string name="settings_quality_best">Best</string>
+    <string name="perf_fast_time">About 0.83× the time</string>
+    <string name="perf_balanced_time">Standard time</string>
+    <string name="perf_best_time">About 1.5× the time</string>
+    <string name="perf_quality_help">Fast can leave slightly more music at chunk edges; Best is smoother but slower.</string>
+    <string name="perf_batch">Batch size</string>
+    <string name="perf_batch_1">1 (recommended)</string>
+    <string name="perf_batch_2">2</string>
+    <string name="perf_batch_2_desc">Experimental. Uses about 1 GB more memory; may not be faster.</string>
+    <string name="perf_batch_2_needs_ram">Needs a phone with 6 GB of RAM</string>
+
+    <!-- Settings: history & storage, server discovery, Termux -->
+    <string name="clear_history_title">Clear history?</string>
+    <string name="clear_history_text">The list of processed videos is removed from Murem.</string>
+    <plurals name="exporting_items">
+        <item quantity="one">Exporting %d item…</item>
+        <item quantity="other">Exporting %d items…</item>
+    </plurals>
+    <string name="export_failed">Export failed: %1$s</string>
+    <string name="export_none">No files available to export</string>
+    <string name="discover_searching">Searching for server…</string>
+    <string name="discover_found">Found server at %1$s</string>
+    <string name="discover_failed">Discovery failed</string>
+    <string name="discover_error">Discovery error: %1$s</string>
+    <string name="termux_come_back">Come back here when Termux finishes.</string>
+
+    <!-- Settings: about -->
+    <string name="about_help">Help</string>
+    <string name="about_components_title">Open-source components</string>
+    <string name="about_components">MP3 encoding uses LAME (LGPL-2.0) through FFmpeg (GPL), both shipped by youtubedl-android (GPL-3.0). Separation uses ONNX Runtime (MIT) and UVR MDX-Net models downloaded from their authors.</string>
+
+    <!-- Settings: accounts & cookies for on-device links -->
+    <string name="cookies_title">Accounts &amp; cookies</string>
+    <plurals name="cookies_site_summary">
+        <item quantity="one">%1$d cookie · saved %2$s</item>
+        <item quantity="other">%1$d cookies · saved %2$s</item>
+    </plurals>
+    <string name="cookies_from_login">from login</string>
+    <string name="cookies_from_import">imported</string>
+    <string name="cookies_login_again">Log in again</string>
+    <string name="cookies_delete">Delete</string>
+    <string name="cookies_not_internal_note">Cookies are used only for links in Internal mode.</string>
+    <string name="cookies_empty_title">No saved logins</string>
+    <string name="cookies_empty_desc">Log in or import cookies to download posts that need an account.</string>
+    <string name="cookies_delete_site_title">Delete cookies for %1$s?</string>
+    <string name="cookies_delete_site_text">To download posts that need this account again, log in again or import its cookies.</string>
+    <string name="cookies_delete_all_title">Delete all saved cookies?</string>
+    <string name="cookies_delete_all_text">Every saved login is removed from this device.</string>
     <string name="cookies_import">Import cookies.txt</string>
     <string name="cookies_delete_all">Delete all</string>
     <string name="cookies_send_for">Send cookies for %1$s</string>
@@ -102,13 +233,13 @@
     <string name="cookies_cannot_open_login">Cannot open a login page for this site</string>
     <string name="cookies_imported">Cookies imported</string>
     <string name="cookies_removed">Cookies removed</string>
-    <string name="cookies_help">Some posts can only be downloaded while logged in. Tap Log in with browser and log in to the site inside Murem, or import a cookies.txt file (Netscape format) exported from a browser on a computer. The cookies are stored only on this device and are sent with every link in Internal mode, for all sites. YouTube downloads may change if YouTube cookies are included. Anyone who has these cookies can use your account: never share them, and tap Remove to delete them when you are done.</string>
+    <string name="cookies_help">Some posts can only be downloaded while logged in. Log in inside Murem or import a cookies.txt file (Netscape format) from a computer browser. Cookies are kept per site and stay on this device. Only sites that are switched on are sent, and only with links in Internal mode. YouTube downloads may change if YouTube cookies are on. Anyone who has these cookies can use your account: never share them, and delete a site when you are done.</string>
     <string name="cookies_login">Log in with browser</string>
     <string name="cookies_login_site_instagram">Instagram</string>
     <string name="cookies_login_site_custom">Other site (https URL)</string>
     <string name="cookies_login_url_hint">https://example.com/login</string>
     <string name="cookies_login_notice_title">Log in with browser</string>
-    <string name="cookies_login_notice">You are logging in inside Murem, not in your browser app. The site\'s cookies are stored only on this device and used for on-device links. Remove deletes them.</string>
+    <string name="cookies_login_notice">You are logging in inside Murem, not in your browser app. The site\'s cookies are stored only on this device and used for on-device links. Delete removes them in Settings → Accounts &amp; cookies.</string>
     <string name="cookies_login_continue">Continue</string>
     <string name="cookies_login_cancel">Cancel</string>
     <string name="cookies_login_title">Log in, then tap Save</string>

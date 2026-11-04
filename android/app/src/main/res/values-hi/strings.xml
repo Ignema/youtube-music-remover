@@ -59,15 +59,12 @@
     <string name="stop">बंद करें</string>
     <string name="update_server">सर्वर अपडेट करें</string>
     <string name="first_time_hint">पहली बार? इंस्टॉल पर टैप करें, पूरा होने तक इंतज़ार करें, फिर शुरू करें पर टैप करें।</string>
-    <string name="history_and_cache">इतिहास &amp; कैश</string>
     <string name="processed_videos">%d प्रोसेस किए गए वीडियो · %s कैश</string>
     <string name="no_history">अभी तक कोई इतिहास नहीं</string>
     <string name="clear_history">इतिहास साफ़ करें</string>
     <string name="clear_cache">कैश साफ़ करें</string>
     <string name="permissions">अनुमतियाँ</string>
-    <string name="manage_permissions">अनुमतियाँ प्रबंधित करें</string>
     <string name="permissions_desc">नोटिफ़िकेशन, बैटरी ऑप्टिमाइज़ेशन और Termux एक्सेस प्रबंधित करें।</string>
-    <string name="about">ऐप के बारे में</string>
     <string name="appearance">दिखावट</string>
     <string name="theme">थीम</string>
     <string name="language">भाषा</string>

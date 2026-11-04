@@ -59,15 +59,12 @@
     <string name="stop">Остановить</string>
     <string name="update_server">Обновить сервер</string>
     <string name="first_time_hint">Первый раз? Нажмите Установить, дождитесь завершения, затем нажмите Запустить.</string>
-    <string name="history_and_cache">История &amp; Кэш</string>
     <string name="processed_videos">%d обработанных видео · %s в кэше</string>
     <string name="no_history">Истории пока нет</string>
     <string name="clear_history">Очистить историю</string>
     <string name="clear_cache">Очистить кэш</string>
     <string name="permissions">Разрешения</string>
-    <string name="manage_permissions">Управление разрешениями</string>
     <string name="permissions_desc">Управляйте уведомлениями, оптимизацией батареи и доступом к Termux.</string>
-    <string name="about">О приложении</string>
     <string name="appearance">Внешний вид</string>
     <string name="theme">Тема</string>
     <string name="language">Язык</string>

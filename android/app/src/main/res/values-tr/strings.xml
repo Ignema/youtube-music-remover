@@ -59,15 +59,12 @@
     <string name="stop">Durdur</string>
     <string name="update_server">Sunucuyu Güncelle</string>
     <string name="first_time_hint">İlk kez mi? Yükle\'ye dokunun, bitmesini bekleyin, sonra Başlat\'a dokunun.</string>
-    <string name="history_and_cache">Geçmiş &amp; Önbellek</string>
     <string name="processed_videos">%d işlenmiş video · %s önbellekte</string>
     <string name="no_history">Henüz geçmiş yok</string>
     <string name="clear_history">Geçmişi Temizle</string>
     <string name="clear_cache">Önbelleği Temizle</string>
     <string name="permissions">İzinler</string>
-    <string name="manage_permissions">İzinleri Yönet</string>
     <string name="permissions_desc">Bildirimleri, pil optimizasyonunu ve Termux erişimini yönetin.</string>
-    <string name="about">Hakkında</string>
     <string name="appearance">Görünüm</string>
     <string name="theme">Tema</string>
     <string name="language">Dil</string>

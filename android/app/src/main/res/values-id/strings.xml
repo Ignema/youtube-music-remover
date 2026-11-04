@@ -59,15 +59,12 @@
     <string name="stop">Hentikan</string>
     <string name="update_server">Perbarui Server</string>
     <string name="first_time_hint">Pertama kali? Ketuk Instal, tunggu sampai selesai, lalu ketuk Mulai.</string>
-    <string name="history_and_cache">Riwayat &amp; Cache</string>
     <string name="processed_videos">%d video diproses · %s di-cache</string>
     <string name="no_history">Belum ada riwayat</string>
     <string name="clear_history">Hapus Riwayat</string>
     <string name="clear_cache">Hapus Cache</string>
     <string name="permissions">Izin</string>
-    <string name="manage_permissions">Kelola Izin</string>
     <string name="permissions_desc">Kelola notifikasi, optimasi baterai, dan akses Termux.</string>
-    <string name="about">Tentang</string>
     <string name="appearance">Tampilan</string>
     <string name="theme">Tema</string>
     <string name="language">Bahasa</string>

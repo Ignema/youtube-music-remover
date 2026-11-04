@@ -10,11 +10,15 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.lifecycle.lifecycleScope
@@ -26,7 +30,17 @@ import com.musicremover.app.ui.HelpScreen
 import com.musicremover.app.ui.HomeScreen
 import com.musicremover.app.ui.PermissionsScreen
 import com.musicremover.app.ui.PlayerScreen
-import com.musicremover.app.ui.SettingsScreen
+import com.musicremover.app.ui.settings.AboutSettingsScreen
+import com.musicremover.app.ui.settings.AccountsSettingsScreen
+import com.musicremover.app.ui.settings.AppearanceSettingsScreen
+import com.musicremover.app.ui.settings.ModelsSettingsScreen
+import com.musicremover.app.ui.settings.OutputSettingsScreen
+import com.musicremover.app.ui.settings.PerformanceSettingsScreen
+import com.musicremover.app.ui.settings.ProcessingSettingsScreen
+import com.musicremover.app.ui.settings.SettingsMainScreen
+import com.musicremover.app.ui.settings.SettingsRoutes
+import com.musicremover.app.ui.settings.StorageSettingsScreen
+import com.musicremover.app.ui.settings.YtDlpSettingsScreen
 import com.musicremover.app.ui.theme.MusicRemoverTheme
 
 class MainActivity : AppCompatActivity() {
@@ -101,13 +115,26 @@ class MainActivity : AppCompatActivity() {
                             },
                         )
                     }
-                    composable("settings") {
-                        SettingsScreen(
-                            vm = vm,
-                            onBack = { navController.popBackStack() },
-                            onPermissionsClick = { navController.navigate("permissions") },
-                            onLoginClick = { url -> navController.navigate(cookieLoginRoute(url)) },
-                        )
+                    // navigate("settings") (Home gear, widget) opens settings/main; system back pops to it, then Home
+                    navigation(route = SettingsRoutes.GRAPH, startDestination = SettingsRoutes.MAIN) {
+                        val back: () -> Unit = { navController.popBackStack() }
+                        settingsRoute(SettingsRoutes.MAIN) {
+                            SettingsMainScreen(vm = vm, onBack = back, onNavigate = { navController.navigate(it) })
+                        }
+                        settingsRoute(SettingsRoutes.PROCESSING) { ProcessingSettingsScreen(vm, back) }
+                        settingsRoute(SettingsRoutes.MODELS) { ModelsSettingsScreen(vm, back) }
+                        settingsRoute(SettingsRoutes.OUTPUT) { OutputSettingsScreen(vm, back) }
+                        settingsRoute(SettingsRoutes.PERFORMANCE) { PerformanceSettingsScreen(vm, back) }
+                        settingsRoute(SettingsRoutes.ACCOUNTS) {
+                            // cookie_login is outside this graph, so leaving it returns here
+                            AccountsSettingsScreen(vm, back, onLogin = { url -> navController.navigate(cookieLoginRoute(url)) })
+                        }
+                        settingsRoute(SettingsRoutes.YTDLP) { YtDlpSettingsScreen(vm, back) }
+                        settingsRoute(SettingsRoutes.APPEARANCE) { AppearanceSettingsScreen(vm, back) }
+                        settingsRoute(SettingsRoutes.STORAGE) { StorageSettingsScreen(vm, back) }
+                        settingsRoute(SettingsRoutes.ABOUT) {
+                            AboutSettingsScreen(vm, back, onHelp = { navController.navigate(SettingsRoutes.HELP) })
+                        }
                     }
                     composable(
                         "cookie_login?url={url}",
@@ -220,6 +247,17 @@ class MainActivity : AppCompatActivity() {
     private fun playerRoute(url: String, title: String, jobId: String?): String {
         val route = "player/${java.net.URLEncoder.encode(url, "UTF-8")}/${java.net.URLEncoder.encode(title, "UTF-8")}"
         return if (jobId != null) "$route?jobId=${java.net.URLEncoder.encode(jobId, "UTF-8")}" else route
+    }
+
+    /** A Settings sub-screen; while it is composed, transient messages use its Snackbar instead of a Toast. */
+    private fun NavGraphBuilder.settingsRoute(route: String, content: @Composable () -> Unit) {
+        composable(route) {
+            DisposableEffect(Unit) {
+                vm.settingsVisible++
+                onDispose { vm.settingsVisible-- }
+            }
+            content()
+        }
     }
 
     /** [url] null opens the Instagram login; otherwise a custom https login URL. */

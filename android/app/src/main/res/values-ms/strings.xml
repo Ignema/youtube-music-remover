@@ -59,15 +59,12 @@
     <string name="stop">Henti</string>
     <string name="update_server">Kemas Kini Pelayan</string>
     <string name="first_time_hint">Kali pertama? Ketik Pasang, tunggu sehingga selesai, kemudian ketik Mula.</string>
-    <string name="history_and_cache">Sejarah &amp; Cache</string>
     <string name="processed_videos">%d video diproses · %s di-cache</string>
     <string name="no_history">Belum ada sejarah</string>
     <string name="clear_history">Padam Sejarah</string>
     <string name="clear_cache">Padam Cache</string>
     <string name="permissions">Kebenaran</string>
-    <string name="manage_permissions">Urus Kebenaran</string>
     <string name="permissions_desc">Urus pemberitahuan, pengoptimuman bateri dan akses Termux.</string>
-    <string name="about">Perihal</string>
     <string name="appearance">Penampilan</string>
     <string name="theme">Tema</string>
     <string name="language">Bahasa</string>

@@ -59,15 +59,12 @@
     <string name="stop">بند کریں</string>
     <string name="update_server">سرور اپڈیٹ کریں</string>
     <string name="first_time_hint">پہلی بار؟ انسٹال پر ٹیپ کریں، مکمل ہونے کا انتظار کریں، پھر شروع پر ٹیپ کریں۔</string>
-    <string name="history_and_cache">تاریخ &amp; کیش</string>
     <string name="processed_videos">%d پروسیس شدہ ویڈیوز · %s کیش</string>
     <string name="no_history">ابھی تک کوئی تاریخ نہیں</string>
     <string name="clear_history">تاریخ صاف کریں</string>
     <string name="clear_cache">کیش صاف کریں</string>
     <string name="permissions">اجازتیں</string>
-    <string name="manage_permissions">اجازتیں منظم کریں</string>
     <string name="permissions_desc">اطلاعات، بیٹری آپٹیمائزیشن اور Termux رسائی منظم کریں۔</string>
-    <string name="about">ایپ کے بارے میں</string>
     <string name="appearance">ظاہری شکل</string>
     <string name="theme">تھیم</string>
     <string name="language">زبان</string>

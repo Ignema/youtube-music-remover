@@ -59,15 +59,12 @@
     <string name="stop">Stoppen</string>
     <string name="update_server">Server aktualisieren</string>
     <string name="first_time_hint">Erstes Mal? Tippe auf Installieren, warte bis es fertig ist, dann tippe auf Starten.</string>
-    <string name="history_and_cache">Verlauf &amp; Cache</string>
     <string name="processed_videos">%d verarbeitete(s) Video(s) · %s zwischengespeichert</string>
     <string name="no_history">Noch kein Verlauf</string>
     <string name="clear_history">Verlauf löschen</string>
     <string name="clear_cache">Cache leeren</string>
     <string name="permissions">Berechtigungen</string>
-    <string name="manage_permissions">Berechtigungen verwalten</string>
     <string name="permissions_desc">Benachrichtigungen, Akkuoptimierung und Termux-Zugriff verwalten.</string>
-    <string name="about">Über</string>
     <string name="appearance">Erscheinungsbild</string>
     <string name="theme">Design</string>
     <string name="language">Sprache</string>

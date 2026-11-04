@@ -37,8 +37,11 @@ import com.musicremover.app.processing.internal.ModelSpec
 import com.musicremover.app.processing.internal.ModelState
 import com.musicremover.app.processing.internal.Mp3Support
 import com.musicremover.app.processing.internal.PerformanceSettings
+import com.musicremover.app.processing.internal.YtDlpBanner
 import com.musicremover.app.processing.internal.YtDlpRuntime
+import com.musicremover.app.processing.InternalProcessingWorker
 import com.musicremover.app.processing.statusWithEta
+import com.musicremover.app.ui.settings.SnackPolicy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -158,6 +161,8 @@ internal fun resetState(prev: MainUiState, p: PersistedUi): MainUiState = MainUi
     performance = prev.performance,
     cookieSites = prev.cookieSites,
     ytDlpVersion = prev.ytDlpVersion,
+    ytDlpBanner = prev.ytDlpBanner,
+    internalModel = prev.internalModel,
     mp3Support = prev.mp3Support,
     audioOnly = p.audioOnly,
     bitrate = p.bitrate,
@@ -238,6 +243,10 @@ data class MainUiState(
     // On-device links (yt-dlp); null until loaded, the first load unzips Python
     val ytDlpVersion: String? = null,
     val ytDlpUpdate: YtDlpUpdateState = YtDlpUpdateState.Idle,
+    /** Home yt-dlp card (Internal mode only); it only offers an update */
+    val ytDlpBanner: YtDlpBanner.Banner? = null,
+    /** The saved on-device model (pref internal_model), also outside Internal mode */
+    val internalModel: String = ModelCatalog.HQ3,
     /** Stored cookie sites for on-device links, sorted by site (counts only, never names or values). */
     val cookieSites: List<CookieSiteUi> = emptyList(),
 )
@@ -303,11 +312,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             bitrate = settingsStore.bitrate,
             outputFormat = settingsStore.outputFormat,
             internalModels = ModelCatalog.get(application),
+            internalModel = settingsStore.internalModel,
             modelStates = modelManager.state.value,
             performance = PerformancePrefs(settingsStore.perfThreads, settingsStore.perfQuality, settingsStore.perfBatch),
         )
         loadModelSpeed()
         applyModelsForMode()
+        refreshBanner()
         // The first cookie store call also migrates a legacy cookies.txt (D3)
         loadCookieSites()
         // Resume polling if app was killed mid-processing
@@ -431,7 +442,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             BackendProvider.MODE_SERVER -> if (_ui.value.serverUrl == BackendProvider.TERMUX_URL) onServerUrlChange("http://")
         }
         applyModelsForMode()
+        refreshBanner()
         refresh()
+    }
+
+    /** On-device models card: saves [name] as the on-device model; in Internal mode it is also selected. */
+    fun selectInternalModel(name: String) {
+        if (_ui.value.internalModels.none { it.name == name }) return
+        settingsStore.internalModel = name
+        _ui.value = _ui.value.copy(internalModel = name)
+        if (_ui.value.processingMode == BackendProvider.MODE_INTERNAL) {
+            _ui.value = _ui.value.copy(selectedModel = name)
+        }
     }
 
     /** Model card Download; a model with an unaccepted license notice opens the notice dialog instead. */
@@ -521,7 +543,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 "?"
             }
             _ui.value = _ui.value.copy(ytDlpVersion = v)
+            refreshBanner()
         }
+    }
+
+    /** Recomputes the Home yt-dlp card from the mode, the loaded version and the banner prefs. */
+    private fun refreshBanner() {
+        val ui = _ui.value
+        val banner = YtDlpBanner.state(
+            internalMode = ui.processingMode == BackendProvider.MODE_INTERNAL,
+            version = ui.ytDlpVersion,
+            today = java.time.LocalDate.now(),
+            firstUseSeen = prefs.getBoolean(InternalProcessingWorker.FIRST_USE_SEEN, false),
+            dismissedEpochDay = prefs.getLong(YtDlpBanner.PREF_DISMISSED_DAY, Long.MIN_VALUE).takeIf { it != Long.MIN_VALUE },
+        )
+        _ui.value = _ui.value.copy(ytDlpBanner = banner)
+    }
+
+    /** Home card close: hides the first-use card for good and the Outdated card for 14 days. */
+    fun dismissBanner() {
+        prefs.edit()
+            .putBoolean(InternalProcessingWorker.FIRST_USE_SEEN, true)
+            .putLong(YtDlpBanner.PREF_DISMISSED_DAY, java.time.LocalDate.now().toEpochDay())
+            .apply()
+        _ui.value = _ui.value.copy(ytDlpBanner = null)
     }
 
     /** Reloads [MainUiState.cookieSites]; the first call of the process also migrates a legacy cookies.txt. */
@@ -649,6 +694,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
             // update() re-reads the version with --version after a change
             val version = (state as? YtDlpUpdateState.Done)?.version?.takeIf { it.isNotEmpty() }
+            // The first-use card does not come back next launch; a shown card stays until closed to show the result
+            if (YtDlpBanner.afterUpdate(success = state is YtDlpUpdateState.Done) != null) {
+                prefs.edit().putBoolean(InternalProcessingWorker.FIRST_USE_SEEN, true).apply()
+            }
             _ui.value = _ui.value.copy(ytDlpUpdate = state, ytDlpVersion = version ?: _ui.value.ytDlpVersion)
         }
     }
@@ -708,6 +757,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val ui = _ui.value
         if (ui.processingMode == BackendProvider.MODE_INTERNAL && ui.internalModels.any { it.name == model }) {
             settingsStore.internalModel = model
+            _ui.value = _ui.value.copy(internalModel = model)
         }
         _ui.value = _ui.value.copy(selectedModel = model, showModelPicker = false)
     }
@@ -1009,14 +1059,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun discoverServer() {
         val app = getApplication<Application>()
         val nsdManager = app.getSystemService(android.content.Context.NSD_SERVICE) as android.net.nsd.NsdManager
-        showTransientError("Searching for server…")
+        showTransientError(str(R.string.discover_searching))
 
         var discoveryListener: android.net.nsd.NsdManager.DiscoveryListener? = null
         discoveryListener = object : android.net.nsd.NsdManager.DiscoveryListener {
             override fun onDiscoveryStarted(serviceType: String) {}
             override fun onDiscoveryStopped(serviceType: String) {}
             override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
-                showTransientError("Discovery failed")
+                showTransientError(str(R.string.discover_failed))
             }
             override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {}
             override fun onServiceFound(serviceInfo: android.net.nsd.NsdServiceInfo) {
@@ -1027,7 +1077,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         val port = si.port
                         val url = "http://$host:$port"
                         onServerUrlChange(url)
-                        showTransientError("Found server at $url")
+                        showTransientError(app.getString(R.string.discover_found, url))
                         try { nsdManager.stopServiceDiscovery(discoveryListener) } catch (_: Exception) {}
                     }
                 })
@@ -1042,7 +1092,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 try { nsdManager.stopServiceDiscovery(discoveryListener) } catch (_: Exception) {}
             }
         } catch (e: Exception) {
-            showTransientError("Discovery error: ${e.message}")
+            showTransientError(app.getString(R.string.discover_error, e.message ?: e.javaClass.simpleName))
         }
     }
 
@@ -1110,7 +1160,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun exportHistory(context: Context) {
         val items = _ui.value.history
         if (items.isEmpty()) return
-        showTransientError("Exporting ${items.size} items…")
+        showTransientError(context.resources.getQuantityString(R.plurals.exporting_items, items.size, items.size))
         bgScope.launch {
             try {
                 val exportDir = java.io.File(context.cacheDir, "export")
@@ -1176,10 +1226,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                     context.startActivity(chooser)
                 } else {
-                    showTransientError("No files available to export")
+                    showTransientError(str(R.string.export_none))
                 }
             } catch (e: Exception) {
-                showTransientError("Export failed: ${e.message}")
+                showTransientError(context.getString(R.string.export_failed, e.message ?: e.javaClass.simpleName))
             }
         }
     }
@@ -1446,11 +1496,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var snackJob: kotlinx.coroutines.Job? = null
     private var shareJob: kotlinx.coroutines.Job? = null
 
+    /**
+     * Settings routes on screen, counted by a DisposableEffect in each route (main thread). While > 0
+     * the Settings Snackbar shows [MainUiState.snackError] and no Toast is shown.
+     */
+    @Volatile
+    var settingsVisible: Int = 0
+
     fun showTransientError(msg: String) {
         snackJob?.cancel()
         _ui.value = _ui.value.copy(snackError = msg)
-        // Also show a Toast so it's visible even when scrolled
-        try {
+        // Also show a Toast so it's visible even when scrolled (Home); Settings screens use their Snackbar
+        if (SnackPolicy.showToast(settingsVisible)) try {
             val app = getApplication<Application>()
             kotlinx.coroutines.MainScope().launch {
                 android.widget.Toast.makeText(app, msg, android.widget.Toast.LENGTH_SHORT).show()
@@ -1631,8 +1688,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         showTransientError(str(R.string.mp3_unavailable_fallback))
                     }
                     activeJobMeta = null
-                    // The worker stored a new speed measurement
-                    if (managed) loadModelSpeed()
+                    // The worker stored a new speed measurement and marked the first use as seen
+                    if (managed) {
+                        loadModelSpeed()
+                        refreshBanner()
+                    }
                     // Process next in queue if any
                     if (_ui.value.queue.isNotEmpty()) {
                         processNextInQueue()

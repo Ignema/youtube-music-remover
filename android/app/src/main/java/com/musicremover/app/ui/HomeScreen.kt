@@ -47,7 +47,9 @@ import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.MusicOff
+import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material.icons.outlined.Merge
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Refresh
@@ -103,8 +105,18 @@ import com.musicremover.app.UiState
 import com.musicremover.app.data.HistoryItem
 import com.musicremover.app.data.displayTitle
 import com.musicremover.app.processing.BackendProvider
+import com.musicremover.app.YtDlpUpdateState
 import com.musicremover.app.processing.internal.ModelCatalog
-import com.musicremover.app.processing.internal.Mp3Support
+import com.musicremover.app.processing.internal.ModelState
+import com.musicremover.app.processing.internal.YtDlpBanner
+import com.musicremover.app.processing.internal.YtDlpErrors
+import com.musicremover.app.ui.settings.formatMb
+import com.musicremover.app.ui.settings.modelBestFor
+import com.musicremover.app.ui.settings.modelName
+import com.musicremover.app.ui.settings.modelTag
+import com.musicremover.app.ui.settings.speedHint
+import com.musicremover.app.ui.settings.ytDlpResultText
+import androidx.compose.ui.res.pluralStringResource
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -115,6 +127,10 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
     val ui by vm.ui.collectAsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val context = LocalContext.current
+    // The yt-dlp card needs the version (first call unzips Python); only in Internal mode
+    androidx.compose.runtime.LaunchedEffect(ui.processingMode) {
+        if (ui.processingMode == BackendProvider.MODE_INTERNAL) vm.loadYtDlpVersion()
+    }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -341,6 +357,13 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        // First-run / yt-dlp card above the input (Internal mode only); it only offers an update
+        val banner = ui.ytDlpBanner
+        if (banner != null && ui.processingMode == BackendProvider.MODE_INTERNAL) {
+            YtDlpBannerCard(banner, ui, vm)
+            Spacer(Modifier.height(16.dp))
+        }
+
         // Swipeable input modes
         val pagerState = androidx.compose.foundation.pager.rememberPagerState(
             initialPage = ui.inputTab,
@@ -458,58 +481,7 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                         }
                     }
                 }
-                // Audio-only format (on-device only; Server and Termux always write MP3)
-                if (ui.processingMode == BackendProvider.MODE_INTERNAL && ui.audioOnly) {
-                    androidx.compose.runtime.LaunchedEffect(Unit) { vm.checkMp3() }
-                    var showFormatMenu by remember { mutableStateOf(false) }
-                    Box {
-                        androidx.compose.material3.FilterChip(
-                            selected = true,
-                            onClick = { showFormatMenu = true },
-                            label = { Text(ui.outputFormat.uppercase()) },
-                            shape = RoundedCornerShape(12.dp),
-                        )
-                        androidx.compose.material3.DropdownMenu(
-                            expanded = showFormatMenu,
-                            onDismissRequest = { showFormatMenu = false },
-                        ) {
-                            Text(
-                                stringResource(R.string.output_format),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.outline,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                            )
-                            val mp3Ok = ui.mp3Support == Mp3Support.State.Available
-                            listOf(Mp3Support.M4A, Mp3Support.MP3).forEach { fmt ->
-                                val enabled = fmt == Mp3Support.M4A || mp3Ok
-                                androidx.compose.material3.DropdownMenuItem(
-                                    text = {
-                                        Column {
-                                            Text(fmt.uppercase())
-                                            if (!enabled) {
-                                                val note = if (ui.mp3Support == Mp3Support.State.Unavailable) {
-                                                    R.string.output_mp3_unavailable
-                                                } else {
-                                                    R.string.output_mp3_checking
-                                                }
-                                                Text(
-                                                    stringResource(note),
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    modifier = Modifier.widthIn(max = 220.dp),
-                                                )
-                                            }
-                                        }
-                                    },
-                                    onClick = { vm.setOutputFormat(fmt); showFormatMenu = false },
-                                    enabled = enabled,
-                                    trailingIcon = {
-                                        if (ui.outputFormat == fmt) Icon(Icons.Outlined.CheckCircle, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
-                                    },
-                                )
-                            }
-                        }
-                    }
-                }
+                // The audio-only format (M4A/MP3) lives on Settings → Output
             }
         }
 
@@ -549,16 +521,19 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                             onClick = { vm.onModelSelect(ModelCatalog.HQ3) },
                         )
                     } else {
-                        // Catalog models only (Roformer stays server-only)
+                        // Catalog models only (Roformer stays server-only): name, tag, best for, size, state, speed
                         ui.internalModels.forEachIndexed { i, spec ->
                             if (i > 0) Spacer(Modifier.height(8.dp))
-                            val hq3 = spec.name == ModelCatalog.HQ3
+                            val state = if (ui.modelStates[spec.name] is ModelState.Ready) R.string.model_state_downloaded
+                            else R.string.model_state_first_use
                             ModelOption(
-                                name = if (hq3) stringResource(R.string.model_default_name) else spec.name.removeSuffix(".onnx"),
-                                description = if (hq3) stringResource(R.string.model_default_desc) else spec.primaryStem,
-                                tag = "%.0f MB".format(spec.size / 1_048_576.0),
+                                name = modelName(spec),
+                                description = modelBestFor(spec) ?: spec.primaryStem,
+                                tag = modelTag(spec) ?: formatMb(spec.size),
                                 selected = ui.selectedModel == spec.name,
                                 onClick = { vm.onModelSelect(spec.name) },
+                                details = listOfNotNull(formatMb(spec.size), stringResource(state), speedHint(ui, spec))
+                                    .joinToString(" · "),
                             )
                         }
                     }
@@ -1660,6 +1635,95 @@ private fun modelShortName(model: String): String = when (model) {
     else -> model.removeSuffix(".onnx").removeSuffix(".ckpt").take(15)
 }
 
+/**
+ * Home card for Internal mode: the first-run hint (plus the yt-dlp age when it is over 14 days), or the
+ * Outdated line. Update now is a tap only; the card never starts an update by itself.
+ */
+@Composable
+private fun YtDlpBannerCard(banner: YtDlpBanner.Banner, ui: MainUiState, vm: MainViewModel) {
+    val update = ui.ytDlpUpdate
+    val ageDays = when (banner) {
+        is YtDlpBanner.Banner.FirstUse -> banner.ageDays?.takeIf { it > YtDlpErrors.OUTDATED_DAYS }
+        is YtDlpBanner.Banner.Outdated -> banner.ageDays
+    }
+    androidx.compose.material3.ElevatedCard(
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(modifier = Modifier.padding(start = 16.dp, top = 4.dp, end = 4.dp, bottom = 16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    if (banner is YtDlpBanner.Banner.FirstUse) Icons.Outlined.Memory else Icons.Outlined.SystemUpdate,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    stringResource(
+                        if (banner is YtDlpBanner.Banner.FirstUse) R.string.banner_first_use_title
+                        else R.string.banner_outdated_title,
+                    ),
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.weight(1f),
+                )
+                IconButton(onClick = vm::dismissBanner) {
+                    Icon(Icons.Outlined.Close, stringResource(R.string.banner_close), Modifier.size(18.dp))
+                }
+            }
+            Column(modifier = Modifier.padding(end = 12.dp)) {
+                if (banner is YtDlpBanner.Banner.FirstUse) {
+                    Text(
+                        stringResource(R.string.banner_first_use),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                when {
+                    update == YtDlpUpdateState.Running -> {
+                        Spacer(Modifier.height(12.dp))
+                        // The library reports no byte progress
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            stringResource(R.string.ytdlp_updating),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    update is YtDlpUpdateState.Done -> {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            ytDlpResultText(update) ?: "",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                    ageDays != null -> {
+                        Spacer(Modifier.height(8.dp))
+                        val n = ageDays.toInt()
+                        Text(
+                            pluralStringResource(R.plurals.ytdlp_banner_age, n, n),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        ytDlpResultText(update)?.let {
+                            Spacer(Modifier.height(4.dp))
+                            Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        FilledTonalButton(onClick = vm::updateYtDlp, shape = RoundedCornerShape(12.dp)) {
+                            Icon(Icons.Outlined.SystemUpdate, null, Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(stringResource(R.string.ytdlp_update_now))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 /** One-time license notice (Kim Vocal 2), opened by Process or a model card's Download. */
 @Composable
 internal fun ModelNoticeDialog(vm: MainViewModel) {
@@ -1686,6 +1750,7 @@ private fun ModelOption(
     tag: String,
     selected: Boolean,
     onClick: () -> Unit,
+    details: String? = null,
 ) {
     Card(
         onClick = onClick,
@@ -1739,6 +1804,14 @@ private fun ModelOption(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                details?.let {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline,
+                    )
+                }
             }
         }
     }

@@ -59,15 +59,12 @@
     <string name="stop">停止</string>
     <string name="update_server">更新服务器</string>
     <string name="first_time_hint">第一次使用？点击安装，等待完成，然后点击启动。</string>
-    <string name="history_and_cache">历史记录 &amp; 缓存</string>
     <string name="processed_videos">%d 个已处理视频 · %s 缓存</string>
     <string name="no_history">暂无历史记录</string>
     <string name="clear_history">清除历史记录</string>
     <string name="clear_cache">清除缓存</string>
     <string name="permissions">权限</string>
-    <string name="manage_permissions">管理权限</string>
     <string name="permissions_desc">管理通知、电池优化和 Termux 访问权限。</string>
-    <string name="about">关于</string>
     <string name="appearance">外观</string>
     <string name="theme">主题</string>
     <string name="language">语言</string>

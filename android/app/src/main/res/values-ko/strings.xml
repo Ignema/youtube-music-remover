@@ -59,15 +59,12 @@
     <string name="stop">중지</string>
     <string name="update_server">서버 업데이트</string>
     <string name="first_time_hint">처음이신가요? 설치를 탭하고 완료될 때까지 기다린 후 시작을 탭하세요.</string>
-    <string name="history_and_cache">기록 &amp; 캐시</string>
     <string name="processed_videos">처리된 동영상 %d개 · 캐시 %s</string>
     <string name="no_history">아직 기록이 없습니다</string>
     <string name="clear_history">기록 삭제</string>
     <string name="clear_cache">캐시 삭제</string>
     <string name="permissions">권한</string>
-    <string name="manage_permissions">권한 관리</string>
     <string name="permissions_desc">알림, 배터리 최적화, Termux 접근을 관리합니다.</string>
-    <string name="about">정보</string>
     <string name="appearance">외관</string>
     <string name="theme">테마</string>
     <string name="language">언어</string>

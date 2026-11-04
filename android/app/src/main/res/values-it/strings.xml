@@ -59,15 +59,12 @@
     <string name="stop">Ferma</string>
     <string name="update_server">Aggiorna server</string>
     <string name="first_time_hint">Prima volta? Tocca Installa, attendi il completamento, poi tocca Avvia.</string>
-    <string name="history_and_cache">Cronologia &amp; Cache</string>
     <string name="processed_videos">%d video elaborati · %s nella cache</string>
     <string name="no_history">Nessuna cronologia</string>
     <string name="clear_history">Cancella cronologia</string>
     <string name="clear_cache">Svuota cache</string>
     <string name="permissions">Autorizzazioni</string>
-    <string name="manage_permissions">Gestisci autorizzazioni</string>
     <string name="permissions_desc">Gestisci notifiche, ottimizzazione batteria e accesso a Termux.</string>
-    <string name="about">Informazioni</string>
     <string name="appearance">Aspetto</string>
     <string name="theme">Tema</string>
     <string name="language">Lingua</string>
