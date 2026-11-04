@@ -136,7 +136,7 @@
     <string name="help_remote_server">원격 서버</string>
     <string name="help_remote_server_desc">GPU가 있는 PC에서 서버를 실행하면 훨씬 빠르게 처리할 수 있습니다. 설정 → 사용자 지정에서 URL을 설정하세요.</string>
     <string name="help_start_pc">PC에서 서버 시작</string>
-    <string name="help_start_pc_desc" tools:ignore="TypographyDashes">먼저 저장소를 클론하세요:\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\n그다음 서버를 시작하세요:\nuvx --with fastapi --with yt-dlp --with python-multipart --with \"audio-separator[gpu]\" --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000</string>
+    <string name="help_start_pc_desc" tools:ignore="TypographyDashes">먼저 저장소를 클론하세요:\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\n그다음 서버를 시작하세요:\nuvx --with fastapi --with yt-dlp --with python-multipart --with \"audio-separator[gpu]\" --with audioread --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000</string>
     <string name="help_docker">Docker (PC에서 가장 쉬움)</string>
     <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\n끝입니다. Python이나 ffmpeg를 설치할 필요가 없습니다.</string>
 

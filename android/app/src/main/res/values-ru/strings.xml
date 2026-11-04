@@ -136,7 +136,7 @@
     <string name="help_remote_server">Удалённый сервер</string>
     <string name="help_remote_server_desc">Запустите сервер на ПК с GPU для гораздо более быстрой обработки. Укажите URL в Настройки → Свой.</string>
     <string name="help_start_pc">Запустить сервер на ПК</string>
-    <string name="help_start_pc_desc" tools:ignore="TypographyDashes">Сначала клонируйте репозиторий:\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\nЗатем запустите сервер:\nuvx --with fastapi --with yt-dlp --with python-multipart --with \"audio-separator[gpu]\" --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000</string>
+    <string name="help_start_pc_desc" tools:ignore="TypographyDashes">Сначала клонируйте репозиторий:\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\nЗатем запустите сервер:\nuvx --with fastapi --with yt-dlp --with python-multipart --with \"audio-separator[gpu]\" --with audioread --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000</string>
     <string name="help_docker">Docker (проще всего для ПК)</string>
     <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\nВот и всё. Настраивать Python или ffmpeg не нужно.</string>
 

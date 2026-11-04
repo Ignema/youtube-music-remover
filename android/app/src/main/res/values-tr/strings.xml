@@ -136,7 +136,7 @@
     <string name="help_remote_server">Uzak sunucu</string>
     <string name="help_remote_server_desc">Çok daha hızlı işleme için sunucuyu GPU\'lu bir PC\'de çalıştırın. URL\'yi Ayarlar → Özel\'den ayarlayın.</string>
     <string name="help_start_pc">Sunucuyu PC\'de başlat</string>
-    <string name="help_start_pc_desc" tools:ignore="TypographyDashes">Önce depoyu klonlayın:\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\nArdından sunucuyu başlatın:\nuvx --with fastapi --with yt-dlp --with python-multipart --with \"audio-separator[gpu]\" --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000</string>
+    <string name="help_start_pc_desc" tools:ignore="TypographyDashes">Önce depoyu klonlayın:\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\nArdından sunucuyu başlatın:\nuvx --with fastapi --with yt-dlp --with python-multipart --with \"audio-separator[gpu]\" --with audioread --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000</string>
     <string name="help_docker">Docker (PC için en kolay)</string>
     <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\nBu kadar. Python veya ffmpeg kurulumu gerekmez.</string>
 

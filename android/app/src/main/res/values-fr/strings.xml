@@ -136,7 +136,7 @@
     <string name="help_remote_server">Serveur distant</string>
     <string name="help_remote_server_desc">Lancez le serveur sur un PC avec un GPU pour un traitement beaucoup plus rapide. Définissez l\'URL dans Paramètres → Personnalisé.</string>
     <string name="help_start_pc">Démarrer le serveur sur PC</string>
-    <string name="help_start_pc_desc" tools:ignore="TypographyDashes">Clonez d\'abord le dépôt :\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\nPuis démarrez le serveur :\nuvx --with fastapi --with yt-dlp --with python-multipart --with \"audio-separator[gpu]\" --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000</string>
+    <string name="help_start_pc_desc" tools:ignore="TypographyDashes">Clonez d\'abord le dépôt :\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\nPuis démarrez le serveur :\nuvx --with fastapi --with yt-dlp --with python-multipart --with \"audio-separator[gpu]\" --with audioread --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000</string>
     <string name="help_docker">Docker (le plus simple pour PC)</string>
     <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\nC\'est tout. Aucune installation de Python ou de ffmpeg n\'est nécessaire.</string>
 

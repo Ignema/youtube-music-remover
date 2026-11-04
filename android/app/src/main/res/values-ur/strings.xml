@@ -136,7 +136,7 @@
     <string name="help_remote_server">ریموٹ سرور</string>
     <string name="help_remote_server_desc">بہت تیز پروسیسنگ کے لیے GPU والے PC پر سرور چلائیں۔ ترتیبات ← حسب ضرورت میں URL سیٹ کریں۔</string>
     <string name="help_start_pc">PC پر سرور شروع کریں</string>
-    <string name="help_start_pc_desc" tools:ignore="TypographyDashes">پہلے ریپو کلون کریں:\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\nپھر سرور شروع کریں:\nuvx --with fastapi --with yt-dlp --with python-multipart --with \"audio-separator[gpu]\" --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000</string>
+    <string name="help_start_pc_desc" tools:ignore="TypographyDashes">پہلے ریپو کلون کریں:\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\nپھر سرور شروع کریں:\nuvx --with fastapi --with yt-dlp --with python-multipart --with \"audio-separator[gpu]\" --with audioread --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000</string>
     <string name="help_docker">Docker (PC کے لیے سب سے آسان)</string>
     <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\nبس۔ Python یا ffmpeg سیٹ اپ کی ضرورت نہیں۔</string>
 
