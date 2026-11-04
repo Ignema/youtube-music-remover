@@ -78,6 +78,11 @@ class ColorPalettesTest {
         Triple("onPrimaryContainer/primaryContainer", s.onPrimaryContainer, s.primaryContainer),
         Triple("onSecondaryContainer/secondaryContainer", s.onSecondaryContainer, s.secondaryContainer),
         Triple("onBackground/background", s.onBackground, s.background),
+        // Recent metadata line and other secondary text on cards/surfaces
+        Triple("onSurfaceVariant/surfaceVariant", s.onSurfaceVariant, s.surfaceVariant),
+        Triple("onSurfaceVariant/surface", s.onSurfaceVariant, s.surface),
+        Triple("onSecondary/secondary", s.onSecondary, s.secondary),
+        Triple("onTertiaryContainer/tertiaryContainer", s.onTertiaryContainer, s.tertiaryContainer),
     )
 
     private fun contrast(a: Color, b: Color): Double {
