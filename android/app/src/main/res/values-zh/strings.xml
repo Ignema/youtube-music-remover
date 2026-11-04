@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Murem</string>
 
     <!-- Home Screen -->
@@ -127,7 +127,9 @@
     <string name="help_remote_server">远程服务器</string>
     <string name="help_remote_server_desc">在带有 GPU 的电脑上运行服务器，处理速度会快很多。在设置 → 自定义中设置 URL。</string>
     <string name="help_start_pc">在电脑上启动服务器</string>
+    <string name="help_start_pc_desc" tools:ignore="TypographyDashes">先克隆仓库：\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\n然后启动服务器：\nuvx --with fastapi --with yt-dlp --with python-multipart --with \"audio-separator[gpu]\" --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000</string>
     <string name="help_docker">Docker（电脑上最简单的方式）</string>
+    <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\n就这样——无需配置 Python 或 ffmpeg。</string>
 
     <!-- Notifications -->
     <string name="notif_done">完成 — %s</string>

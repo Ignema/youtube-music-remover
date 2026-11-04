@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Murem</string>
 
     <!-- Home Screen -->
@@ -127,7 +127,9 @@
     <string name="help_remote_server">Servidor remoto</string>
     <string name="help_remote_server_desc">Ejecuta el servidor en un PC con GPU para un procesamiento mucho más rápido. Configura la URL en Ajustes → Personalizado.</string>
     <string name="help_start_pc">Iniciar el servidor en PC</string>
+    <string name="help_start_pc_desc" tools:ignore="TypographyDashes">Primero clona el repositorio:\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\nLuego inicia el servidor:\nuvx --with fastapi --with yt-dlp --with python-multipart --with \"audio-separator[gpu]\" --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000</string>
     <string name="help_docker">Docker (lo más fácil para PC)</string>
+    <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\nEso es todo: no hace falta configurar Python ni ffmpeg.</string>
 
     <!-- Notifications -->
     <string name="notif_done">Listo — %s</string>

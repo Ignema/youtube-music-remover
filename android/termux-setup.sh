@@ -30,14 +30,17 @@ echo "→ Setting up Python environment inside Ubuntu..."
 proot-distro login ubuntu -- bash -c '
     set -e
     apt update -y && apt upgrade -y
-    apt install -y python3 python3-pip python3-venv ffmpeg git
+    apt install -y python3 python3-pip python3-venv ffmpeg git curl unzip ca-certificates
 
     echo "→ Creating virtual environment..."
     python3 -m venv ~/venv
 
     echo "→ Installing Python packages..."
     . ~/venv/bin/activate
-    pip install fastapi uvicorn yt-dlp python-multipart "audio-separator[cpu]"
+    pip install fastapi uvicorn "yt-dlp[default]" python-multipart "audio-separator[cpu]"
+
+    # deno: JS runtime yt-dlp uses for YouTube challenges (non-fatal)
+    { ( arch=$(uname -m) && cd /tmp && f=deno-$arch-unknown-linux-gnu.zip && curl -fsSLO https://github.com/denoland/deno/releases/latest/download/$f && curl -fsSLO https://github.com/denoland/deno/releases/latest/download/$f.sha256sum && sha256sum -c $f.sha256sum && unzip -o -q $f -d /usr/local/bin && chmod +x /usr/local/bin/deno && rm -f $f $f.sha256sum && /usr/local/bin/deno --version ) || echo "⚠ deno could not be installed. YouTube links may fail; other sites still work."; }
 
     # Clone the repo for the API code
     if [ -d ~/music-remover ]; then
