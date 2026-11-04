@@ -131,6 +131,7 @@ import com.musicremover.app.R
 import com.musicremover.app.UiState
 import com.musicremover.app.data.HistoryItem
 import com.musicremover.app.data.displayTitle
+import com.musicremover.app.data.resultMimeType
 import com.musicremover.app.processing.BackendProvider
 import com.musicremover.app.YtDlpUpdateState
 import com.musicremover.app.processing.internal.ModelCatalog
@@ -1098,7 +1099,7 @@ private fun ProcessingBanner(ui: MainUiState, vm: MainViewModel) {
 @Composable
 private fun DoneContent(ui: MainUiState, vm: MainViewModel, context: android.content.Context, onPlay: (String, String, String?) -> Unit) {
     val saveLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.CreateDocument("video/mp4"),
+        contract = CreateResultDocument(),
     ) { uri ->
         if (uri != null) vm.saveToUri(context, uri)
     }
@@ -2208,6 +2209,12 @@ private class GetMediaContent : androidx.activity.result.contract.ActivityResult
     override fun createIntent(context: android.content.Context, input: String): android.content.Intent =
         super.createIntent(context, input)
             .putExtra(android.content.Intent.EXTRA_MIME_TYPES, arrayOf("video/*", "audio/*"))
+}
+
+/** Save dialog typed from the file name, so an .mp3/.m4a result is not saved as video/mp4 (".m4a.mp4"). */
+private class CreateResultDocument : androidx.activity.result.contract.ActivityResultContracts.CreateDocument("video/mp4") {
+    override fun createIntent(context: android.content.Context, input: String): android.content.Intent =
+        super.createIntent(context, input).setType(resultMimeType(input))
 }
 
 @Composable

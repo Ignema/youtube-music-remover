@@ -19,6 +19,7 @@ import com.musicremover.app.ui.theme.ColorPalettes
 import com.musicremover.app.data.TermuxHelper
 import com.musicremover.app.data.VideoInfo
 import com.musicremover.app.data.displayTitle
+import com.musicremover.app.data.resultMimeType
 import com.musicremover.app.processing.ActiveJobTracker
 import com.musicremover.app.processing.BackendProvider
 import com.musicremover.app.processing.InternalBackend
@@ -1072,11 +1073,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _ui.value = _ui.value.copy(history = updated)
     }
 
-    private fun mimeFor(name: String): String = when {
-        name.endsWith(".mp3") -> "audio/mpeg"
-        name.endsWith(".m4a") -> "audio/mp4"
-        else -> "video/mp4"
-    }
+    private fun mimeFor(name: String): String = resultMimeType(name)
 
     private fun viewFile(context: Context, file: java.io.File) {
         val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {

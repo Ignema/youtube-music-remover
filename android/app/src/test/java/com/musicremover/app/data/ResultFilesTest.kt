@@ -128,4 +128,13 @@ class ResultFilesTest {
         assertEquals("a.b.wav", displayTitle("a.b.wav"))
         assertEquals("noext", displayTitle("noext"))
     }
+
+    @Test
+    fun resultMimeTypeFollowsExtension() {
+        assertEquals("audio/mpeg", resultMimeType("song.mp3"))
+        assertEquals("audio/mpeg", resultMimeType("SONG.MP3"))
+        assertEquals("audio/mp4", resultMimeType("a.m4a"))
+        assertEquals("video/mp4", resultMimeType("v.mp4"))
+        assertEquals("video/mp4", resultMimeType("noext"))
+    }
 }

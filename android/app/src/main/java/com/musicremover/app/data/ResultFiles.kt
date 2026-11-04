@@ -130,3 +130,10 @@ fun displayTitle(name: String): String {
     val ext = name.substringAfterLast('.', "").lowercase()
     return if (ext in MEDIA_EXTENSIONS) name.substringBeforeLast('.') else name
 }
+
+/** MIME type of a result file from its extension (case-insensitive); anything else is video/mp4. */
+fun resultMimeType(name: String): String = when (name.substringAfterLast('.', "").lowercase()) {
+    "mp3" -> "audio/mpeg"
+    "m4a" -> "audio/mp4"
+    else -> "video/mp4"
+}
