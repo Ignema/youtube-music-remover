@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Android 11 and lower: the imported cookies.txt (account session tokens) is never backed up. -->
+<!--
+    Android 11 and lower. Never backed up: the stored cookies.txt (account session tokens), the per-job
+    work dirs (they hold a temporary cookies.txt copy while a link downloads) and the WebView data dir
+    used by "Log in with browser".
+-->
 <full-backup-content>
     <exclude domain="file" path="cookies/" />
+    <exclude domain="file" path="work/" />
+    <exclude domain="root" path="app_webview/" />
 </full-backup-content>
