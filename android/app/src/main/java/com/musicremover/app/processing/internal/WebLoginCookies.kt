@@ -96,7 +96,7 @@ object WebLoginCookies {
             if (entries.isNotEmpty() && !LoginSites.isLoggedIn(site, entries.map { it.name })) {
                 return CookieStore.SaveResult.NotLoggedIn
             }
-            return withContext(Dispatchers.IO) { store.saveCaptured(entries) }
+            return withContext(Dispatchers.IO) { store.saveCaptured(site, entries) }
         } finally {
             clearAll(webView)
         }

@@ -29,6 +29,7 @@ import com.musicremover.app.processing.ProcessingBackend
 import com.musicremover.app.processing.RemoteServerBackend
 import com.musicremover.app.processing.internal.CookieStore
 import com.musicremover.app.processing.internal.CookiesTxt
+import com.musicremover.app.processing.internal.LoginSites
 import com.musicremover.app.processing.internal.ModelCatalog
 import com.musicremover.app.processing.internal.ModelFailure
 import com.musicremover.app.processing.internal.ModelManager
@@ -155,7 +156,7 @@ internal fun resetState(prev: MainUiState, p: PersistedUi): MainUiState = MainUi
     modelStates = prev.modelStates,
     modelSpeed = prev.modelSpeed,
     performance = prev.performance,
-    cookies = prev.cookies,
+    cookieSites = prev.cookieSites,
     ytDlpVersion = prev.ytDlpVersion,
     mp3Support = prev.mp3Support,
     audioOnly = p.audioOnly,
@@ -237,8 +238,17 @@ data class MainUiState(
     // On-device links (yt-dlp); null until loaded, the first load unzips Python
     val ytDlpVersion: String? = null,
     val ytDlpUpdate: YtDlpUpdateState = YtDlpUpdateState.Idle,
-    /** Imported cookies.txt for on-device links (count and domains only), null if none. */
-    val cookies: CookiesTxt.Summary? = null,
+    /** Stored cookie sites for on-device links, sorted by site (counts only, never names or values). */
+    val cookieSites: List<CookieSiteUi> = emptyList(),
+)
+
+/** One stored cookie site; [count] is 0 if its file is missing or invalid. [source] is "login" or "import". */
+data class CookieSiteUi(
+    val site: String,
+    val enabled: Boolean,
+    val count: Int,
+    val savedAtMs: Long,
+    val source: String,
 )
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -298,6 +308,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
         loadModelSpeed()
         applyModelsForMode()
+        // The first cookie store call also migrates a legacy cookies.txt (D3)
+        loadCookieSites()
         // Resume polling if app was killed mid-processing
         val savedJobId = prefs.getString("active_job_id", null)
         // Remove temps, markers and work dirs left by killed jobs; keep the resumed job and live workers
@@ -317,6 +329,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 cache.cleanStale(keep)
                 backends.internal.cleanStaleWork(keep)
             }
+            // Cookie copies of previews interrupted by a killed process (D6)
+            backends.internal.cleanStalePreviews()
         }
         val savedQueue = loadQueue()
         if (savedJobId != null) {
@@ -510,23 +524,74 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /** Settings cookies row: reads the count and domains of the imported cookies.txt. */
-    fun loadCookies() {
+    /** Reloads [MainUiState.cookieSites]; the first call of the process also migrates a legacy cookies.txt. */
+    fun loadCookieSites() {
+        bgScope.launch { refreshCookieSites() }
+    }
+
+    /** Blocking; call on [bgScope]. */
+    private fun refreshCookieSites() {
+        val sites = CookieStore(getApplication()).sites().map {
+            CookieSiteUi(it.site, it.enabled, it.count, it.savedAtMs, it.source)
+        }
+        _ui.value = _ui.value.copy(cookieSites = sites)
+    }
+
+    /** Accounts switch: whether [site]'s cookies are sent with on-device links. */
+    fun setCookieSiteEnabled(site: String, on: Boolean) {
         bgScope.launch {
-            _ui.value = _ui.value.copy(cookies = CookieStore(getApplication()).summary())
+            if (!CookieStore(getApplication()).setEnabled(site, on)) showTransientError(str(R.string.cookies_change_failed))
+            refreshCookieSites()
         }
     }
 
-    /** Settings "Import" (SAF document); invalid files are rejected with a message and leave the old file. */
+    /** Accounts "Delete" (after the confirm dialog). */
+    fun deleteCookieSite(site: String) {
+        bgScope.launch {
+            if (!CookieStore(getApplication()).deleteSite(site)) showTransientError(str(R.string.cookies_change_failed))
+            refreshCookieSites()
+        }
+    }
+
+    /** Accounts "Delete all" (after the confirm dialog): every site and a leftover legacy cookies.txt. */
+    fun deleteAllCookies() {
+        bgScope.launch {
+            val ok = CookieStore(getApplication()).deleteAll()
+            showTransientError(str(if (ok) R.string.cookies_removed else R.string.cookies_change_failed))
+            refreshCookieSites()
+        }
+    }
+
+    /**
+     * Accounts "Log in again" for [site]: calls [open] on the main thread with null for the Instagram
+     * preset (`cookie_login`), or the https login URL (`cookie_login?url=…`): the site's stored custom URL
+     * if [LoginSites.custom] accepts it, else `https://<site>/`. If no login page can be built, shows
+     * `cookies_cannot_open_login` and does not call [open].
+     */
+    fun cookieLoginUrlFor(site: String, open: (url: String?) -> Unit) {
+        viewModelScope.launch {
+            val info = withContext(Dispatchers.IO) {
+                CookieStore(getApplication()).sites().firstOrNull { it.site == site }
+            }
+            val stored = info?.loginUrl
+            when {
+                site == INSTAGRAM_SITE && stored == null -> open(null)
+                stored != null && LoginSites.custom(stored) != null -> open(stored)
+                else -> {
+                    val fallback = LoginSites.custom("https://$site/")
+                    if (fallback != null) open(fallback.startUrl) else showTransientError(str(R.string.cookies_cannot_open_login))
+                }
+            }
+        }
+    }
+
+    /** Settings "Import" (SAF document); invalid files are rejected with a message and leave the stored sites. */
     fun importCookies(uri: android.net.Uri?) {
         if (uri == null) return
         bgScope.launch {
             val app = getApplication<Application>()
             val msg = when (val r = CookieStore(app).import(uri)) {
-                is CookieStore.ImportResult.Imported -> {
-                    _ui.value = _ui.value.copy(cookies = r.summary)
-                    str(R.string.cookies_imported)
-                }
+                is CookieStore.ImportResult.Imported -> str(R.string.cookies_imported)
                 is CookieStore.ImportResult.Rejected -> when (r.reason) {
                     CookiesTxt.Invalid.TOO_LARGE -> str(R.string.cookies_invalid_too_large)
                     CookiesTxt.Invalid.EMPTY -> str(R.string.cookies_invalid_empty)
@@ -535,15 +600,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 CookieStore.ImportResult.Unreadable -> str(R.string.cookies_unreadable)
             }
+            refreshCookieSites()
             showTransientError(msg)
-        }
-    }
-
-    fun removeCookies() {
-        bgScope.launch {
-            CookieStore(getApplication()).remove()
-            _ui.value = _ui.value.copy(cookies = null)
-            showTransientError(str(R.string.cookies_removed))
         }
     }
 
@@ -561,7 +619,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val r = com.musicremover.app.processing.internal.WebLoginCookies.saveAndClear(store, site, currentUrl, webView)
         val msg = when (r) {
             is CookieStore.SaveResult.Saved -> {
-                _ui.value = _ui.value.copy(cookies = r.summary)
                 app.resources.getQuantityString(
                     R.plurals.cookies_login_saved, r.captured.count, r.captured.count, r.captured.domains.joinToString(", "),
                 )
@@ -575,6 +632,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             CookieStore.SaveResult.NotLoggedIn -> str(R.string.cookies_login_not_logged_in)
             CookieStore.SaveResult.Unwritable -> str(R.string.cookies_login_save_failed)
         }
+        loadCookieSites()
         showTransientError(msg)
     }
 
@@ -1833,5 +1891,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         const val MODEL_SPACE_MARGIN = 50L * 1024 * 1024
         /** Pref: a queued on-device item is waiting for the app to come to the foreground */
         const val PENDING_INTERNAL_START = "pending_internal_start"
+        /** The site of [LoginSites.INSTAGRAM]: "Log in again" opens the preset when it has no custom URL */
+        const val INSTAGRAM_SITE = "instagram.com"
     }
 }

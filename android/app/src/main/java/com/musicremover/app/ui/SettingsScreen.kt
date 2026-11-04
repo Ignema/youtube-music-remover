@@ -37,6 +37,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -777,8 +779,8 @@ private fun YtDlpCard(vm: MainViewModel) {
 }
 
 /**
- * Cookies for on-device links: count and domains (never values), Log in with browser, Import (SAF) and
- * Remove.
+ * Cookies for on-device links: one line per site with its count (never values) and switch, Log in with
+ * browser, Import (SAF) and Delete all.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -794,11 +796,11 @@ private fun CookiesCard(vm: MainViewModel, onLoginClick: (url: String?) -> Unit)
             },
         )
     }
-    LaunchedEffect(Unit) { vm.loadCookies() }
+    LaunchedEffect(Unit) { vm.loadCookieSites() }
     val picker = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
     ) { uri -> vm.importCookies(uri) }
-    val cookies = ui.cookies
+    val sites = ui.cookieSites
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
@@ -813,21 +815,30 @@ private fun CookiesCard(vm: MainViewModel, onLoginClick: (url: String?) -> Unit)
                 color = MaterialTheme.colorScheme.primary,
             )
             Spacer(Modifier.height(8.dp))
-            val status = if (cookies == null) {
-                stringResource(R.string.cookies_none)
-            } else {
-                val shown = cookies.domains.take(MAX_DOMAINS).joinToString(", ")
-                val more = cookies.domains.size - MAX_DOMAINS
-                val domains = if (more > 0) {
-                    pluralStringResource(R.plurals.cookies_more_domains, more, shown, more)
-                } else shown
-                pluralStringResource(R.plurals.cookies_status, cookies.count, cookies.count, domains)
+            if (sites.isEmpty()) {
+                Text(
+                    stringResource(R.string.cookies_none),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
-            Text(
-                status,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            // One line per site with its switch; the full Accounts screen replaces this card
+            for (s in sites) {
+                val desc = stringResource(R.string.cookies_send_for, s.site)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        pluralStringResource(R.plurals.cookies_status, s.count, s.count, s.site),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                    )
+                    androidx.compose.material3.Switch(
+                        checked = s.enabled,
+                        onCheckedChange = { on -> vm.setCookieSiteEnabled(s.site, on) },
+                        modifier = Modifier.semantics { contentDescription = desc },
+                    )
+                }
+            }
             Spacer(Modifier.height(12.dp))
             FilledTonalButton(onClick = { showLogin = true }, shape = RoundedCornerShape(12.dp)) {
                 Text(stringResource(R.string.cookies_login))
@@ -841,11 +852,11 @@ private fun CookiesCard(vm: MainViewModel, onLoginClick: (url: String?) -> Unit)
                 ) {
                     Text(stringResource(R.string.cookies_import))
                 }
-                if (cookies != null) {
-                    OutlinedButton(onClick = vm::removeCookies, shape = RoundedCornerShape(12.dp)) {
+                if (sites.isNotEmpty()) {
+                    OutlinedButton(onClick = vm::deleteAllCookies, shape = RoundedCornerShape(12.dp)) {
                         Icon(Icons.Outlined.DeleteOutline, null, Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text(stringResource(R.string.cookies_remove))
+                        Text(stringResource(R.string.cookies_delete_all))
                     }
                 }
             }
@@ -858,8 +869,6 @@ private fun CookiesCard(vm: MainViewModel, onLoginClick: (url: String?) -> Unit)
         }
     }
 }
-
-private const val MAX_DOMAINS = 4
 
 /** Site picker and notice before the login screen; [onContinue] gets null for Instagram, else the https URL. */
 @Composable

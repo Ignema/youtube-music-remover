@@ -118,6 +118,39 @@ object CookiesTxt {
         return out.joinToString("\n", postfix = "\n")
     }
 
+    /**
+     * The cookie lines of [text]: non-blank lines that are not comments, or start with `#HttpOnly_`. A
+     * leading BOM and each line's trailing `\r` are removed; the header and other comments are dropped.
+     */
+    fun cookieLines(text: String): List<String> = text.removePrefix("\uFEFF").lines().mapNotNull { raw ->
+        val line = raw.trimEnd('\r')
+        line.takeIf { it.isNotBlank() && (!it.startsWith("#") || it.startsWith(HTTP_ONLY_PREFIX)) }
+    }
+
+    /**
+     * Import merge: [existing] (a stored site file, or null) with the cookie lines of [imported]. A line's
+     * key is its domain (without `#HttpOnly_` and a leading dot, lowercased), path and name. The result is
+     * the Netscape header, the existing lines whose key is not imported (in order), then the imported
+     * lines verbatim; of imported lines with the same key the last one wins.
+     */
+    fun mergeLines(existing: String?, imported: String): String {
+        val last = LinkedHashMap<String, String>()
+        for (line in cookieLines(imported)) {
+            val k = lineKey(line)
+            last.remove(k)
+            last[k] = line
+        }
+        val out = mutableListOf(NETSCAPE_HEADER)
+        existing?.let { e -> cookieLines(e).filterTo(out) { lineKey(it) !in last } }
+        out += last.values
+        return out.joinToString("\n", postfix = "\n")
+    }
+
+    private fun lineKey(line: String): String {
+        val f = line.removePrefix(HTTP_ONLY_PREFIX).split('\t')
+        return f[0].removePrefix(".").lowercase() + "\t" + f.getOrElse(2) { "" } + "\t" + f.getOrElse(5) { "" }
+    }
+
     private fun replaced(line: String, keys: Set<String>): Boolean {
         val f = line.split('\t')
         return f.size == 7 && key(f[0], f[5]) in keys

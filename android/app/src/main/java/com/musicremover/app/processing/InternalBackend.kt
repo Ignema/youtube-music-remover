@@ -91,7 +91,7 @@ class InternalBackend(context: Context, private val cache: ResultCache) : Proces
     override suspend fun info(url: String): VideoInfo = withContext(Dispatchers.IO) {
         val normalized = UrlNormalizer.normalize(url)
             ?: throw IllegalArgumentException(appContext.getString(R.string.internal_url_invalid))
-        val id = "preview-${UUID.randomUUID()}"
+        val id = "$PREVIEW_PREFIX${UUID.randomUUID()}"
         // Per-call cookie copy in cacheDir (not under workRoot, which cleanStaleWork may empty)
         val tmp = File(appContext.cacheDir, id)
         try {
@@ -233,7 +233,14 @@ class InternalBackend(context: Context, private val cache: ResultCache) : Proces
         }
     }
 
+    /** Deletes cacheDir/preview-* dirs (the per-call cookie copies of [info]) left by a killed process. */
+    fun cleanStalePreviews() {
+        appContext.cacheDir.listFiles { f -> f.isDirectory && f.name.startsWith(PREVIEW_PREFIX) }
+            ?.forEach { it.deleteRecursively() }
+    }
+
     companion object {
+        private const val PREVIEW_PREFIX = "preview-"
         const val WORK_TAG = "internal"
         const val UNIQUE_WORK = "internal-processing"
 

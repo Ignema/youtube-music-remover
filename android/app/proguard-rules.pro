@@ -14,6 +14,9 @@
 # Gson DTOs for assets/models.json
 -keep class com.musicremover.app.processing.internal.ModelCatalogJson { *; }
 -keep class com.musicremover.app.processing.internal.ModelSpecJson { *; }
+# Gson DTOs for filesDir/cookies/sites.json
+-keep class com.musicremover.app.processing.internal.CookieIndexJson { *; }
+-keep class com.musicremover.app.processing.internal.CookieSiteJson { *; }
 
 # youtubedl-android: JNI and runtime asset lookups, and the unzip of the Python/ffmpeg packages
 -keep class com.yausername.** { *; }

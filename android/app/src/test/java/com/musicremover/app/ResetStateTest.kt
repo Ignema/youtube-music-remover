@@ -3,7 +3,6 @@ package com.musicremover.app
 import com.musicremover.app.data.HistoryItem
 import com.musicremover.app.data.PersistedUi
 import com.musicremover.app.processing.BackendProvider
-import com.musicremover.app.processing.internal.CookiesTxt
 import com.musicremover.app.processing.internal.ModelCatalog
 import com.musicremover.app.processing.internal.ModelSpec
 import com.musicremover.app.processing.internal.ModelState
@@ -40,7 +39,7 @@ class ResetStateTest {
         modelStates = mapOf(ModelCatalog.HQ3 to ModelState.Ready(1L)),
         modelSpeed = mapOf(ModelCatalog.HQ3 to 4_000L),
         performance = PerformancePrefs(threads = 2, quality = "best", batch = 2),
-        cookies = CookiesTxt.Summary(3, listOf("instagram.com")),
+        cookieSites = listOf(CookieSiteUi("instagram.com", true, 3, 1_730_000_000_000L, "login")),
         ytDlpVersion = "2025.11.12",
         mp3Support = Mp3Support.State.Unavailable,
         noticeDialog = NoticeRequest("Kim_Vocal_2.onnx", NoticeTrigger.Process),
@@ -73,7 +72,7 @@ class ResetStateTest {
         assertEquals(prev.modelStates, r.modelStates)
         assertEquals(prev.modelSpeed, r.modelSpeed)
         assertEquals(prev.performance, r.performance)
-        assertEquals(prev.cookies, r.cookies)
+        assertEquals(prev.cookieSites, r.cookieSites)
         assertEquals(prev.ytDlpVersion, r.ytDlpVersion)
         // Describes the device, not the job
         assertEquals(Mp3Support.State.Unavailable, r.mp3Support)

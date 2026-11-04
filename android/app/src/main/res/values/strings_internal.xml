@@ -95,12 +95,11 @@
         <item quantity="one">%1$d cookie for %2$s</item>
         <item quantity="other">%1$d cookies for %2$s</item>
     </plurals>
-    <plurals name="cookies_more_domains">
-        <item quantity="one">%1$s and %2$d more site</item>
-        <item quantity="other">%1$s and %2$d more sites</item>
-    </plurals>
     <string name="cookies_import">Import cookies.txt</string>
-    <string name="cookies_remove">Remove</string>
+    <string name="cookies_delete_all">Delete all</string>
+    <string name="cookies_send_for">Send cookies for %1$s</string>
+    <string name="cookies_change_failed">Could not change the saved cookies. Try again.</string>
+    <string name="cookies_cannot_open_login">Cannot open a login page for this site</string>
     <string name="cookies_imported">Cookies imported</string>
     <string name="cookies_removed">Cookies removed</string>
     <string name="cookies_help">Some posts can only be downloaded while logged in. Tap Log in with browser and log in to the site inside Murem, or import a cookies.txt file (Netscape format) exported from a browser on a computer. The cookies are stored only on this device and are sent with every link in Internal mode, for all sites. YouTube downloads may change if YouTube cookies are included. Anyone who has these cookies can use your account: never share them, and tap Remove to delete them when you are done.</string>

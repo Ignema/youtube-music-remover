@@ -32,11 +32,11 @@ class WebLoginCookiesTest {
     private val ctx = instr.targetContext
     private val store = CookieStore(ctx)
     private lateinit var webView: WebView
-    private val stored get() = File(ctx.filesDir, "${CookieStore.DIR}/${CookieStore.FILE}")
+    private val stored get() = File(ctx.filesDir, "cookies/sites/instagram.com.txt")
 
     @Before
     fun setUp() = runBlocking {
-        store.remove()
+        store.deleteAll()
         val started = CountDownLatch(1)
         instr.runOnMainSync {
             webView = WebView(ctx)
@@ -52,7 +52,7 @@ class WebLoginCookiesTest {
 
     @After
     fun tearDown() = runBlocking {
-        store.remove()
+        store.deleteAll()
         WebLoginCookies.clearAll(webView)
         instr.runOnMainSync { webView.destroy() }
     }
@@ -102,7 +102,7 @@ class WebLoginCookiesTest {
         val lines = stored.readText().lines()
         assertEquals(1, lines.count { it.contains("\tsessionid\t") })
         assertTrue(lines.any { it.endsWith("\tsessionid\tDUMMY_SESSION_CHANGED_789") })
-        assertTrue(lines.any { it.endsWith("\tmurem_test\tDUMMY_VALUE_123456") })
+        assertTrue(File(ctx.filesDir, "cookies/sites/murem-test.invalid.txt").readText().lines().any { it.endsWith("\tmurem_test\tDUMMY_VALUE_123456") })
     }
 
     @Test

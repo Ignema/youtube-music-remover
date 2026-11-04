@@ -48,11 +48,11 @@ class YtDlpCookiesTest {
 
     @After
     fun tearDown() {
-        store.remove()
+        store.deleteAll()
         if (::work.isInitialized) work.deleteRecursively()
     }
 
-    private val stored get() = File(ctx.filesDir, "${CookieStore.DIR}/${CookieStore.FILE}")
+    private val stored get() = File(ctx.filesDir, "cookies/sites/murem-test.invalid.txt")
 
     @Test
     fun importRejectsInvalidFileAndKeepsTheOldOne() {
@@ -60,7 +60,7 @@ class YtDlpCookiesTest {
         val r = store.import(Uri.fromFile(bad))
         bad.delete()
         assertEquals(CookieStore.ImportResult.Rejected(CookiesTxt.Invalid.MALFORMED_LINE, 1), r)
-        assertArrayEquals(dummy, stored.readBytes())
+        assertArrayEquals(CookiesTxt.mergeLines(null, dummy.decodeToString()).toByteArray(), stored.readBytes())
         assertEquals(1, store.summary()?.count)
     }
 
@@ -85,7 +85,7 @@ class YtDlpCookiesTest {
         }
         Log.i(TAG, "cookies test: info '${info.videoInfo.title}', copy deleted=${!copy!!.exists()}")
         assertFalse("per-job copy not deleted", copy!!.exists())
-        assertArrayEquals("stored cookies.txt changed", dummy, stored.readBytes())
+        assertArrayEquals("stored cookies.txt changed", CookiesTxt.mergeLines(null, dummy.decodeToString()).toByteArray(), stored.readBytes())
     }
 
     @Test
@@ -105,7 +105,7 @@ class YtDlpCookiesTest {
 
     @Test
     fun noCookiesNoCopy() {
-        store.remove()
+        store.deleteAll()
         val dir = File(work, "cookies")
         withJobCookies(store, dir) { cookies -> assertNull(cookies) }
         assertFalse(File(dir, CookieStore.FILE).exists())

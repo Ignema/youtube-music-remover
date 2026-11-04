@@ -27,7 +27,7 @@ class InternalLinkErrorTextTest {
         val url = InstrumentationRegistry.getArguments().getString("muremLoginUrl")
         assumeTrue("no muremLoginUrl", !url.isNullOrBlank())
         YtDlpTestSupport.applyProxy()
-        CookieStore(ctx).remove()
+        CookieStore(ctx).deleteAll()
         val expected = ctx.getString(R.string.internal_url_login_required)
         try {
             BackendProvider(ctx).internal.info(url!!)

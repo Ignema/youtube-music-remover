@@ -205,24 +205,38 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
             if (url != null) {
                 report("downloading", modelEnd)
                 val downloader = YtDlpDownloader(ctx)
-                // A per-job copy of the imported cookies (yt-dlp rewrites it), deleted right after the download
-                val media = withJobCookies(CookieStore(ctx), File(workDir, "cookies")) { cookies ->
-                    val i = try {
-                        downloader.info(url, "$jobId-info-$runAttemptCount", cookies)
-                    } catch (e: YtDlpException) {
-                        throw linkError(e, null, cookies != null)
-                    }
-                    if (i.isLive) {
-                        Log.i(TAG, "$jobId: live stream refused")
-                        throw jobError(R.string.internal_url_live)
-                    }
-                    info = i
-                    try {
-                        downloader.download(i, workDir, audioOnly, "$jobId-dl-$runAttemptCount", cookies) { p ->
-                            report("downloading", modelEnd + p / 10)
+                // A per-job copy of the enabled sites' cookies (yt-dlp rewrites it), deleted right after the download
+                var cookiesCopied = false
+                val media = try {
+                    withJobCookies(CookieStore(ctx), File(workDir, "cookies")) { cookies ->
+                        cookiesCopied = true
+                        val i = try {
+                            downloader.info(url, "$jobId-info-$runAttemptCount", cookies)
+                        } catch (e: YtDlpException) {
+                            throw linkError(e, null, cookies != null)
                         }
-                    } catch (e: YtDlpException) {
-                        throw linkError(e, i, cookies != null)
+                        if (i.isLive) {
+                            Log.i(TAG, "$jobId: live stream refused")
+                            throw jobError(R.string.internal_url_live)
+                        }
+                        info = i
+                        try {
+                            downloader.download(i, workDir, audioOnly, "$jobId-dl-$runAttemptCount", cookies) { p ->
+                                report("downloading", modelEnd + p / 10)
+                            }
+                        } catch (e: YtDlpException) {
+                            throw linkError(e, i, cookies != null)
+                        }
+                    }
+                } catch (e: IOException) {
+                    // Only the cookie copy is mapped here; other failures keep their handling
+                    if (cookiesCopied) throw e
+                    Log.w(TAG, "$jobId: cookie copy failed: ${e.javaClass.simpleName}")
+                    throw if (StorageErrors.isNoSpace(e)) {
+                        InternalJobException(ctx.getString(R.string.internal_no_space, YtDlpErrors.neededMb(0, null)), null)
+                    } else {
+                        // No cause: the failure log of the job then also carries the class name only
+                        jobError(R.string.internal_processing_failed)
                     }
                 }
                 audioUri = Uri.fromFile(media.audio)
