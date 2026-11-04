@@ -1,7 +1,9 @@
 package com.musicremover.app.data
 
 import android.content.Context
+import android.util.Log
 import com.google.gson.Gson
+import com.google.gson.JsonParseException
 import com.google.gson.reflect.TypeToken
 
 data class HistoryItem(
@@ -26,17 +28,31 @@ data class HistoryItem(
     val processedBy: String? = null,
 )
 
+/**
+ * No anonymous TypeToken subclass, so R8 cannot strip its generic signature. History is read when the
+ * app starts: an unreadable value must give an empty list, not stop the app from opening.
+ */
+internal fun parseHistory(gson: Gson, json: String?): List<HistoryItem> {
+    if (json == null) return emptyList()
+    val type = TypeToken.getParameterized(List::class.java, HistoryItem::class.java).type
+    return try {
+        gson.fromJson<List<HistoryItem>>(json, type) ?: emptyList()
+    } catch (e: JsonParseException) {
+        Log.w("HistoryStore", "Unreadable history, ignoring it", e)
+        emptyList()
+    } catch (e: IllegalStateException) {
+        Log.w("HistoryStore", "Unreadable history, ignoring it", e)
+        emptyList()
+    }
+}
+
 class HistoryStore(context: Context) {
     private val prefs = context.getSharedPreferences("history", Context.MODE_PRIVATE)
     private val gson = Gson()
     private val key = "items"
     private val savedJobIds = mutableSetOf<String>()
 
-    fun getAll(): List<HistoryItem> {
-        val json = prefs.getString(key, null) ?: return emptyList()
-        val type = object : TypeToken<List<HistoryItem>>() {}.type
-        return gson.fromJson(json, type)
-    }
+    fun getAll(): List<HistoryItem> = parseHistory(gson, prefs.getString(key, null))
 
     // Shared by all instances: several HistoryStores in one process may add the same job
     fun add(item: HistoryItem) {

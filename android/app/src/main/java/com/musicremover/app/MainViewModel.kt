@@ -97,6 +97,18 @@ data class QueueItem(
     }
 }
 
+/** Reads the saved queue without an anonymous TypeToken (R8 can strip its signature); unreadable -> empty. */
+internal fun parseQueue(gson: com.google.gson.Gson, json: String?): List<QueueItem> {
+    if (json == null) return emptyList()
+    return try {
+        val mapType = com.google.gson.reflect.TypeToken
+            .getParameterized(Map::class.java, String::class.java, Any::class.java).type
+        val type = com.google.gson.reflect.TypeToken.getParameterized(List::class.java, mapType).type
+        val list: List<Map<String, Any?>>? = gson.fromJson(json, type)
+        list.orEmpty().map { QueueItem.fromJsonMap(it) }
+    } catch (_: Exception) { emptyList() }
+}
+
 /**
  * Options for a queued item, from the item's own values (never from the UI state). In internal mode an
  * unsupported model, or a model whose license notice is not accepted, becomes [internalDefault]
@@ -299,14 +311,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         prefs.edit().putString("queue", json).apply()
     }
 
-    private fun loadQueue(): List<QueueItem> {
-        val json = prefs.getString("queue", null) ?: return emptyList()
-        return try {
-            val type = object : com.google.gson.reflect.TypeToken<List<Map<String, Any?>>>() {}.type
-            val list: List<Map<String, Any?>> = gson.fromJson(json, type)
-            list.map { QueueItem.fromJsonMap(it) }
-        } catch (_: Exception) { emptyList() }
-    }
+    private fun loadQueue(): List<QueueItem> = parseQueue(gson, prefs.getString("queue", null))
 
     init {
         _ui.value = _ui.value.copy(
