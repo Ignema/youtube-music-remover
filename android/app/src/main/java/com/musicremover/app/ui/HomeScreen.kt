@@ -96,6 +96,8 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
@@ -364,7 +366,8 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                     onSelect = { vm.setInputTab(it) },
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
-                Spacer(Modifier.height(16.dp))
+                // The 16dp gap under the tabs is the pages' top padding (inside the pager), so the
+                // list header's touch target can extend into it and still receive taps
 
                 // Both pages get the height of the taller one, so switching Link/File doesn't move the content below.
                 // Natural heights are measured on the inner Column (unaffected by the outer min height).
@@ -385,7 +388,8 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .onSizeChanged { if (pageHeights[page] != it.height) pageHeights[page] = it.height },
+                                .onSizeChanged { if (pageHeights[page] != it.height) pageHeights[page] = it.height }
+                                .padding(top = 16.dp),
                         ) {
                             when (page) {
                                 0 -> LinkInputTab(ui, vm, urlFilePicker, homeColors.field)
@@ -403,7 +407,7 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                 Spacer(Modifier.height(4.dp))
 
                 // Options footer: quiet chips, start-aligned
-                OptionsRow(ui, vm, Modifier.padding(horizontal = 12.dp))
+                OptionsRow(ui, vm, Modifier.padding(horizontal = 16.dp))
             }
         }
 
@@ -589,18 +593,20 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                 style = MaterialTheme.typography.titleMedium,
             )
         }
-        if (!hasSource) {
-            Spacer(Modifier.height(8.dp))
-            Text(
-                stringResource(
-                    if (HomeInput.normalizeInputTab(ui.inputTab) == HomeInput.TAB_FILE) R.string.home_cta_hint_file
-                    else R.string.home_cta_hint_link,
-                ),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-        }
+        // The hint line is always laid out (hidden when there is a source), so Recent doesn't move
+        Spacer(Modifier.height(8.dp))
+        Text(
+            stringResource(
+                if (HomeInput.normalizeInputTab(ui.inputTab) == HomeInput.TAB_FILE) R.string.home_cta_hint_file
+                else R.string.home_cta_hint_link,
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .alpha(if (hasSource) 0f else 1f)
+                .then(if (hasSource) Modifier.clearAndSetSemantics {} else Modifier),
+        )
     }
 }
 
@@ -1360,6 +1366,7 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                             colors = CardDefaults.cardColors(
                                 containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f),
                             ),
+                            modifier = Modifier.align(Alignment.CenterVertically),
                         ) {
                             Text(
                                 if (daysLeft <= 0) stringResource(R.string.expired)
@@ -2009,6 +2016,10 @@ private fun LinkInputTab(ui: MainUiState, vm: MainViewModel, urlFilePicker: andr
 private val LinkFieldHeight = 56.dp
 private val LinkFieldButtonsGap = 8.dp
 private val FileDropZoneHeight = LinkFieldHeight + LinkFieldButtonsGap + 48.dp
+// Trimmed from the list header's 48dp touch target in layout. The top part overlaps the page's
+// 16dp top padding, the bottom part the equal spacer under the header, so the full target stays tappable.
+private val ListHeaderTrimTop = 12.dp
+private val ListHeaderTrimBottom = 4.dp
 
 @Composable
 private fun filledFieldColors(fieldColor: Color) = androidx.compose.material3.TextFieldDefaults.colors(
@@ -2022,17 +2033,31 @@ private fun filledFieldColors(fieldColor: Color) = androidx.compose.material3.Te
 
 @Composable
 private fun LinkList(ui: MainUiState, vm: MainViewModel, fieldColor: Color) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    // Header on the 16dp content edge: the label starts at the edge, "Clear all" text ends at it
+    // (the button's 12dp text padding sits in the card padding). The row reports less height than
+    // its 48dp touch target, so the gap under the tabs keeps the card's 16dp rhythm.
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .layout { measurable, constraints ->
+                val p = measurable.measure(constraints)
+                val top = ListHeaderTrimTop.roundToPx()
+                val bottom = ListHeaderTrimBottom.roundToPx()
+                layout(p.width, (p.height - top - bottom).coerceAtLeast(0)) { p.place(0, -top) }
+            },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Text(
             stringResource(R.string.link_count, ui.links.size),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f).padding(start = 4.dp),
+            modifier = Modifier.weight(1f),
         )
-        TextButton(onClick = vm::clearLinks) {
+        TextButton(onClick = vm::clearLinks, modifier = Modifier.offset(x = 12.dp)) {
             Text(stringResource(R.string.link_clear_all), style = MaterialTheme.typography.labelLarge)
         }
     }
+    Spacer(Modifier.height(ListHeaderTrimBottom))
     // A plain Column: the page already sits in the screen's verticalScroll
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         ui.links.forEachIndexed { i, link ->
@@ -2064,7 +2089,7 @@ private fun LinkList(ui: MainUiState, vm: MainViewModel, fieldColor: Color) {
         }
     }
     Spacer(Modifier.height(8.dp))
-    // Next link; Add (trailing, IME Done or the pill below) moves it into the list
+    // Next link; IME Done or the "Add another link" pill below moves it into the list
     androidx.compose.material3.TextField(
         value = ui.url,
         onValueChange = { vm.onUrlChange(it) },
@@ -2075,7 +2100,7 @@ private fun LinkList(ui: MainUiState, vm: MainViewModel, fieldColor: Color) {
         modifier = Modifier.fillMaxWidth(),
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = { vm.addFieldLinkToList() }),
-        leadingIcon = { Icon(Icons.Outlined.Add, null, Modifier.size(20.dp)) },
+        leadingIcon = { Icon(Icons.Outlined.Link, null, Modifier.size(20.dp)) },
         trailingIcon = if (ui.url.isNotEmpty()) {
             {
                 IconButton(onClick = { vm.onUrlChange("") }) { Icon(Icons.Outlined.Close, "Clear", Modifier.size(18.dp)) }
