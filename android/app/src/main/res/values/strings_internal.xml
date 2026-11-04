@@ -28,6 +28,12 @@
     <string name="about_1_min_left">about 1 min left</string>
     <string name="less_than_minute_left">less than a minute left</string>
 
+    <!-- Output format (audio-only results) -->
+    <string name="output_format">Format</string>
+    <string name="output_mp3_checking">Checking…</string>
+    <string name="output_mp3_unavailable">MP3 is not available on this phone, so results are saved as M4A.</string>
+    <string name="output_server_mp3_note">Server and Termux always save audio-only results as MP3</string>
+
     <!-- Home / Help -->
     <string name="status_ready_on_device">Ready for on-device processing</string>
     <string name="status_model_unavailable">Model not downloaded and no internet connection</string>
@@ -49,6 +55,7 @@
     <string name="internal_video_codec_unsupported">This video format (%1$s) cannot be processed on this phone. Turn on Audio only or use Server mode.</string>
     <string name="internal_video_convert_failed">Could not copy or convert this video (%1$s) on-device. Turn on Audio only or use Server mode.</string>
     <string name="internal_encode_failed">Could not encode the result</string>
+    <string name="mp3_unavailable_fallback">MP3 is not available on this phone, so the result was saved as M4A</string>
     <string name="internal_interrupted">Processing was interrupted repeatedly</string>
     <string name="internal_job_not_found">On-device job not found</string>
     <string name="internal_needs_foreground">On-device processing needs Murem to be open when it starts. Open Murem and try again.</string>

@@ -7,6 +7,7 @@ import com.musicremover.app.processing.internal.CookiesTxt
 import com.musicremover.app.processing.internal.ModelCatalog
 import com.musicremover.app.processing.internal.ModelSpec
 import com.musicremover.app.processing.internal.ModelState
+import com.musicremover.app.processing.internal.Mp3Support
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -41,6 +42,7 @@ class ResetStateTest {
         performance = PerformancePrefs(threads = 2, quality = "best", batch = 2),
         cookies = CookiesTxt.Summary(3, listOf("instagram.com")),
         ytDlpVersion = "2025.11.12",
+        mp3Support = Mp3Support.State.Unavailable,
         noticeDialog = NoticeRequest("Kim_Vocal_2.onnx", NoticeTrigger.Process),
         audioOnly = false,
         bitrate = "128k",
@@ -73,6 +75,8 @@ class ResetStateTest {
         assertEquals(prev.performance, r.performance)
         assertEquals(prev.cookies, r.cookies)
         assertEquals(prev.ytDlpVersion, r.ytDlpVersion)
+        // Describes the device, not the job
+        assertEquals(Mp3Support.State.Unavailable, r.mp3Support)
     }
 
     @Test

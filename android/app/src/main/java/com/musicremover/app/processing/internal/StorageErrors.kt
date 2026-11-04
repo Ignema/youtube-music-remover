@@ -26,4 +26,8 @@ object StorageErrors {
 
     /** [isNoSpace], or less than 10 MB left in the work dir. */
     fun isLikelyNoSpace(t: Throwable, usableBytes: Long): Boolean = isNoSpace(t) || usableBytes < LOW_SPACE_BYTES
+
+    /** As above for a failure that may have no throwable, with [text] such as an ffmpeg log tail. */
+    fun isLikelyNoSpace(t: Throwable?, text: String?, usableBytes: Long): Boolean =
+        (t != null && isNoSpace(t)) || (text != null && isNoSpaceText(text)) || usableBytes < LOW_SPACE_BYTES
 }

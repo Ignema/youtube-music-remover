@@ -7,6 +7,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.musicremover.app.R
 import com.musicremover.app.data.HistoryItem
 import com.musicremover.app.data.HistoryStore
@@ -33,6 +34,7 @@ import com.musicremover.app.processing.internal.ModelFailure
 import com.musicremover.app.processing.internal.ModelManager
 import com.musicremover.app.processing.internal.ModelSpec
 import com.musicremover.app.processing.internal.ModelState
+import com.musicremover.app.processing.internal.Mp3Support
 import com.musicremover.app.processing.internal.PerformanceSettings
 import com.musicremover.app.processing.internal.YtDlpRuntime
 import com.musicremover.app.processing.statusWithEta
@@ -155,6 +157,7 @@ internal fun resetState(prev: MainUiState, p: PersistedUi): MainUiState = MainUi
     performance = prev.performance,
     cookies = prev.cookies,
     ytDlpVersion = prev.ytDlpVersion,
+    mp3Support = prev.mp3Support,
     audioOnly = p.audioOnly,
     bitrate = p.bitrate,
     outputFormat = p.outputFormat,
@@ -201,6 +204,8 @@ data class MainUiState(
     val audioOnly: Boolean = false,
     val bitrate: String = "192k",
     val outputFormat: String = "m4a",
+    /** Whether the bundled ffmpeg can write MP3 on this phone (describes the device, kept by reset) */
+    val mp3Support: Mp3Support.State = Mp3Support.State.Unknown,
     // Thumbnail preview
     val urlPreview: VideoInfo? = null,
     val loadingPreview: Boolean = false,
@@ -673,6 +678,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (!SettingsStore.isValidBitrate(value)) return
         settingsStore.bitrate = value
         _ui.value = _ui.value.copy(bitrate = value)
+    }
+
+    /** Probes MP3 support once per process (only success is cached); never throws. */
+    fun checkMp3() {
+        val s = _ui.value.mp3Support
+        if (s == Mp3Support.State.Checking || s == Mp3Support.State.Available) return
+        _ui.value = _ui.value.copy(mp3Support = Mp3Support.State.Checking)
+        viewModelScope.launch {
+            val ok = Mp3Support.available(getApplication())
+            _ui.value = _ui.value.copy(mp3Support = if (ok) Mp3Support.State.Available else Mp3Support.State.Unavailable)
+        }
     }
 
     fun setOutputFormat(value: String) {
@@ -1408,6 +1424,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val ytViewCount: Long = 0,
         val ytUploadDate: String? = null,
         val ytDescription: String? = null,
+        /** Requested audio-only format of the built [ProcessOptions], for the MP3 fallback notice */
+        val outputFormat: String = "m4a",
     )
     private var activeJobMeta: JobMeta? = null
 
@@ -1427,6 +1445,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (!managed) ProcessingService.start(getApplication(), text, 0)
         val fileName = _ui.value.selectedFileName ?: "video.mp4"
         val options = options(backend, item)
+        activeJobMeta = activeJobMeta?.copy(outputFormat = options.outputFormat)
         tracker.launch(
             bgScope, backend,
             start = { backend.startFile(uri, fileName, options) },
@@ -1446,6 +1465,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.starting), jobId = null)
         if (!managed) ProcessingService.start(getApplication(), str(R.string.starting), 0)
         val options = options(backend, item)
+        activeJobMeta = activeJobMeta?.copy(outputFormat = options.outputFormat)
         tracker.launch(
             bgScope, backend,
             start = { backend.startUrl(url, options) },
@@ -1548,6 +1568,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         notif.showDone(filename, jobId, resultPlayUrl(jobId))
                     }
                     hapticTick()
+                    // The worker wrote M4A because this phone cannot encode MP3
+                    if (activeJobMeta?.outputFormat == Mp3Support.MP3 && filename.endsWith(".m4a")) {
+                        showTransientError(str(R.string.mp3_unavailable_fallback))
+                    }
                     activeJobMeta = null
                     // The worker stored a new speed measurement
                     if (managed) loadModelSpeed()

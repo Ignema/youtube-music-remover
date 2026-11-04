@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -103,6 +104,7 @@ import com.musicremover.app.data.HistoryItem
 import com.musicremover.app.data.displayTitle
 import com.musicremover.app.processing.BackendProvider
 import com.musicremover.app.processing.internal.ModelCatalog
+import com.musicremover.app.processing.internal.Mp3Support
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -453,6 +455,58 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                                     if (ui.bitrate == br) Icon(Icons.Outlined.CheckCircle, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
                                 },
                             )
+                        }
+                    }
+                }
+                // Audio-only format (on-device only; Server and Termux always write MP3)
+                if (ui.processingMode == BackendProvider.MODE_INTERNAL && ui.audioOnly) {
+                    androidx.compose.runtime.LaunchedEffect(Unit) { vm.checkMp3() }
+                    var showFormatMenu by remember { mutableStateOf(false) }
+                    Box {
+                        androidx.compose.material3.FilterChip(
+                            selected = true,
+                            onClick = { showFormatMenu = true },
+                            label = { Text(ui.outputFormat.uppercase()) },
+                            shape = RoundedCornerShape(12.dp),
+                        )
+                        androidx.compose.material3.DropdownMenu(
+                            expanded = showFormatMenu,
+                            onDismissRequest = { showFormatMenu = false },
+                        ) {
+                            Text(
+                                stringResource(R.string.output_format),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.outline,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                            )
+                            val mp3Ok = ui.mp3Support == Mp3Support.State.Available
+                            listOf(Mp3Support.M4A, Mp3Support.MP3).forEach { fmt ->
+                                val enabled = fmt == Mp3Support.M4A || mp3Ok
+                                androidx.compose.material3.DropdownMenuItem(
+                                    text = {
+                                        Column {
+                                            Text(fmt.uppercase())
+                                            if (!enabled) {
+                                                val note = if (ui.mp3Support == Mp3Support.State.Unavailable) {
+                                                    R.string.output_mp3_unavailable
+                                                } else {
+                                                    R.string.output_mp3_checking
+                                                }
+                                                Text(
+                                                    stringResource(note),
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    modifier = Modifier.widthIn(max = 220.dp),
+                                                )
+                                            }
+                                        }
+                                    },
+                                    onClick = { vm.setOutputFormat(fmt); showFormatMenu = false },
+                                    enabled = enabled,
+                                    trailingIcon = {
+                                        if (ui.outputFormat == fmt) Icon(Icons.Outlined.CheckCircle, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                                    },
+                                )
+                            }
                         }
                     }
                 }

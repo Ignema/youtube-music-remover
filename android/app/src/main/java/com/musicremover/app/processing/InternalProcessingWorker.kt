@@ -1,6 +1,7 @@
 package com.musicremover.app.processing
 
 import ai.onnxruntime.OrtException
+import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.content.Context
 import android.content.pm.ServiceInfo
@@ -28,6 +29,9 @@ import com.musicremover.app.processing.internal.ModelCorruptException
 import com.musicremover.app.processing.internal.ModelManager
 import com.musicremover.app.processing.internal.ModelNoticeRequiredException
 import com.musicremover.app.processing.internal.ModelStorageException
+import com.musicremover.app.processing.internal.Mp3Encoder
+import com.musicremover.app.processing.internal.Mp3Support
+import com.musicremover.app.processing.internal.StorageErrors
 import com.musicremover.app.processing.internal.OrtSpectrogramModel
 import com.musicremover.app.processing.internal.PerformanceSettings
 import com.musicremover.app.processing.internal.PcmFileReader
@@ -151,6 +155,14 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
                 1
             }
         }
+        val outputFormat = when (val f = inputData.getString(InternalBackend.KEY_OUTPUT_FORMAT)) {
+            null, Mp3Support.M4A -> Mp3Support.M4A
+            Mp3Support.MP3 -> Mp3Support.MP3
+            else -> {
+                Log.w(TAG, "$jobId: invalid output format ${f.take(16)}, using m4a")
+                Mp3Support.M4A
+            }
+        }
 
         // 2. Fresh work dir
         val workDir = File(InternalBackend.workRoot(ctx), jobId)
@@ -224,6 +236,10 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
             val mixFile = File(workDir, "mix.f32")
             val decoded = AudioDecoder(ctx).decode(audioUri, mixFile, audioOnly, bitrate, videoUri) { p ->
                 report("extracting", extractStart + p * (20 - extractStart) / 100)
+            }
+            // MP3 only without video; probed before separation so a fallback never wastes one
+            val wantMp3 = Mp3Support.wantMp3(outputFormat, decoded.videoTrack != null) {
+                Mp3Support.available(ctx).also { ok -> if (!ok) Log.w(TAG, "$jobId: mp3 unavailable, writing m4a") }
             }
 
             // 4b. Free memory right before the session is created
@@ -313,19 +329,27 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
             report("merging", 90)
             val gain = if (peakVocals > 0.9f) 0.9f / peakVocals else 1f
             val stem = if (info != null) sanitizeName(info.videoInfo.title.ifBlank { "video" }) else sanitizeStem(fileName)
-            val outName = if (decoded.videoTrack != null) "$stem-vocals-only.mp4" else "$stem-vocals-only.m4a"
+            val outName = when {
+                decoded.videoTrack != null -> "$stem-vocals-only.mp4"
+                wantMp3 -> "$stem-vocals-only.mp3"
+                else -> "$stem-vocals-only.m4a"
+            }
             val out = withContext(Dispatchers.IO) { cache.tempFile(jobId) }
             tmp = out
-            VideoResultWriter(ctx).write(
-                pcm = vocalsFile,
-                gain = gain,
-                bitrateBps = bitrate,
-                audioStartUs = decoded.audioStartUs,
-                video = decoded.videoTrack,
-                source = decoded.videoSource,
-                out = out,
-                workDir = workDir,
-            ) { p -> report("merging", 90 + p * 9 / 100) }
+            if (wantMp3) {
+                encodeMp3(vocalsFile, gain, bitrate, out, workDir, decoded.durationUs)
+            } else {
+                VideoResultWriter(ctx).write(
+                    pcm = vocalsFile,
+                    gain = gain,
+                    bitrateBps = bitrate,
+                    audioStartUs = decoded.audioStartUs,
+                    video = decoded.videoTrack,
+                    source = decoded.videoSource,
+                    out = out,
+                    workDir = workDir,
+                ) { p -> report("merging", 90 + p * 9 / 100) }
+            }
 
             // 7. Commit; a finished job keeps its result even if cancelled now
             return withContext(NonCancellable + Dispatchers.IO) {
@@ -380,6 +404,40 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
         val mb = YtDlpErrors.neededMb(info?.videoInfo?.duration ?: 0, info?.knownBytes)
         val version = if (e.kind == YtDlpErrors.Kind.NO_MEDIA) null else ytDlpVersionOrNull(ctx)
         return InternalJobException(ytDlpErrorText(ctx, e.kind, mb, cookiesImported, version, e.message.orEmpty()), e)
+    }
+
+    /**
+     * Step 6 for MP3: pipes the vocals into the bundled ffmpeg. A failed encode becomes `internal_no_space`
+     * when the log or the error points at a full disk (or little space is left), else `internal_encode_failed`.
+     */
+    // usableSpace only classifies a failure that already happened (same as VideoResultWriter.checkNoSpace)
+    @SuppressLint("UsableSpace")
+    private suspend fun encodeMp3(pcm: File, gain: Float, bitrate: Int, out: File, workDir: File, durationUs: Long) {
+        val r = try {
+            Mp3Encoder(ctx).encode(pcm, gain, bitrate, out, workDir) { p -> report("merging", 90 + p * 9 / 100) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: IOException) {
+            Log.e(TAG, "$jobId: cannot start ffmpeg", e)
+            throw jobError(R.string.internal_encode_failed, e)
+        } catch (e: YtDlpException) {
+            Log.e(TAG, "$jobId: cannot unpack ffmpeg", e)
+            throw jobError(R.string.internal_encode_failed, e)
+        }
+        if (r.exitCode != 0 || r.inputError != null) {
+            Log.e(TAG, "$jobId: mp3 encode failed: exit ${r.exitCode}, input ${r.inputError?.javaClass?.simpleName}: ${r.stderrTail}")
+            val noSpace = StorageErrors.isLikelyNoSpace(r.inputError, r.stderrTail, workDir.usableSpace)
+            throw if (noSpace) {
+                InternalJobException(ctx.getString(R.string.internal_no_space, neededMb(durationUs, bitrate)), r.inputError)
+            } else {
+                jobError(R.string.internal_encode_failed, r.inputError)
+            }
+        }
+        val length = withContext(Dispatchers.IO) { out.length() }
+        if (length == 0L) {
+            Log.e(TAG, "$jobId: mp3 encode wrote nothing: ${r.stderrTail}")
+            throw jobError(R.string.internal_encode_failed)
+        }
     }
 
     private fun fail(message: String): Result {

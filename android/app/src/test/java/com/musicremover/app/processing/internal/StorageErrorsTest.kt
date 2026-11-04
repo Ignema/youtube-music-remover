@@ -53,4 +53,27 @@ class StorageErrorsTest {
         assertTrue(StorageErrors.isLikelyNoSpace(e, 5L * 1024 * 1024))
         assertFalse(StorageErrors.isLikelyNoSpace(e, 500L * 1024 * 1024))
     }
+
+    @Test
+    fun logTextWithoutThrowableIsLikelyNoSpace() {
+        val tail = "[mp3 @ 0x7f] Error writing trailer: No space left on device"
+        assertTrue(StorageErrors.isLikelyNoSpace(null, tail, 500L * 1024 * 1024))
+    }
+
+    @Test
+    fun benignTextAndAmpleSpaceIsNotNoSpace() {
+        assertFalse(StorageErrors.isLikelyNoSpace(null, null, 500L * 1024 * 1024))
+        assertFalse(StorageErrors.isLikelyNoSpace(null, "pipe:0: Invalid data found", 500L * 1024 * 1024))
+        assertFalse(StorageErrors.isLikelyNoSpace(IOException("Broken pipe"), "", 500L * 1024 * 1024))
+    }
+
+    @Test
+    fun lowSpaceWithoutThrowableOrTextIsLikelyNoSpace() {
+        assertTrue(StorageErrors.isLikelyNoSpace(null, null, 5L * 1024 * 1024))
+    }
+
+    @Test
+    fun enospcThrowableWithBenignTextIsLikelyNoSpace() {
+        assertTrue(StorageErrors.isLikelyNoSpace(IOException("write failed: ENOSPC"), "", 500L * 1024 * 1024))
+    }
 }
