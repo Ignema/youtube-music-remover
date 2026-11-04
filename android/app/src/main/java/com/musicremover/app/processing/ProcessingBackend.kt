@@ -14,6 +14,8 @@ data class ProcessOptions(
     val sourceFileSize: Long? = null,
     /** Original picker URI of the source file, for the on-device history entry. Remote ignores it. */
     val sourceFilePath: String? = null,
+    /** Audio-only result format for on-device jobs, "m4a" or "mp3". Remote ignores it (the server writes MP3). */
+    val outputFormat: String = "m4a",
 )
 
 sealed interface JobEvent {
@@ -29,6 +31,8 @@ sealed interface JobEvent {
         val error: String? = null,
         val filename: String? = null,
         val metadata: VideoInfo? = null,
+        /** Seconds of separation left, on-device only; null when unknown. */
+        val etaSec: Int? = null,
     ) : JobEvent
 
     /** [file] is the result in ResultCache, or null if it could not be stored locally */

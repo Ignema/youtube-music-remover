@@ -13,6 +13,7 @@ import androidx.work.WorkManager
 import androidx.work.await
 import com.musicremover.app.R
 import com.musicremover.app.data.ResultCache
+import com.musicremover.app.data.SettingsStore
 import com.musicremover.app.data.VideoInfo
 import com.musicremover.app.processing.internal.InternalCapability
 import com.musicremover.app.processing.internal.ModelCatalog
@@ -70,7 +71,7 @@ class InternalBackend(context: Context, private val cache: ResultCache) : Proces
     override suspend fun isReady(): Boolean = withContext(Dispatchers.IO) {
         try {
             if (InternalCapability.current(appContext) != null) return@withContext false
-            if (ModelManager.get(appContext).isDownloaded(ModelCatalog.HQ3)) return@withContext true
+            if (ModelManager.get(appContext).isDownloaded(SettingsStore(appContext).internalModel)) return@withContext true
             val cm = appContext.getSystemService(ConnectivityManager::class.java)
             val caps = cm.getNetworkCapabilities(cm.activeNetwork)
             caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
@@ -128,6 +129,7 @@ class InternalBackend(context: Context, private val cache: ResultCache) : Proces
                 .putString(KEY_MODEL, options.model)
                 .putBoolean(KEY_AUDIO_ONLY, options.audioOnly)
                 .putString(KEY_BITRATE, options.bitrate)
+                .putPerformance()
                 .build()
             OneTimeWorkRequestBuilder<InternalProcessingWorker>()
                 .setInputData(input)
@@ -153,6 +155,7 @@ class InternalBackend(context: Context, private val cache: ResultCache) : Proces
             .putString(KEY_BITRATE, options.bitrate)
             .putLong(KEY_SOURCE_SIZE, options.sourceFileSize ?: -1L)
             .apply { options.sourceFilePath?.let { putString(KEY_SOURCE_PATH, it) } }
+            .putPerformance()
             .build()
         val req = OneTimeWorkRequestBuilder<InternalProcessingWorker>()
             .setInputData(input)
@@ -169,6 +172,18 @@ class InternalBackend(context: Context, private val cache: ResultCache) : Proces
             Log.e(TAG, "Model not available on-device")
             throw IllegalArgumentException("Model not available on-device")
         }
+        if (ModelManager.get(appContext).needsNotice(model)) {
+            Log.i(TAG, "Notice not accepted for $model")
+            throw IllegalArgumentException(appContext.getString(R.string.model_notice_required))
+        }
+    }
+
+    /** Performance prefs are fixed when the job is enqueued (design §1d.1 capture points). */
+    private fun Data.Builder.putPerformance(): Data.Builder {
+        val settings = SettingsStore(appContext)
+        return putInt(KEY_THREADS, settings.perfThreads)
+            .putString(KEY_QUALITY, settings.perfQuality)
+            .putInt(KEY_BATCH, settings.perfBatch)
     }
 
     override fun events(jobId: String): Flow<JobEvent> {
@@ -230,6 +245,10 @@ class InternalBackend(context: Context, private val cache: ResultCache) : Proces
         const val KEY_BITRATE = "bitrate"
         const val KEY_SOURCE_SIZE = "sourceFileSize"
         const val KEY_SOURCE_PATH = "sourceFilePath"
+        /** Performance prefs captured at enqueue time; validated and resolved by the worker. */
+        const val KEY_THREADS = "perfThreads"
+        const val KEY_QUALITY = "perfQuality"
+        const val KEY_BATCH = "perfBatch"
 
         private const val TAG = "MuremInternal"
 

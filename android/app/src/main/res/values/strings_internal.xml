@@ -13,6 +13,20 @@
     <string name="download_model">Download</string>
     <string name="delete_model">Delete</string>
     <string name="internal_model_in_use">The model is in use. Try again when the download or processing has finished.</string>
+    <string name="model_notice_required">Open Settings → On-device models and accept the notice for this model first</string>
+    <string name="model_notice_needed">Needs your OK before download</string>
+    <string name="model_notice_title">About this model</string>
+    <string name="model_notice_kim">Kim Vocal 2 is published by its author through UVR\'s public model repository. No license is stated for it, so its terms of use are unknown. Murem downloads it from there only when you ask and does not redistribute it.</string>
+    <string name="model_notice_download">Download</string>
+    <string name="model_notice_cancel">Cancel</string>
+
+    <!-- Progress: separation ETA -->
+    <plurals name="about_n_min_left">
+        <item quantity="one">about %d min left</item>
+        <item quantity="other">about %d min left</item>
+    </plurals>
+    <string name="about_1_min_left">about 1 min left</string>
+    <string name="less_than_minute_left">less than a minute left</string>
 
     <!-- Home / Help -->
     <string name="status_ready_on_device">Ready for on-device processing</string>

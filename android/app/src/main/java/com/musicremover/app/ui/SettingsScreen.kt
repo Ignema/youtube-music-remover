@@ -73,6 +73,7 @@ import com.musicremover.app.UiState
 import com.musicremover.app.YtDlpUpdateState
 import com.musicremover.app.processing.BackendProvider
 import com.musicremover.app.processing.internal.LoginSites
+import com.musicremover.app.processing.internal.ModelCatalog
 import com.musicremover.app.processing.internal.ModelFailure
 import com.musicremover.app.processing.internal.ModelState
 
@@ -597,8 +598,6 @@ private fun formatMb(bytes: Long): String = "%.1f MB".format(bytes / 1_048_576.0
 @Composable
 private fun InternalModelCard(vm: MainViewModel) {
     val ui by vm.ui.collectAsState()
-    val modelState = ui.modelState
-    val total = formatMb(ui.modelSizeBytes)
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
@@ -615,73 +614,80 @@ private fun InternalModelCard(vm: MainViewModel) {
                 )
                 Spacer(Modifier.height(12.dp))
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Outlined.Memory,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp),
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    stringResource(R.string.internal_model_name),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-            Spacer(Modifier.height(8.dp))
-            val statusText = when (modelState) {
-                is ModelState.Ready -> stringResource(R.string.internal_model_downloaded, formatMb(modelState.sizeBytes))
-                is ModelState.Downloading -> stringResource(
-                    R.string.internal_model_downloading,
-                    formatMb(modelState.bytes),
-                    formatMb(if (modelState.total > 0) modelState.total else ui.modelSizeBytes),
-                )
-                is ModelState.Failed -> when (val f = modelState.failure) {
-                    is ModelFailure.NoSpace -> stringResource(R.string.internal_no_space, (f.neededBytes / 1_000_000).toInt())
-                    ModelFailure.Corrupt -> stringResource(R.string.internal_model_corrupt)
-                    ModelFailure.Network -> stringResource(R.string.internal_model_failed_network)
-                    ModelFailure.Other -> stringResource(R.string.internal_processing_failed)
+            val anyDownloading = ui.modelStates.values.any { it is ModelState.Downloading }
+            for (spec in ui.internalModels) {
+                val modelState = ui.modelStates[spec.name] ?: ModelState.NotDownloaded
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Outlined.Memory,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        if (spec.name == ModelCatalog.HQ3) stringResource(R.string.internal_model_name)
+                        else spec.name.removeSuffix(".onnx"),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
                 }
-                ModelState.NotDownloaded -> stringResource(R.string.internal_model_not_downloaded, total)
-            }
-            Text(
-                statusText,
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (modelState is ModelState.Failed) MaterialTheme.colorScheme.error
-                else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            if (modelState is ModelState.Downloading) {
                 Spacer(Modifier.height(8.dp))
-                val totalBytes = if (modelState.total > 0) modelState.total else ui.modelSizeBytes
-                LinearProgressIndicator(
-                    progress = { (modelState.bytes.toFloat() / totalBytes).coerceIn(0f, 1f) },
-                    modifier = Modifier.fillMaxWidth(),
+                val statusText = when (modelState) {
+                    is ModelState.Ready -> stringResource(R.string.internal_model_downloaded, formatMb(modelState.sizeBytes))
+                    is ModelState.Downloading -> stringResource(
+                        R.string.internal_model_downloading,
+                        formatMb(modelState.bytes),
+                        formatMb(if (modelState.total > 0) modelState.total else spec.size),
+                    )
+                    is ModelState.Failed -> when (val f = modelState.failure) {
+                        is ModelFailure.NoSpace -> stringResource(R.string.internal_no_space, (f.neededBytes / 1_000_000).toInt())
+                        ModelFailure.Corrupt -> stringResource(R.string.internal_model_corrupt)
+                        ModelFailure.Network -> stringResource(R.string.internal_model_failed_network)
+                        ModelFailure.Other -> stringResource(R.string.internal_processing_failed)
+                        ModelFailure.NoticeRequired -> stringResource(R.string.model_notice_needed)
+                    }
+                    ModelState.NotDownloaded -> stringResource(R.string.internal_model_not_downloaded, formatMb(spec.size))
+                }
+                val noticeOnly = (modelState as? ModelState.Failed)?.failure == ModelFailure.NoticeRequired
+                Text(
+                    statusText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (modelState is ModelState.Failed && !noticeOnly) MaterialTheme.colorScheme.error
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-            }
-            Spacer(Modifier.height(12.dp))
-            when (modelState) {
-                is ModelState.Ready -> OutlinedButton(
-                    onClick = vm::deleteModel,
-                    enabled = ui.state != UiState.Processing,
-                    shape = RoundedCornerShape(12.dp),
-                ) {
-                    Icon(Icons.Outlined.DeleteOutline, null, Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text(stringResource(R.string.delete_model))
+                if (modelState is ModelState.Downloading) {
+                    Spacer(Modifier.height(8.dp))
+                    val totalBytes = if (modelState.total > 0) modelState.total else spec.size
+                    LinearProgressIndicator(
+                        progress = { (modelState.bytes.toFloat() / totalBytes).coerceIn(0f, 1f) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
-                is ModelState.Downloading -> Unit
-                else -> FilledTonalButton(
-                    onClick = vm::downloadModel,
-                    enabled = ui.internalUnsupportedReason == null,
-                    shape = RoundedCornerShape(12.dp),
-                ) {
-                    Icon(Icons.Outlined.Download, null, Modifier.size(16.dp))
-                    Spacer(Modifier.width(6.dp))
-                    Text(stringResource(R.string.download_model))
+                Spacer(Modifier.height(12.dp))
+                when (modelState) {
+                    is ModelState.Ready -> OutlinedButton(
+                        onClick = { vm.deleteModel(spec.name) },
+                        enabled = ui.state != UiState.Processing,
+                        shape = RoundedCornerShape(12.dp),
+                    ) {
+                        Icon(Icons.Outlined.DeleteOutline, null, Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.delete_model))
+                    }
+                    is ModelState.Downloading -> Unit
+                    else -> FilledTonalButton(
+                        onClick = { vm.downloadModel(spec.name) },
+                        enabled = ui.internalUnsupportedReason == null && !anyDownloading,
+                        shape = RoundedCornerShape(12.dp),
+                    ) {
+                        Icon(Icons.Outlined.Download, null, Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.download_model))
+                    }
                 }
+                Spacer(Modifier.height(16.dp))
             }
-            Spacer(Modifier.height(12.dp))
             Text(
                 stringResource(R.string.internal_warning),
                 style = MaterialTheme.typography.bodySmall,
@@ -689,6 +695,8 @@ private fun InternalModelCard(vm: MainViewModel) {
             )
         }
     }
+    // A Download of a model with a license notice opens this dialog
+    ModelNoticeDialog(vm)
 }
 
 /** Bundled yt-dlp for on-device links: version and "Update yt-dlp" (network only on tap). */

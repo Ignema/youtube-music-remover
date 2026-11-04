@@ -13,6 +13,8 @@ object InternalJobEvents {
     const val KEY_PROGRESS = "progress"
     const val KEY_FILENAME = "filename"
     const val KEY_ERROR = "error"
+    /** Seconds of separation left (Int), -1 or absent = unknown. */
+    const val KEY_ETA = "eta"
 
     /** Status the worker reports while waiting for [InternalProcessingLock]; shown as queued. */
     const val STATUS_WAITING = "waiting"
@@ -44,7 +46,8 @@ object InternalJobEvents {
                 if (status == STATUS_WAITING) {
                     listOf(JobEvent.Progress("queued", 0))
                 } else {
-                    listOf(JobEvent.Progress(status ?: "extracting", info.progress.getInt(KEY_PROGRESS, 0)))
+                    val eta = info.progress.getInt(KEY_ETA, -1).takeIf { it >= 0 }
+                    listOf(JobEvent.Progress(status ?: "extracting", info.progress.getInt(KEY_PROGRESS, 0), etaSec = eta))
                 }
             }
             WorkInfo.State.SUCCEEDED -> {

@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Build
+import android.os.SystemClock
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
@@ -17,6 +18,7 @@ import com.musicremover.app.data.NotificationHelper
 import com.musicremover.app.data.ResultCache
 import com.musicremover.app.data.VideoInfo
 import com.musicremover.app.processing.internal.AudioDecoder
+import com.musicremover.app.processing.internal.EtaEstimator
 import com.musicremover.app.processing.internal.InternalCapability
 import com.musicremover.app.processing.internal.InternalJobException
 import com.musicremover.app.processing.internal.MdxParams
@@ -24,8 +26,10 @@ import com.musicremover.app.processing.internal.MdxSeparator
 import com.musicremover.app.processing.internal.ModelCatalog
 import com.musicremover.app.processing.internal.ModelCorruptException
 import com.musicremover.app.processing.internal.ModelManager
+import com.musicremover.app.processing.internal.ModelNoticeRequiredException
 import com.musicremover.app.processing.internal.ModelStorageException
 import com.musicremover.app.processing.internal.OrtSpectrogramModel
+import com.musicremover.app.processing.internal.PerformanceSettings
 import com.musicremover.app.processing.internal.PcmFileReader
 import com.musicremover.app.processing.internal.PcmFileWriter
 import com.musicremover.app.processing.internal.PrimaryStemSink
@@ -69,6 +73,7 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
 
     private var lastStatus: String? = null
     private var lastProgress = -1
+    private var lastEta: Int? = null
 
     override suspend fun getForegroundInfo(): ForegroundInfo = foregroundInfo(ctx.getString(R.string.starting), 0)
 
@@ -128,6 +133,24 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
             Log.e(TAG, "$jobId: model not available on-device")
             throw jobError(R.string.internal_processing_failed)
         }
+        val threadsPref = inputData.getInt(InternalBackend.KEY_THREADS, 0).let {
+            if (it in 0..PerformanceSettings.MAX_THREADS_INPUT) it else {
+                Log.w(TAG, "$jobId: invalid thread count $it, using Auto")
+                0
+            }
+        }
+        val qualityPref = (inputData.getString(InternalBackend.KEY_QUALITY) ?: PerformanceSettings.QUALITY_BALANCED).let {
+            if (it in PerformanceSettings.QUALITIES) it else {
+                Log.w(TAG, "$jobId: invalid quality preset, using balanced")
+                PerformanceSettings.QUALITY_BALANCED
+            }
+        }
+        val batchPref = inputData.getInt(InternalBackend.KEY_BATCH, 1).let {
+            if (it == 1 || it == 2) it else {
+                Log.w(TAG, "$jobId: invalid batch size $it, using 1")
+                1
+            }
+        }
 
         // 2. Fresh work dir
         val workDir = File(InternalBackend.workRoot(ctx), jobId)
@@ -150,6 +173,10 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
                 models.ensure(modelName) { bytes, total ->
                     report("downloading_model", if (total > 0) (bytes * modelEnd / total).toInt() else 0)
                 }
+            } catch (e: ModelNoticeRequiredException) {
+                // Not an IOException; must stay before that branch
+                Log.i(TAG, "$jobId: notice required for ${e.name}")
+                throw jobError(R.string.model_notice_required, e)
             } catch (e: ModelStorageException) {
                 throw InternalJobException(ctx.getString(R.string.internal_no_space, (e.neededBytes / 1_000_000).toInt()), e)
             } catch (e: ModelCorruptException) {
@@ -206,11 +233,24 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
                 Log.w(TAG, "$jobId: availMem ${mi.availMem / 1_000_000} MB")
                 throw jobError(R.string.internal_out_of_memory)
             }
+            val cfg = PerformanceSettings.resolve(
+                threadsPref, qualityPref, batchPref,
+                cores = Runtime.getRuntime().availableProcessors(),
+                totalMem = mi.totalMem,
+                availMem = mi.availMem,
+                specOverlap = spec.overlap,
+            )
+            if (cfg.batchReduced) Log.i(TAG, "$jobId: batch 2 refused, availMem ${mi.availMem / 1_000_000} MB")
+            Log.i(
+                TAG,
+                "$jobId: run config threads=${cfg.threads} overlap=${cfg.overlap} batch=${cfg.batch} " +
+                    "batchReduced=${cfg.batchReduced} totalMem=${mi.totalMem / 1_000_000} MB availMem=${mi.availMem / 1_000_000} MB",
+            )
 
             // 5. Separate (20-90)
             report("separating", 20)
             val ort = try {
-                OrtSpectrogramModel(modelFile, spec.dimF, spec.dimT)
+                OrtSpectrogramModel(modelFile, spec.dimF, spec.dimT, cfg.threads, cfg.batch)
             } catch (e: OrtException) {
                 Log.e(TAG, "$jobId: cannot load model", e)
                 if (!models.delete(modelName)) modelFile.delete()
@@ -220,9 +260,14 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
                 throw jobError(R.string.internal_model_mismatch, e)
             }
             model = ort
-            val params = MdxParams(spec.nFft, spec.dimF, spec.dimT, spec.hop, spec.compensate.toFloat(), spec.overlap)
+            val params = MdxParams(spec.nFft, spec.dimF, spec.dimT, spec.hop, spec.compensate.toFloat(), cfg.overlap)
             val inputScale = if (decoded.peak > 0.9f) 0.9f / decoded.peak else 1f
             val vocalsFile = File(workDir, "vocals.f32")
+            val speedKey = PerformanceSettings.speedKey(modelName, cfg.threads, cfg.batch)
+            val appPrefs = ctx.getSharedPreferences(APP_PREFS, Context.MODE_PRIVATE)
+            val priorMs = appPrefs.getLong(speedKey, -1L).takeIf { it > 0 }
+            var chunks = 0
+            var demixMs = 0L
             val peakVocals = try {
                 withContext(Dispatchers.Default) {
                     PcmFileReader(mixFile).use { src ->
@@ -233,9 +278,15 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
                                 } else {
                                     VocalsSink(mixForSink, writer, inputScale, params.compensate)
                                 }
-                                MdxSeparator(params, ort).demix(src, inputScale, sink) { done, total ->
-                                    report("separating", 20 + done * 70 / total)
+                                val separator = MdxSeparator(params, ort)
+                                val eta = EtaEstimator(separator.chunkCount(src.frames))
+                                report("separating", 20, eta.prior(priorMs))
+                                val start = SystemClock.elapsedRealtime()
+                                separator.demix(src, inputScale, sink) { done, total ->
+                                    chunks = total
+                                    report("separating", 20 + done * 70 / total, eta.onChunk(done, SystemClock.elapsedRealtime() - start))
                                 }
+                                demixMs = SystemClock.elapsedRealtime() - start
                                 if (sink is VocalsSink) sink.peakVocals else (sink as PrimaryStemSink).peak
                             }
                         }
@@ -250,6 +301,12 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
             } catch (e: IOException) {
                 Log.w(TAG, "$jobId: write failed during separation", e)
                 throw InternalJobException(ctx.getString(R.string.internal_no_space, neededMb(decoded.durationUs, bitrate)), e)
+            }
+            if (chunks > 0) {
+                val msPerChunk = demixMs / chunks
+                val ema = PerformanceSettings.ema(priorMs, msPerChunk)
+                appPrefs.edit().putLong(speedKey, ema).apply()
+                Log.i(TAG, "$jobId: separated $chunks chunks in $demixMs ms ($msPerChunk ms/chunk, ema $ema)")
             }
 
             // 6. Encode + mux (90-99)
@@ -277,6 +334,7 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
                     throw jobError(R.string.internal_processing_failed)
                 }
                 committed = true
+                appPrefs.edit().putBoolean(FIRST_USE_SEEN, true).apply()
                 finish(outName, durationS = (decoded.frames / AudioDecoder.SAMPLE_RATE).toInt(), info = info?.videoInfo)
                 Result.success(workDataOf(InternalJobEvents.KEY_FILENAME to outName))
             }
@@ -334,13 +392,20 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
      * (read by the ViewModel) and to the foreground notification.
      */
     @Synchronized
-    private fun report(status: String, progress: Int) {
+    private fun report(status: String, progress: Int, etaSec: Int? = null) {
         if (isStopped) return
-        if (status == lastStatus && progress == lastProgress) return
+        if (status == lastStatus && progress == lastProgress && etaSec == lastEta) return
         lastStatus = status
         lastProgress = progress
-        setProgressAsync(workDataOf(InternalJobEvents.KEY_STATUS to status, InternalJobEvents.KEY_PROGRESS to progress))
-        notif.showProgress(statusLabel(ctx, status, null), progress)
+        lastEta = etaSec
+        setProgressAsync(
+            workDataOf(
+                InternalJobEvents.KEY_STATUS to status,
+                InternalJobEvents.KEY_PROGRESS to progress,
+                InternalJobEvents.KEY_ETA to (etaSec ?: -1),
+            )
+        )
+        notif.showProgress(statusWithEta(ctx, status, null, etaSec), progress)
     }
 
     private fun foregroundInfo(label: String, progress: Int): ForegroundInfo {
@@ -362,6 +427,10 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
     companion object {
         private const val TAG = "MuremInternal"
         private const val MAX_ATTEMPTS = 3
+        /** Bookkeeping prefs (ETA speed, banner state), shared with the ViewModel. */
+        private const val APP_PREFS = "app"
+        /** Prefs `app`: an on-device job has committed a result (yt-dlp banner, FEAT-005). */
+        const val FIRST_USE_SEEN = "internal_first_use_seen"
         private const val DEFAULT_BITRATE = 192_000
         private val BITRATE = Regex("^(\\d{2,3})k$")
         private val UNSAFE_CHARS = Regex("[\\\\/:*?\"<>|\\x00-\\x1F]")

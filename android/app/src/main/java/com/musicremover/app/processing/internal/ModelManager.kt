@@ -2,6 +2,7 @@ package com.musicremover.app.processing.internal
 
 import android.annotation.SuppressLint
 import android.content.Context
+import com.musicremover.app.data.SettingsStore
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -35,10 +36,13 @@ sealed interface ModelFailure {
     data object Corrupt : ModelFailure
     data object Network : ModelFailure
     data object Other : ModelFailure
+    /** The model's license notice has not been accepted yet; nothing was downloaded. */
+    data object NoticeRequired : ModelFailure
 
     companion object {
         /** Pure. First match wins. [neededBytes] is the model size + margin, used for a disk-full write. */
         fun of(e: Throwable, neededBytes: Long): ModelFailure = when {
+            e is ModelNoticeRequiredException -> NoticeRequired
             e is ModelStorageException -> NoSpace(e.neededBytes)
             StorageErrors.isNoSpace(e) -> NoSpace(neededBytes)
             e is ModelCorruptException -> Corrupt
@@ -58,12 +62,19 @@ class ModelStorageException(val neededBytes: Long) : IOException("not enough spa
 class ModelCorruptException(message: String) : IOException(message)
 
 /**
+ * [name] needs its one-time license notice accepted before the first download. Deliberately not an
+ * [IOException], so it never falls into an I/O error branch.
+ */
+class ModelNoticeRequiredException(val name: String) : IllegalStateException("notice required")
+
+/**
  * Downloads, verifies and deletes on-device models in filesDir/models. Process-wide, so Settings and the
  * worker share state and never download at the same time.
  */
 class ModelManager private constructor(context: Context) {
     private val appContext = context.applicationContext
     private val dir = File(appContext.filesDir, "models")
+    private val prefs = appContext.getSharedPreferences(SettingsStore.PREFS, Context.MODE_PRIVATE)
     private val mutex = Mutex()
     private val client = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -91,6 +102,11 @@ class ModelManager private constructor(context: Context) {
     @SuppressLint("UsableSpace")
     suspend fun ensure(name: String, onProgress: (Long, Long) -> Unit = { _, _ -> }): File = mutex.withLock {
         val spec = ModelCatalog.spec(appContext, name) ?: throw IllegalArgumentException("Unknown model: $name")
+        // Before any network access (and before a provisioned file is used)
+        if (requiresNotice(spec, noticeAccepted(name))) {
+            if (!isDownloaded(spec)) setState(name, ModelState.Failed(ModelFailure.NoticeRequired))
+            throw ModelNoticeRequiredException(name)
+        }
         val target = file(name)
         if (isDownloaded(spec)) {
             setState(name, ModelState.Ready(spec.size))
@@ -116,6 +132,20 @@ class ModelManager private constructor(context: Context) {
             setState(name, ModelState.Failed(ModelFailure.of(e, needed)))
             throw e
         }
+    }
+
+    /** True if [name]'s license notice was accepted (always stored, even for models without a notice). */
+    fun noticeAccepted(name: String): Boolean = prefs.getBoolean(SettingsStore.NOTICE_PREFIX + name, false)
+
+    /** True if [name] needs the notice dialog before it may be downloaded or used. */
+    fun needsNotice(name: String): Boolean {
+        val spec = ModelCatalog.spec(appContext, name) ?: return false
+        return requiresNotice(spec, noticeAccepted(name))
+    }
+
+    /** Records the user's OK for [name]'s license notice. */
+    fun acceptNotice(name: String) {
+        prefs.edit().putBoolean(SettingsStore.NOTICE_PREFIX + name, true).apply()
     }
 
     /** Deletes the model and its partial file. Returns false if a download or verification holds the lock. */
@@ -226,6 +256,9 @@ class ModelManager private constructor(context: Context) {
         private const val BUFFER_SIZE = 64 * 1024
         private const val PROGRESS_STEP = 256 * 1024L
         private const val SPACE_MARGIN = 50L * 1024 * 1024
+
+        /** Pure gate: a model with a license notice may only be downloaded or used after the user's OK. */
+        fun requiresNotice(spec: ModelSpec, accepted: Boolean): Boolean = spec.licenseNotice && !accepted
 
         @Volatile
         private var instance: ModelManager? = null

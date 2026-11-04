@@ -257,6 +257,8 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
         )
     }
 
+    ModelNoticeDialog(vm)
+
     // Video info bottom sheet
     if (ui.showInfoSheet) {
         androidx.compose.material3.ModalBottomSheet(
@@ -485,14 +487,27 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                             onClick = { vm.onModelSelect("Kim_Vocal_2.onnx") },
                         )
                         Spacer(Modifier.height(8.dp))
+                        ModelOption(
+                            name = stringResource(R.string.model_default_name),
+                            description = stringResource(R.string.model_default_desc),
+                            tag = stringResource(R.string.tag_fast),
+                            selected = ui.selectedModel == ModelCatalog.HQ3,
+                            onClick = { vm.onModelSelect(ModelCatalog.HQ3) },
+                        )
+                    } else {
+                        // Catalog models only (Roformer stays server-only)
+                        ui.internalModels.forEachIndexed { i, spec ->
+                            if (i > 0) Spacer(Modifier.height(8.dp))
+                            val hq3 = spec.name == ModelCatalog.HQ3
+                            ModelOption(
+                                name = if (hq3) stringResource(R.string.model_default_name) else spec.name.removeSuffix(".onnx"),
+                                description = if (hq3) stringResource(R.string.model_default_desc) else spec.primaryStem,
+                                tag = "%.0f MB".format(spec.size / 1_048_576.0),
+                                selected = ui.selectedModel == spec.name,
+                                onClick = { vm.onModelSelect(spec.name) },
+                            )
+                        }
                     }
-                    ModelOption(
-                        name = stringResource(R.string.model_default_name),
-                        description = stringResource(R.string.model_default_desc),
-                        tag = stringResource(R.string.tag_fast),
-                        selected = ui.selectedModel == ModelCatalog.HQ3,
-                        onClick = { vm.onModelSelect(ModelCatalog.HQ3) },
-                    )
                     if (internalMode) {
                         Spacer(Modifier.height(12.dp))
                         Text(
@@ -1589,6 +1604,24 @@ private fun modelShortName(model: String): String = when (model) {
     "vocals_mel_band_roformer.ckpt" -> "Mel-Band"
     "model_bs_roformer_ep_317_sdr_12.9755.ckpt" -> "BS-Roformer"
     else -> model.removeSuffix(".onnx").removeSuffix(".ckpt").take(15)
+}
+
+/** One-time license notice (Kim Vocal 2), opened by Process or a model card's Download. */
+@Composable
+internal fun ModelNoticeDialog(vm: MainViewModel) {
+    val ui by vm.ui.collectAsState()
+    val request = ui.noticeDialog ?: return
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = vm::dismissNotice,
+        title = { Text(stringResource(R.string.model_notice_title)) },
+        text = { Text(stringResource(R.string.model_notice_kim)) },
+        confirmButton = {
+            androidx.compose.material3.TextButton(onClick = { vm.acceptNotice(request) }) { Text(stringResource(R.string.model_notice_download)) }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = vm::dismissNotice) { Text(stringResource(R.string.model_notice_cancel)) }
+        },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

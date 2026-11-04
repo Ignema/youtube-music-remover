@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
+import com.musicremover.app.data.SettingsStore
 
 class MuremWidget : AppWidgetProvider() {
 
@@ -25,8 +26,8 @@ class MuremWidget : AppWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.widget_layout)
 
             // Apply widget theme
-            val theme = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-                .getString("widget_theme", "orange") ?: "orange"
+            val theme = context.getSharedPreferences(SettingsStore.PREFS, Context.MODE_PRIVATE)
+                .getString(SettingsStore.KEY_WIDGET_THEME, "orange") ?: "orange"
             val bgRes = when (theme) {
                 "light" -> R.drawable.widget_bg_light
                 "dark" -> R.drawable.widget_bg_dark

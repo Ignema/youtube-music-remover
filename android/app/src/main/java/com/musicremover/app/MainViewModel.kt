@@ -11,6 +11,7 @@ import com.musicremover.app.R
 import com.musicremover.app.data.HistoryItem
 import com.musicremover.app.data.HistoryStore
 import com.musicremover.app.data.NotificationHelper
+import com.musicremover.app.data.PersistedUi
 import com.musicremover.app.data.ResultCache
 import com.musicremover.app.data.SettingsStore
 import com.musicremover.app.data.TermuxHelper
@@ -30,9 +31,11 @@ import com.musicremover.app.processing.internal.CookiesTxt
 import com.musicremover.app.processing.internal.ModelCatalog
 import com.musicremover.app.processing.internal.ModelFailure
 import com.musicremover.app.processing.internal.ModelManager
+import com.musicremover.app.processing.internal.ModelSpec
 import com.musicremover.app.processing.internal.ModelState
+import com.musicremover.app.processing.internal.PerformanceSettings
 import com.musicremover.app.processing.internal.YtDlpRuntime
-import com.musicremover.app.processing.statusLabel
+import com.musicremover.app.processing.statusWithEta
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -63,11 +66,14 @@ data class QueueItem(
     val fileUri: android.net.Uri? = null,
     val fileName: String? = null,
     val fileSize: Long? = null,
+    /** Audio-only result format captured when the item was queued: "m4a" or "mp3". */
+    val outputFormat: String = "m4a",
 ) {
     /** Serialize for SharedPreferences (file URIs stored as strings) */
     fun toJsonMap(): Map<String, Any?> = mapOf(
         "url" to url, "model" to model, "audioOnly" to audioOnly, "bitrate" to bitrate,
         "fileUri" to fileUri?.toString(), "fileName" to fileName, "fileSize" to fileSize,
+        "outputFormat" to outputFormat,
     )
 
     companion object {
@@ -79,9 +85,84 @@ data class QueueItem(
             fileUri = (m["fileUri"] as? String)?.let { android.net.Uri.parse(it) },
             fileName = m["fileName"] as? String,
             fileSize = (m["fileSize"] as? Number)?.toLong(),
+            outputFormat = m["outputFormat"] as? String ?: "m4a",
         )
     }
 }
+
+/**
+ * Options for a queued item, from the item's own values (never from the UI state). In internal mode an
+ * unsupported model, or a model whose license notice is not accepted, becomes [internalDefault]
+ * (HQ3 if that is not supported either).
+ */
+internal fun QueueItem.toOptions(
+    supported: List<String>,
+    internal: Boolean,
+    internalDefault: String,
+    noticeOk: (String) -> Boolean,
+    sourceFileSize: Long?,
+    sourceFilePath: String?,
+): ProcessOptions {
+    val chosen = if (internal && (model !in supported || !noticeOk(model))) {
+        internalDefault.takeIf { it in supported } ?: ModelCatalog.HQ3
+    } else {
+        model
+    }
+    return ProcessOptions(
+        chosen, audioOnly, bitrate,
+        sourceFileSize = sourceFileSize,
+        sourceFilePath = sourceFilePath,
+        outputFormat = outputFormat,
+    )
+}
+
+/** What opened the license-notice dialog. */
+enum class NoticeTrigger { Process, Download }
+
+/** The license-notice dialog for [model], opened by [trigger]. */
+data class NoticeRequest(val model: String, val trigger: NoticeTrigger)
+
+/** What the ViewModel does after the notice dialog closes. */
+sealed interface NoticeAction {
+    data object RunProcess : NoticeAction
+    data class RunDownload(val name: String) : NoticeAction
+    data object None : NoticeAction
+}
+
+/** Pure: accepting re-runs the triggering action; cancelling does nothing (the selection stays). */
+fun onNoticeResult(req: NoticeRequest, accepted: Boolean): NoticeAction = when {
+    !accepted -> NoticeAction.None
+    req.trigger == NoticeTrigger.Process -> NoticeAction.RunProcess
+    else -> NoticeAction.RunDownload(req.model)
+}
+
+/** Performance prefs as shown in Settings (0 threads = Auto). */
+data class PerformancePrefs(val threads: Int = 0, val quality: String = "balanced", val batch: Int = 1)
+
+/**
+ * "Process another": a fresh state that keeps the live fields of [prev] and the persisted Output and
+ * Appearance prefs [p]. Job fields, the selection and the notice dialog return to their defaults.
+ */
+internal fun resetState(prev: MainUiState, p: PersistedUi): MainUiState = MainUiState(
+    history = prev.history,
+    serverUrl = prev.serverUrl,
+    termuxInstalled = prev.termuxInstalled,
+    processingMode = prev.processingMode,
+    internalUnsupportedReason = prev.internalUnsupportedReason,
+    internalModels = prev.internalModels,
+    modelStates = prev.modelStates,
+    modelSpeed = prev.modelSpeed,
+    performance = prev.performance,
+    cookies = prev.cookies,
+    ytDlpVersion = prev.ytDlpVersion,
+    audioOnly = p.audioOnly,
+    bitrate = p.bitrate,
+    outputFormat = p.outputFormat,
+    themeMode = p.themeMode,
+    dynamicColor = p.dynamicColor,
+    language = p.language,
+    widgetTheme = p.widgetTheme,
+)
 
 data class MainUiState(
     val state: UiState = UiState.Idle,
@@ -116,9 +197,10 @@ data class MainUiState(
     val videoInfoError: Boolean = false,
     val fileInfoItem: HistoryItem? = null,
     val currentInfoItem: HistoryItem? = null,
-    // New options
+    // Output options; mirror the prefs, changed only by setAudioOnly/setBitrate/setOutputFormat
     val audioOnly: Boolean = false,
     val bitrate: String = "192k",
+    val outputFormat: String = "m4a",
     // Thumbnail preview
     val urlPreview: VideoInfo? = null,
     val loadingPreview: Boolean = false,
@@ -137,9 +219,14 @@ data class MainUiState(
     val widgetTheme: String = "orange",
     // Processing mode: "internal", "termux" or "server"
     val processingMode: String = BackendProvider.MODE_SERVER,
-    // On-device model (HQ_3)
-    val modelState: ModelState = ModelState.NotDownloaded,
-    val modelSizeBytes: Long = 66_759_214,
+    // On-device models (catalog order) and their download state
+    val internalModels: List<ModelSpec> = emptyList(),
+    val modelStates: Map<String, ModelState> = emptyMap(),
+    /** Measured ms per chunk for the current Performance prefs; a missing or null entry = no hint. */
+    val modelSpeed: Map<String, Long?> = emptyMap(),
+    /** License-notice dialog, or null when closed */
+    val noticeDialog: NoticeRequest? = null,
+    val performance: PerformancePrefs = PerformancePrefs(),
     /** Why this phone cannot run on-device processing, or null if it can */
     val internalUnsupportedReason: String? = null,
     // On-device links (yt-dlp); null until loaded, the first load unzips Python
@@ -197,7 +284,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             language = settingsStore.language,
             widgetTheme = settingsStore.widgetTheme,
             processingMode = settingsStore.processingMode,
+            audioOnly = settingsStore.audioOnly,
+            bitrate = settingsStore.bitrate,
+            outputFormat = settingsStore.outputFormat,
+            internalModels = ModelCatalog.get(application),
+            modelStates = modelManager.state.value,
+            performance = PerformancePrefs(settingsStore.perfThreads, settingsStore.perfQuality, settingsStore.perfBatch),
         )
+        loadModelSpeed()
         applyModelsForMode()
         // Resume polling if app was killed mid-processing
         val savedJobId = prefs.getString("active_job_id", null)
@@ -251,7 +345,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // On-device model state for Settings
         bgScope.launch {
             modelManager.state.collect { states ->
-                _ui.value = _ui.value.copy(modelState = states[ModelCatalog.HQ3] ?: ModelState.NotDownloaded)
+                _ui.value = _ui.value.copy(modelStates = states)
             }
         }
         bgScope.launch {
@@ -301,6 +395,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             selected = ui.selectedModel,
             supported = models,
             remembered = remoteModelBeforeInternal,
+            internalDefault = settingsStore.internalModel,
         )
         remoteModelBeforeInternal = remembered
         _ui.value = ui.copy(models = models, selectedModel = selected)
@@ -320,17 +415,39 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         refresh()
     }
 
-    fun downloadModel() {
+    /** Model card Download; a model with an unaccepted license notice opens the notice dialog instead. */
+    fun downloadModel(name: String) {
+        if (modelManager.needsNotice(name)) {
+            _ui.value = _ui.value.copy(noticeDialog = NoticeRequest(name, NoticeTrigger.Download))
+            return
+        }
+        val size = _ui.value.internalModels.firstOrNull { it.name == name }?.size ?: 0L
         bgScope.launch {
             try {
-                modelManager.ensure(ModelCatalog.HQ3)
+                modelManager.ensure(name)
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
                 // Same mapping as the Settings card, so both say the same thing
-                showTransientError(modelFailureText(ModelFailure.of(e, _ui.value.modelSizeBytes + MODEL_SPACE_MARGIN)))
+                showTransientError(modelFailureText(ModelFailure.of(e, size + MODEL_SPACE_MARGIN)))
             }
         }
+    }
+
+    /** Notice dialog "Download": records the OK and re-runs the action that opened the dialog. */
+    fun acceptNotice(request: NoticeRequest) {
+        modelManager.acceptNotice(request.model)
+        _ui.value = _ui.value.copy(noticeDialog = null)
+        when (val action = onNoticeResult(request, accepted = true)) {
+            NoticeAction.RunProcess -> process()
+            is NoticeAction.RunDownload -> downloadModel(action.name)
+            NoticeAction.None -> Unit
+        }
+    }
+
+    /** Notice dialog "Cancel": nothing starts and the selection stays. */
+    fun dismissNotice() {
+        _ui.value = _ui.value.copy(noticeDialog = null)
     }
 
     private fun modelFailureText(f: ModelFailure): String = when (f) {
@@ -338,6 +455,38 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         ModelFailure.Corrupt -> str(R.string.internal_model_corrupt)
         ModelFailure.Network -> str(R.string.internal_model_failed_network)
         ModelFailure.Other -> str(R.string.internal_processing_failed)
+        ModelFailure.NoticeRequired -> str(R.string.model_notice_required)
+    }
+
+    /**
+     * ms per chunk per catalog model for the current Performance prefs (D4): key
+     * perf_ms:<name>:<resolved threads>:<batch pref>. Missing = no hint.
+     */
+    private fun loadModelSpeed() {
+        val perf = _ui.value.performance
+        val threads = PerformanceSettings.threads(perf.threads, Runtime.getRuntime().availableProcessors())
+        val speed = _ui.value.internalModels.associate { spec ->
+            spec.name to prefs.getLong(PerformanceSettings.speedKey(spec.name, threads, perf.batch), -1L).takeIf { it > 0 }
+        }
+        _ui.value = _ui.value.copy(modelSpeed = speed)
+    }
+
+    fun setPerfThreads(value: Int) {
+        settingsStore.perfThreads = value
+        _ui.value = _ui.value.copy(performance = _ui.value.performance.copy(threads = settingsStore.perfThreads))
+        loadModelSpeed()
+    }
+
+    fun setPerfQuality(value: String) {
+        settingsStore.perfQuality = value
+        _ui.value = _ui.value.copy(performance = _ui.value.performance.copy(quality = settingsStore.perfQuality))
+        loadModelSpeed()
+    }
+
+    fun setPerfBatch(value: Int) {
+        settingsStore.perfBatch = value
+        _ui.value = _ui.value.copy(performance = _ui.value.performance.copy(batch = settingsStore.perfBatch))
+        loadModelSpeed()
     }
 
     /** Loads the bundled yt-dlp version once (Settings, Internal mode). */
@@ -441,8 +590,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun deleteModel() {
-        if (!modelManager.delete(ModelCatalog.HQ3)) {
+    fun deleteModel(name: String) {
+        if (!modelManager.delete(name)) {
             showTransientError(str(R.string.internal_model_in_use))
         }
     }
@@ -491,7 +640,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** In internal mode a catalog pick is saved as internal_model first, so applyModelsForMode keeps it. */
     fun onModelSelect(model: String) {
+        val ui = _ui.value
+        if (ui.processingMode == BackendProvider.MODE_INTERNAL && ui.internalModels.any { it.name == model }) {
+            settingsStore.internalModel = model
+        }
         _ui.value = _ui.value.copy(selectedModel = model, showModelPicker = false)
     }
 
@@ -511,11 +665,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setAudioOnly(value: Boolean) {
+        settingsStore.audioOnly = value
         _ui.value = _ui.value.copy(audioOnly = value)
     }
 
     fun setBitrate(value: String) {
+        if (!SettingsStore.isValidBitrate(value)) return
+        settingsStore.bitrate = value
         _ui.value = _ui.value.copy(bitrate = value)
+    }
+
+    fun setOutputFormat(value: String) {
+        if (value !in SettingsStore.OUTPUT_FORMATS) return
+        settingsStore.outputFormat = value
+        _ui.value = _ui.value.copy(outputFormat = value)
     }
 
     fun setThemeMode(mode: String) {
@@ -551,14 +714,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun reset() {
-        _ui.value = MainUiState(
-            history = _ui.value.history,
-            serverUrl = _ui.value.serverUrl,
-            termuxInstalled = _ui.value.termuxInstalled,
-            processingMode = _ui.value.processingMode,
-            modelState = _ui.value.modelState,
-            internalUnsupportedReason = _ui.value.internalUnsupportedReason,
-        )
+        _ui.value = resetState(_ui.value, settingsStore.persistedUi())
         applyModelsForMode()
     }
 
@@ -983,6 +1139,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     // --- Processing ---
     fun process() {
+        // A model with an unaccepted license notice: ask first, nothing is queued or started
+        val selected = _ui.value.selectedModel
+        if (_ui.value.processingMode == BackendProvider.MODE_INTERNAL && modelManager.needsNotice(selected)) {
+            _ui.value = _ui.value.copy(noticeDialog = NoticeRequest(selected, NoticeTrigger.Process))
+            return
+        }
         // Handle batch mode
         if (_ui.value.inputTab == 2) {
             val urls = _ui.value.batchText.lines().map { it.trim() }.filter { it.isNotEmpty() }
@@ -1031,6 +1193,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             model = _ui.value.selectedModel,
             audioOnly = _ui.value.audioOnly,
             bitrate = _ui.value.bitrate,
+            outputFormat = _ui.value.outputFormat,
         )
         val updated = _ui.value.queue + item
         _ui.value = _ui.value.copy(queue = updated)
@@ -1046,6 +1209,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 model = _ui.value.selectedModel,
                 audioOnly = _ui.value.audioOnly,
                 bitrate = _ui.value.bitrate,
+                outputFormat = _ui.value.outputFormat,
             )
         }
         if (_ui.value.state == UiState.Processing) {
@@ -1058,7 +1222,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val rest = items.drop(1)
             _ui.value = _ui.value.copy(queue = rest, url = first.url)
             saveQueue(rest)
-            processUrl(first.url)
+            processUrl(first.url, first)
         }
         showTransientError("${urls.size} URLs queued")
         hapticTick()
@@ -1070,6 +1234,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             model = _ui.value.selectedModel,
             audioOnly = _ui.value.audioOnly,
             bitrate = _ui.value.bitrate,
+            outputFormat = _ui.value.outputFormat,
             fileUri = uri,
             fileName = _ui.value.selectedFileName,
             fileSize = _ui.value.selectedFileSize,
@@ -1111,17 +1276,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             queue = remaining,
             url = next.url,
             selectedModel = next.model,
-            audioOnly = next.audioOnly,
-            bitrate = next.bitrate,
             selectedFileUri = next.fileUri,
             selectedFileName = next.fileName,
             selectedFileSize = next.fileSize,
         )
         saveQueue(remaining)
+        // The item carries its own Output values; the prefs and the chips are never changed by a queue run
         if (next.fileUri != null) {
-            processFile(next.fileUri)
+            processFile(next.fileUri, next)
         } else {
-            processUrl(next.url)
+            processUrl(next.url, next)
         }
     }
 
@@ -1247,7 +1411,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     )
     private var activeJobMeta: JobMeta? = null
 
-    private fun processFile(uri: android.net.Uri) {
+    private fun processFile(uri: android.net.Uri, item: QueueItem? = null) {
         activeJobMeta = JobMeta(
             url = "", model = _ui.value.selectedModel,
             isFileUpload = true,
@@ -1262,7 +1426,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = text, jobId = null)
         if (!managed) ProcessingService.start(getApplication(), text, 0)
         val fileName = _ui.value.selectedFileName ?: "video.mp4"
-        val options = options(backend)
+        val options = options(backend, item)
         tracker.launch(
             bgScope, backend,
             start = { backend.startFile(uri, fileName, options) },
@@ -1271,7 +1435,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    private fun processUrl(url: String) {
+    private fun processUrl(url: String, item: QueueItem? = null) {
         activeJobMeta = JobMeta(
             url = url, model = _ui.value.selectedModel,
             isFileUpload = false,
@@ -1281,7 +1445,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val managed = backend.managesNotifications
         _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.starting), jobId = null)
         if (!managed) ProcessingService.start(getApplication(), str(R.string.starting), 0)
-        val options = options(backend)
+        val options = options(backend, item)
         tracker.launch(
             bgScope, backend,
             start = { backend.startUrl(url, options) },
@@ -1310,21 +1474,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun options(backend: ProcessingBackend): ProcessOptions {
+    /** A queued [item] uses its own values; a direct Process uses the UI state, which mirrors the prefs. */
+    private fun options(backend: ProcessingBackend, item: QueueItem?): ProcessOptions {
+        val ui = _ui.value
+        val source = item ?: QueueItem(
+            url = ui.url,
+            model = ui.selectedModel,
+            audioOnly = ui.audioOnly,
+            bitrate = ui.bitrate,
+            outputFormat = ui.outputFormat,
+        )
         // The on-device backend only has its own models (§3.6)
-        val supported = backend.supportedModels()
-        val model = _ui.value.selectedModel.let {
-            if (backend is InternalBackend && it !in supported) supported.first() else it
-        }
-        return ProcessOptions(
-            model, _ui.value.audioOnly, _ui.value.bitrate,
-            sourceFileSize = _ui.value.selectedFileSize,
-            sourceFilePath = _ui.value.originalFileUri,
+        return source.toOptions(
+            supported = backend.supportedModels(),
+            internal = backend is InternalBackend,
+            internalDefault = settingsStore.internalModel,
+            noticeOk = { !modelManager.needsNotice(it) },
+            sourceFileSize = ui.selectedFileSize,
+            sourceFilePath = ui.originalFileUri,
         )
     }
 
-    private fun statusText(status: String, error: String?): String =
-        statusLabel(getApplication(), status, error)
+    private fun statusText(status: String, error: String?, etaSec: Int? = null): String =
+        statusWithEta(getApplication(), status, error, etaSec)
 
     private suspend fun runJob(jobId: String) {
         val backend = backends.forJob(jobId)
@@ -1334,7 +1506,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         backend.events(jobId).collect { e ->
             when (e) {
                 is JobEvent.Progress -> {
-                    val text = statusText(e.status, e.error)
+                    val text = statusText(e.status, e.error, e.etaSec)
                     _ui.value = _ui.value.copy(progress = e.progress, statusText = text)
                     if (!managed) ProcessingService.start(getApplication(), text, e.progress)
                     if (e.status == "done") {
@@ -1377,6 +1549,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     }
                     hapticTick()
                     activeJobMeta = null
+                    // The worker stored a new speed measurement
+                    if (managed) loadModelSpeed()
                     // Process next in queue if any
                     if (_ui.value.queue.isNotEmpty()) {
                         processNextInQueue()
@@ -1385,6 +1559,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 is JobEvent.Failed -> {
                     val text = statusText(e.status, e.error)
                     prefs.edit().remove("active_job_id").apply()
+                    if (managed) loadModelSpeed()
                     if (!managed) {
                         ProcessingService.stop(getApplication())
                         notif.showError(text)

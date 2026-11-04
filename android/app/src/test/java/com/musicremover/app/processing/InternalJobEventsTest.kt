@@ -36,6 +36,20 @@ class InternalJobEventsTest {
     }
 
     @Test
+    fun runningCarriesTheEta() {
+        val p = workDataOf("status" to "separating", "progress" to 55, "eta" to 125)
+        assertEquals(listOf(JobEvent.Progress("separating", 55, etaSec = 125)), map(info(WorkInfo.State.RUNNING, progress = p)))
+    }
+
+    @Test
+    fun unknownEtaIsNull() {
+        val unknown = workDataOf("status" to "separating", "progress" to 20, "eta" to -1)
+        assertEquals(listOf(JobEvent.Progress("separating", 20, etaSec = null)), map(info(WorkInfo.State.RUNNING, progress = unknown)))
+        val zero = workDataOf("status" to "separating", "progress" to 89, "eta" to 0)
+        assertEquals(listOf(JobEvent.Progress("separating", 89, etaSec = 0)), map(info(WorkInfo.State.RUNNING, progress = zero)))
+    }
+
+    @Test
     fun runningWithoutProgressIsExtracting() {
         assertEquals(listOf(JobEvent.Progress("extracting", 0)), map(info(WorkInfo.State.RUNNING)))
     }
