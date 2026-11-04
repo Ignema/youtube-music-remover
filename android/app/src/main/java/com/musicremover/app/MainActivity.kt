@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.IntentCompat
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
@@ -61,10 +62,12 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         // Wipe a login session left behind if the process died on the login screen
         lifecycleScope.launch { WebLoginCookies.wipeLeftoverSession(applicationContext) }
-        handleShareIntent(intent)
-        handlePlayIntent(intent)
-        handleShareAction(intent)
-        handleWidgetPaste(intent)
+        // A recreation (e.g. a language change) re-delivers the original intent; it was handled already
+        if (savedInstanceState == null) {
+            handleEntryIntent(intent)
+            handlePlayIntent(intent)
+            handleShareAction(intent)
+        }
         setContent {
             val ui by vm.ui.collectAsState()
             MusicRemoverTheme(
@@ -211,19 +214,76 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        handleShareIntent(intent)
+        handleEntryIntent(intent)
         handlePlayIntent(intent)
         handleShareAction(intent)
-        handleWidgetPaste(intent)
     }
 
-    private fun handleShareIntent(intent: Intent?) {
-        if (intent?.action == Intent.ACTION_SEND && intent.type == "text/plain") {
-            intent.getStringExtra(Intent.EXTRA_TEXT)?.let { shared ->
-                val urlPattern = Regex("https?://\\S+")
-                val match = urlPattern.find(shared)
-                vm.onUrlChange(match?.value ?: shared)
+    /** Set by the widget Paste button; the clipboard is read once the window has focus (Android 10+). */
+    private var pendingWidgetPaste = false
+
+    /** Shares and widget buttons pick the Home mode (HomeInput.entryFor). Shares never start processing. */
+    private fun handleEntryIntent(intent: Intent?) {
+        if (intent == null) return
+        val streams = sharedStreams(intent)
+        val facts = HomeInput.EntryFacts(intent.action, intent.type, intent.getStringExtra(Intent.EXTRA_TEXT), streams.size)
+        when (val entry = HomeInput.entryFor(facts)) {
+            is HomeInput.Entry.SingleLink -> {
+                vm.setInputTab(HomeInput.TAB_LINK)
+                vm.onUrlChange(entry.text)
             }
+            is HomeInput.Entry.Links -> vm.addLinks(entry.urls)
+            is HomeInput.Entry.Files -> {
+                // File mode holds one file; the card appears once the cache copy is done
+                vm.setInputTab(HomeInput.TAB_FILE)
+                vm.importFile(streams.first(), persist = false)
+                if (entry.count > 1) vm.showTransientError(getString(R.string.share_first_file_only, entry.count))
+            }
+            HomeInput.Entry.WidgetPaste -> {
+                vm.setInputTab(HomeInput.TAB_LINK)
+                pendingWidgetPaste = true
+                if (hasWindowFocus()) consumeWidgetPaste()
+            }
+            HomeInput.Entry.WidgetFile -> vm.setInputTab(HomeInput.TAB_FILE)
+            HomeInput.Entry.WidgetLinks -> vm.requestLinkImport()
+            HomeInput.Entry.WidgetSettings -> vm.pendingNavigation = "settings"
+            HomeInput.Entry.None -> {}
+        }
+    }
+
+    /** EXTRA_STREAM of SEND / SEND_MULTIPLE, else the ClipData items some senders use instead. */
+    private fun sharedStreams(intent: Intent): List<android.net.Uri> {
+        val streams = when (intent.action) {
+            Intent.ACTION_SEND -> listOfNotNull(
+                IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, android.net.Uri::class.java)
+            )
+            Intent.ACTION_SEND_MULTIPLE ->
+                IntentCompat.getParcelableArrayListExtra(intent, Intent.EXTRA_STREAM, android.net.Uri::class.java)
+                    ?.filterNotNull().orEmpty()
+            else -> return emptyList()
+        }
+        if (streams.isNotEmpty()) return streams
+        val clip = intent.clipData ?: return emptyList()
+        return (0 until clip.itemCount).mapNotNull { clip.getItemAt(it).uri }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) consumeWidgetPaste()
+    }
+
+    /** One clipboard link processes right away, as before; several fill the Link list without starting. */
+    private fun consumeWidgetPaste() {
+        if (!pendingWidgetPaste) return
+        pendingWidgetPaste = false
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        val clip = clipboard.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
+        val links = HomeInput.extractLinks(clip)
+        if (links.size >= 2) {
+            vm.addLinks(links)
+        } else if (clip.isNotEmpty()) {
+            vm.onUrlChange(clip)
+            vm.process()
         }
     }
 
@@ -268,21 +328,4 @@ class MainActivity : AppCompatActivity() {
     /** [url] null opens the Instagram login; otherwise a custom https login URL. */
     private fun cookieLoginRoute(url: String?): String =
         if (url == null) "cookie_login" else "cookie_login?url=${android.net.Uri.encode(url)}"
-
-    private fun handleWidgetPaste(intent: Intent?) {
-        if (intent?.action == MuremWidget.ACTION_PASTE_PROCESS) {
-            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-            val clip = clipboard.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
-            if (clip.isNotEmpty()) {
-                vm.onUrlChange(clip)
-                vm.process()
-            }
-        } else if (intent?.action == MuremWidget.ACTION_FILE) {
-            vm.setInputTab(1)
-        } else if (intent?.action == MuremWidget.ACTION_BATCH) {
-            vm.setInputTab(2)
-        } else if (intent?.action == MuremWidget.ACTION_SETTINGS) {
-            vm.pendingNavigation = "settings"
-        }
-    }
 }

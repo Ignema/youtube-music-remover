@@ -4,10 +4,22 @@
 
     <!-- Home Screen -->
     <string name="url_label">URL YouTube atau ID Video</string>
-    <string name="url_placeholder">Tampal pautan atau kongsi dari YouTube</string>
+    <string name="url_placeholder">Tampal satu atau lebih pautan, atau kongsi dari mana-mana apl</string>
     <string name="or_divider">atau</string>
     <string name="pick_video">Pilih fail video</string>
     <string name="remove_music">Buang Muzik</string>
+    <string name="home_mode_link">Pautan</string>
+    <string name="home_mode_file">Fail</string>
+    <string name="link_add_another">Tambah pautan lain</string>
+    <string name="link_import_txt">Import .txt</string>
+    <string name="link_remove">Buang pautan</string>
+    <string name="link_clear_all">Kosongkan semua</string>
+    <string name="link_count">Pautan: %1$d</string>
+    <string name="link_import_none">Tiada pautan ditemui dalam fail itu</string>
+    <string name="link_import_failed">Tidak dapat membaca fail itu</string>
+    <string name="links_added">Pautan ditambah: %1$d</string>
+    <string name="remove_music_n">Buang Muzik (%1$d)</string>
+    <string name="share_first_file_only">Fail dikongsi: %1$d. Fail pertama dipilih.</string>
     <string name="change">Tukar</string>
     <string name="recent">Terkini</string>
     <string name="hold_for_info">tekan lama untuk maklumat</string>
@@ -106,13 +118,13 @@
     <string name="help_share_yt">Kongsi dari YouTube</string>
     <string name="help_ai_models">Model AI</string>
     <string name="help_paste_link">Tampal pautan YouTube</string>
-    <string name="help_paste_desc">Salin URL dari YouTube dan tampal dalam medan input. Anda juga boleh berkongsi terus dari aplikasi YouTube.</string>
+    <string name="help_paste_desc">Salin URL dari YouTube dan tampal dalam medan input. Anda juga boleh berkongsi terus dari aplikasi YouTube. Tampal atau kongsi beberapa pautan sekali gus untuk mendapatkan senarai yang diproses satu demi satu, atau import fail .txt yang mengandungi pautan.</string>
     <string name="help_tap_remove">Ketik Buang Muzik</string>
     <string name="help_tap_remove_desc">Aplikasi akan memuat turun video, mengasingkan vokal menggunakan AI, dan menggabungkan semuanya semula.</string>
     <string name="help_play_save">Main atau simpan</string>
     <string name="help_play_save_desc">Setelah selesai, mainkan hasilnya terus atau simpan di mana-mana pada peranti anda.</string>
     <string name="help_pick_file">Pilih fail video</string>
-    <string name="help_pick_file_desc">Selain pautan YouTube, ketik "Pilih fail video" untuk memilih video dari peranti anda.</string>
+    <string name="help_pick_file_desc">Selain pautan YouTube, ketik "Pilih fail video" untuk memilih video dari peranti anda. Anda juga boleh berkongsi fail video atau audio ke Murem dari mana-mana apl.</string>
     <string name="help_process_usual">Proses seperti biasa</string>
     <string name="help_process_usual_desc">Aplikasi memuat naik fail ke pelayan, mengekstrak audio, mengasingkan vokal, dan mengembalikan hasilnya.</string>
     <string name="help_tap_share">Ketik Kongsi di YouTube</string>
@@ -141,16 +153,8 @@
     <string name="server_timeout">Pelayan tidak dapat dalam talian. Semak Termux untuk ralat.</string>
 
     <!-- New strings -->
-    <string name="import_url_file">Import URL dari fail</string>
     <string name="tab_url">URL</string>
     <string name="tab_file">Fail</string>
-    <string name="tab_batch">Kelompok</string>
-    <string name="batch_label">URL (satu setiap baris)</string>
-    <string name="batch_placeholder">https://youtube.com/watch?v=…\nhttps://tiktok.com/…</string>
-    <string name="input_mode">Mod Input</string>
-    <string name="mode_url_desc">Tampal URL video dari mana-mana laman yang disokong</string>
-    <string name="mode_file_desc">Pilih fail video dari peranti anda</string>
-    <string name="mode_batch_desc">Proses beberapa URL sekaligus</string>
     <string name="downloading_model">Memuat turun model AI…</string>
     <string name="sharing">Berkongsi…</string>
     <string name="bitrate">Kadar bit</string>
@@ -193,6 +197,6 @@
     <string name="widget_paste_process">Tampal &amp; Proses</string>
     <string name="widget_open">Buka Murem</string>
     <string name="widget_file">Muat Naik Video</string>
-    <string name="widget_batch">Kelompok</string>
-    <string name="widget_desc">Akses pantas untuk tampal, muat naik, proses kelompok, atau buka tetapan</string>
+    <string name="widget_batch">Pautan</string>
+    <string name="widget_desc">Akses pantas untuk tampal, muat naik, pautan atau tetapan</string>
 </resources>

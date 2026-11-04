@@ -4,10 +4,22 @@
 
     <!-- Home Screen -->
     <string name="url_label">URL YouTube o ID video</string>
-    <string name="url_placeholder">Incolla un link o condividi da YouTube</string>
+    <string name="url_placeholder">Incolla uno o più link, o condividi da qualsiasi app</string>
     <string name="or_divider">o</string>
     <string name="pick_video">Scegli un file video</string>
     <string name="remove_music">Rimuovi musica</string>
+    <string name="home_mode_link">Link</string>
+    <string name="home_mode_file">File</string>
+    <string name="link_add_another">Aggiungi un altro link</string>
+    <string name="link_import_txt">Importa .txt</string>
+    <string name="link_remove">Rimuovi link</string>
+    <string name="link_clear_all">Cancella tutto</string>
+    <string name="link_count">Link: %1$d</string>
+    <string name="link_import_none">Nessun link trovato in quel file</string>
+    <string name="link_import_failed">Impossibile leggere quel file</string>
+    <string name="links_added">Link aggiunti: %1$d</string>
+    <string name="remove_music_n">Rimuovi musica (%1$d)</string>
+    <string name="share_first_file_only">File condivisi: %1$d. È selezionato il primo.</string>
     <string name="change">Cambia</string>
     <string name="recent">Recenti</string>
     <string name="hold_for_info">tieni premuto per info</string>
@@ -106,13 +118,13 @@
     <string name="help_share_yt">Condividi da YouTube</string>
     <string name="help_ai_models">Modelli IA</string>
     <string name="help_paste_link">Incolla un link YouTube</string>
-    <string name="help_paste_desc">Copia un URL da YouTube e incollalo nel campo di inserimento. Puoi anche condividere direttamente dall\'app YouTube.</string>
+    <string name="help_paste_desc">Copia un URL da YouTube e incollalo nel campo di inserimento. Puoi anche condividere direttamente dall\'app YouTube. Incolla o condividi più link insieme per creare un elenco elaborato uno dopo l\'altro, oppure importa un file .txt di link.</string>
     <string name="help_tap_remove">Tocca Rimuovi musica</string>
     <string name="help_tap_remove_desc">L\'app scaricherà il video, separerà le voci con l\'IA e riunirà tutto.</string>
     <string name="help_play_save">Riproduci o salva</string>
     <string name="help_play_save_desc">Una volta finito, riproduci il risultato direttamente o salvalo dove vuoi sul tuo dispositivo.</string>
     <string name="help_pick_file">Scegli un file video</string>
-    <string name="help_pick_file_desc">Invece di un link YouTube, tocca "Scegli un file video" per selezionare un video dal tuo dispositivo.</string>
+    <string name="help_pick_file_desc">Invece di un link YouTube, tocca "Scegli un file video" per selezionare un video dal tuo dispositivo. Puoi anche condividere un file video o audio con Murem da qualsiasi app.</string>
     <string name="help_process_usual">Elabora come al solito</string>
     <string name="help_process_usual_desc">L\'app carica il file sul server, estrae l\'audio, separa le voci e restituisce il risultato.</string>
     <string name="help_tap_share">Tocca Condividi in YouTube</string>
@@ -141,16 +153,8 @@
     <string name="server_timeout">Il server non si è avviato. Controlla Termux per eventuali errori.</string>
 
     <!-- New strings -->
-    <string name="import_url_file">Importa URL da file</string>
     <string name="tab_url">URL</string>
     <string name="tab_file">File</string>
-    <string name="tab_batch">Batch</string>
-    <string name="batch_label">URL (uno per riga)</string>
-    <string name="batch_placeholder">https://youtube.com/watch?v=…\nhttps://tiktok.com/…</string>
-    <string name="input_mode">Modalità di inserimento</string>
-    <string name="mode_url_desc">Incolla un URL video da qualsiasi sito supportato</string>
-    <string name="mode_file_desc">Scegli un file video dal tuo dispositivo</string>
-    <string name="mode_batch_desc">Elabora più URL contemporaneamente</string>
     <string name="downloading_model">Download del modello IA…</string>
     <string name="sharing">Condivisione…</string>
     <string name="bitrate">Bitrate</string>
@@ -193,6 +197,6 @@
     <string name="widget_paste_process">Incolla ed elabora</string>
     <string name="widget_open">Apri Murem</string>
     <string name="widget_file">Carica video</string>
-    <string name="widget_batch">Batch</string>
-    <string name="widget_desc">Accesso rapido per incollare, caricare, elaborare in batch o aprire le impostazioni</string>
+    <string name="widget_batch">Link</string>
+    <string name="widget_desc">Accesso rapido per incollare, caricare, link o impostazioni</string>
 </resources>

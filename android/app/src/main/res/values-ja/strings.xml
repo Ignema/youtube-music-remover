@@ -4,10 +4,22 @@
 
     <!-- Home Screen -->
     <string name="url_label">YouTube URLまたは動画ID</string>
-    <string name="url_placeholder">リンクを貼り付けるかYouTubeから共有</string>
+    <string name="url_placeholder">1 つ以上のリンクを貼り付けるか、任意のアプリから共有</string>
     <string name="or_divider">または</string>
     <string name="pick_video">動画ファイルを選択</string>
     <string name="remove_music">音楽を除去</string>
+    <string name="home_mode_link">リンク</string>
+    <string name="home_mode_file">ファイル</string>
+    <string name="link_add_another">リンクを追加</string>
+    <string name="link_import_txt">.txt をインポート</string>
+    <string name="link_remove">リンクを削除</string>
+    <string name="link_clear_all">すべてクリア</string>
+    <string name="link_count">リンク: %1$d</string>
+    <string name="link_import_none">そのファイルにリンクが見つかりません</string>
+    <string name="link_import_failed">そのファイルを読み込めませんでした</string>
+    <string name="links_added">追加したリンク: %1$d</string>
+    <string name="remove_music_n">音楽を除去 (%1$d)</string>
+    <string name="share_first_file_only">共有されたファイル: %1$d。最初のファイルを選択しています。</string>
     <string name="change">変更</string>
     <string name="recent">最近</string>
     <string name="hold_for_info">長押しで詳細</string>
@@ -106,13 +118,13 @@
     <string name="help_share_yt">YouTubeから共有</string>
     <string name="help_ai_models">AIモデル</string>
     <string name="help_paste_link">YouTubeリンクを貼り付け</string>
-    <string name="help_paste_desc">YouTubeからURLをコピーして入力欄に貼り付けてください。YouTubeアプリから直接共有することもできます。</string>
+    <string name="help_paste_desc">YouTubeからURLをコピーして入力欄に貼り付けてください。YouTubeアプリから直接共有することもできます。 複数のリンクをまとめて貼り付けまたは共有すると、順番に処理されるリストになります。リンクを書いた .txt ファイルもインポートできます。</string>
     <string name="help_tap_remove">音楽を除去をタップ</string>
     <string name="help_tap_remove_desc">アプリが動画をダウンロードし、AIでボーカルを分離し、すべてを再結合します。</string>
     <string name="help_play_save">再生または保存</string>
     <string name="help_play_save_desc">完了したら、結果を直接再生するかデバイスの好きな場所に保存できます。</string>
     <string name="help_pick_file">動画ファイルを選択</string>
-    <string name="help_pick_file_desc">YouTubeリンクの代わりに「動画ファイルを選択」をタップしてデバイスから動画を選べます。</string>
+    <string name="help_pick_file_desc">YouTubeリンクの代わりに「動画ファイルを選択」をタップしてデバイスから動画を選べます。 任意のアプリから動画や音声ファイルを Murem に共有することもできます。</string>
     <string name="help_process_usual">通常通り処理</string>
     <string name="help_process_usual_desc">アプリがファイルをサーバーにアップロードし、音声を抽出、ボーカルを分離して結果を返します。</string>
     <string name="help_tap_share">YouTubeで共有をタップ</string>
@@ -141,16 +153,8 @@
     <string name="server_timeout">サーバーがオンラインになりませんでした。Termux でエラーを確認してください。</string>
 
     <!-- New strings -->
-    <string name="import_url_file">ファイルからURLをインポート</string>
     <string name="tab_url">URL</string>
     <string name="tab_file">ファイル</string>
-    <string name="tab_batch">一括</string>
-    <string name="batch_label">URL（1行に1つ）</string>
-    <string name="batch_placeholder">https://youtube.com/watch?v=…\nhttps://tiktok.com/…</string>
-    <string name="input_mode">入力モード</string>
-    <string name="mode_url_desc">対応サイトの動画URLを貼り付け</string>
-    <string name="mode_file_desc">デバイスから動画ファイルを選択</string>
-    <string name="mode_batch_desc">複数のURLを一度に処理</string>
     <string name="downloading_model">AIモデルをダウンロード中…</string>
     <string name="sharing">共有中…</string>
     <string name="bitrate">ビットレート</string>
@@ -193,6 +197,6 @@
     <string name="widget_paste_process">貼り付けて処理</string>
     <string name="widget_open">Murem を開く</string>
     <string name="widget_file">動画をアップロード</string>
-    <string name="widget_batch">一括</string>
-    <string name="widget_desc">貼り付け、アップロード、一括処理、設定を開くためのクイックアクセス</string>
+    <string name="widget_batch">リンク</string>
+    <string name="widget_desc">貼り付け、アップロード、リンク、設定にすばやくアクセス</string>
 </resources>

@@ -4,10 +4,22 @@
 
     <!-- Home Screen -->
     <string name="url_label">YouTube URL 또는 동영상 ID</string>
-    <string name="url_placeholder">링크를 붙여넣거나 YouTube에서 공유</string>
+    <string name="url_placeholder">링크를 하나 이상 붙여넣거나 다른 앱에서 공유하세요</string>
     <string name="or_divider">또는</string>
     <string name="pick_video">동영상 파일 선택</string>
     <string name="remove_music">음악 제거</string>
+    <string name="home_mode_link">링크</string>
+    <string name="home_mode_file">파일</string>
+    <string name="link_add_another">링크 추가</string>
+    <string name="link_import_txt">.txt 가져오기</string>
+    <string name="link_remove">링크 삭제</string>
+    <string name="link_clear_all">모두 지우기</string>
+    <string name="link_count">링크: %1$d</string>
+    <string name="link_import_none">해당 파일에서 링크를 찾지 못했습니다</string>
+    <string name="link_import_failed">해당 파일을 읽을 수 없습니다</string>
+    <string name="links_added">추가된 링크: %1$d</string>
+    <string name="remove_music_n">음악 제거 (%1$d)</string>
+    <string name="share_first_file_only">공유된 파일: %1$d. 첫 번째 파일이 선택되었습니다.</string>
     <string name="change">변경</string>
     <string name="recent">최근</string>
     <string name="hold_for_info">길게 눌러 정보 보기</string>
@@ -106,13 +118,13 @@
     <string name="help_share_yt">YouTube에서 공유</string>
     <string name="help_ai_models">AI 모델</string>
     <string name="help_paste_link">YouTube 링크 붙여넣기</string>
-    <string name="help_paste_desc">YouTube에서 URL을 복사하여 입력란에 붙여넣으세요. YouTube 앱에서 직접 공유할 수도 있습니다.</string>
+    <string name="help_paste_desc">YouTube에서 URL을 복사하여 입력란에 붙여넣으세요. YouTube 앱에서 직접 공유할 수도 있습니다. 여러 링크를 한 번에 붙여넣거나 공유하면 순서대로 처리되는 목록이 됩니다. 링크가 담긴 .txt 파일을 가져올 수도 있습니다.</string>
     <string name="help_tap_remove">음악 제거 탭</string>
     <string name="help_tap_remove_desc">앱이 동영상을 다운로드하고, AI로 보컬을 분리한 후, 모든 것을 다시 합칩니다.</string>
     <string name="help_play_save">재생 또는 저장</string>
     <string name="help_play_save_desc">완료되면 결과를 바로 재생하거나 기기의 원하는 곳에 저장하세요.</string>
     <string name="help_pick_file">동영상 파일 선택</string>
-    <string name="help_pick_file_desc">YouTube 링크 대신 "동영상 파일 선택"을 탭하여 기기에서 동영상을 선택하세요.</string>
+    <string name="help_pick_file_desc">YouTube 링크 대신 "동영상 파일 선택"을 탭하여 기기에서 동영상을 선택하세요. 다른 앱에서 동영상이나 오디오 파일을 Murem으로 공유할 수도 있습니다.</string>
     <string name="help_process_usual">평소처럼 처리</string>
     <string name="help_process_usual_desc">앱이 파일을 서버에 업로드하고, 오디오를 추출하고, 보컬을 분리한 후 결과를 반환합니다.</string>
     <string name="help_tap_share">YouTube에서 공유 탭</string>
@@ -141,16 +153,8 @@
     <string name="server_timeout">서버가 온라인 상태가 되지 않았습니다. Termux에서 오류를 확인하세요.</string>
 
     <!-- New strings -->
-    <string name="import_url_file">파일에서 URL 가져오기</string>
     <string name="tab_url">URL</string>
     <string name="tab_file">파일</string>
-    <string name="tab_batch">일괄</string>
-    <string name="batch_label">URL (한 줄에 하나씩)</string>
-    <string name="batch_placeholder">https://youtube.com/watch?v=…\nhttps://tiktok.com/…</string>
-    <string name="input_mode">입력 모드</string>
-    <string name="mode_url_desc">지원되는 사이트의 동영상 URL을 붙여넣기</string>
-    <string name="mode_file_desc">기기에서 동영상 파일 선택</string>
-    <string name="mode_batch_desc">여러 URL을 한 번에 처리</string>
     <string name="downloading_model">AI 모델 다운로드 중…</string>
     <string name="sharing">공유 중…</string>
     <string name="bitrate">비트레이트</string>
@@ -193,6 +197,6 @@
     <string name="widget_paste_process">붙여넣기 &amp; 처리</string>
     <string name="widget_open">Murem 열기</string>
     <string name="widget_file">동영상 업로드</string>
-    <string name="widget_batch">일괄</string>
-    <string name="widget_desc">붙여넣기, 업로드, 일괄 처리 또는 설정 열기를 위한 빠른 접근</string>
+    <string name="widget_batch">링크</string>
+    <string name="widget_desc">붙여넣기, 업로드, 링크, 설정 바로가기</string>
 </resources>

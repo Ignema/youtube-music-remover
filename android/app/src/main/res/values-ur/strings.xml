@@ -4,10 +4,22 @@
 
     <!-- Home Screen -->
     <string name="url_label">YouTube URL یا ویڈیو ID</string>
-    <string name="url_placeholder">لنک پیسٹ کریں یا YouTube سے شیئر کریں</string>
+    <string name="url_placeholder">ایک یا زیادہ لنکس پیسٹ کریں، یا کسی بھی ایپ سے شیئر کریں</string>
     <string name="or_divider">یا</string>
     <string name="pick_video">ویڈیو فائل منتخب کریں</string>
     <string name="remove_music">موسیقی ہٹائیں</string>
+    <string name="home_mode_link">لنک</string>
+    <string name="home_mode_file">فائل</string>
+    <string name="link_add_another">ایک اور لنک شامل کریں</string>
+    <string name="link_import_txt">.txt درآمد کریں</string>
+    <string name="link_remove">لنک ہٹائیں</string>
+    <string name="link_clear_all">سب صاف کریں</string>
+    <string name="link_count">لنکس: %1$d</string>
+    <string name="link_import_none">اس فائل میں کوئی لنک نہیں ملا</string>
+    <string name="link_import_failed">وہ فائل پڑھی نہیں جا سکی</string>
+    <string name="links_added">شامل کیے گئے لنکس: %1$d</string>
+    <string name="remove_music_n">موسیقی ہٹائیں (%1$d)</string>
+    <string name="share_first_file_only">شیئر کی گئی فائلیں: %1$d۔ پہلی منتخب ہے۔</string>
     <string name="change">تبدیل کریں</string>
     <string name="recent">حالیہ</string>
     <string name="hold_for_info">معلومات کے لیے دبائے رکھیں</string>
@@ -106,13 +118,13 @@
     <string name="help_share_yt">YouTube سے شیئر کریں</string>
     <string name="help_ai_models">AI ماڈلز</string>
     <string name="help_paste_link">YouTube لنک پیسٹ کریں</string>
-    <string name="help_paste_desc">YouTube سے URL کاپی کریں اور ان پٹ فیلڈ میں پیسٹ کریں۔ آپ YouTube ایپ سے براہ راست بھی شیئر کر سکتے ہیں۔</string>
+    <string name="help_paste_desc">YouTube سے URL کاپی کریں اور ان پٹ فیلڈ میں پیسٹ کریں۔ آپ YouTube ایپ سے براہ راست بھی شیئر کر سکتے ہیں۔ ایک ساتھ کئی لنکس پیسٹ یا شیئر کریں تو وہ ایک فہرست بن جائیں گے جو ایک کے بعد ایک پروسیس ہوں گے، یا لنکس والی .txt فائل درآمد کریں۔</string>
     <string name="help_tap_remove">موسیقی ہٹائیں پر ٹیپ کریں</string>
     <string name="help_tap_remove_desc">ایپ ویڈیو ڈاؤنلوڈ کرے گی، AI سے آوازیں الگ کرے گی، اور سب کچھ واپس ملا دے گی۔</string>
     <string name="help_play_save">چلائیں یا محفوظ کریں</string>
     <string name="help_play_save_desc">مکمل ہونے پر، نتیجہ براہ راست چلائیں یا اپنے ڈیوائس پر کہیں بھی محفوظ کریں۔</string>
     <string name="help_pick_file">ویڈیو فائل منتخب کریں</string>
-    <string name="help_pick_file_desc">YouTube لنک کی بجائے، اپنے ڈیوائس سے ویڈیو منتخب کرنے کے لیے "ویڈیو فائل منتخب کریں" پر ٹیپ کریں۔</string>
+    <string name="help_pick_file_desc">YouTube لنک کی بجائے، اپنے ڈیوائس سے ویڈیو منتخب کرنے کے لیے "ویڈیو فائل منتخب کریں" پر ٹیپ کریں۔ آپ کسی بھی ایپ سے Murem پر ویڈیو یا آڈیو فائل بھی شیئر کر سکتے ہیں۔</string>
     <string name="help_process_usual">معمول کے مطابق پروسیس کریں</string>
     <string name="help_process_usual_desc">ایپ فائل سرور پر اپلوڈ کرتی ہے، آڈیو نکالتی ہے، آوازیں الگ کرتی ہے، اور نتیجہ واپس کرتی ہے۔</string>
     <string name="help_tap_share">YouTube میں شیئر پر ٹیپ کریں</string>
@@ -141,16 +153,8 @@
     <string name="server_timeout">سرور آن لائن نہیں ہوا۔ خرابیوں کے لیے Termux چیک کریں۔</string>
 
     <!-- New strings -->
-    <string name="import_url_file">فائل سے URLs درآمد کریں</string>
     <string name="tab_url">URL</string>
     <string name="tab_file">فائل</string>
-    <string name="tab_batch">بیچ</string>
-    <string name="batch_label">URLs (ہر لائن میں ایک)</string>
-    <string name="batch_placeholder">https://youtube.com/watch?v=…\nhttps://tiktok.com/…</string>
-    <string name="input_mode">ان پٹ موڈ</string>
-    <string name="mode_url_desc">کسی بھی معاون سائٹ سے ویڈیو URL پیسٹ کریں</string>
-    <string name="mode_file_desc">اپنے ڈیوائس سے ویڈیو فائل منتخب کریں</string>
-    <string name="mode_batch_desc">ایک ساتھ متعدد URLs پروسیس کریں</string>
     <string name="downloading_model">AI ماڈل ڈاؤنلوڈ ہو رہا ہے…</string>
     <string name="sharing">شیئر ہو رہا ہے…</string>
     <string name="bitrate">بٹ ریٹ</string>
@@ -193,6 +197,6 @@
     <string name="widget_paste_process">پیسٹ کریں اور پروسیس کریں</string>
     <string name="widget_open">Murem کھولیں</string>
     <string name="widget_file">ویڈیو اپلوڈ</string>
-    <string name="widget_batch">بیچ</string>
-    <string name="widget_desc">پیسٹ، اپلوڈ، بیچ پروسیس، یا ترتیبات کھولنے کے لیے فوری رسائی</string>
+    <string name="widget_batch">لنکس</string>
+    <string name="widget_desc">پیسٹ، اپ لوڈ، لنکس یا سیٹنگز تک فوری رسائی</string>
 </resources>

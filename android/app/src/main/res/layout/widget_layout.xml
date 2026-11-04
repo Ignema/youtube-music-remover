@@ -85,7 +85,7 @@
             android:id="@+id/widget_text_batch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/tab_batch"
+            android:text="@string/widget_batch"
             android:textColor="#FFFFFF"
             android:textSize="9sp" />
     </LinearLayout>

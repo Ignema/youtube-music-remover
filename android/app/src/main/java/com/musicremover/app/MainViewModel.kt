@@ -175,8 +175,11 @@ internal fun resetState(prev: MainUiState, p: PersistedUi): MainUiState = MainUi
 
 data class MainUiState(
     val state: UiState = UiState.Idle,
-    val inputTab: Int = 0, // 0=URL, 1=File, 2=Batch
-    val batchText: String = "",
+    val inputTab: Int = 0, // 0=Link, 1=File (HomeInput.normalizeInputTab)
+    /** Link mode list (several links pasted, shared or imported); empty = the single-link field */
+    val links: List<String> = emptyList(),
+    /** One-shot: Home opens the .txt link import picker (widget Links button) */
+    val pendingLinkImport: Boolean = false,
     val url: String = "",
     val selectedModel: String = "Kim_Vocal_2.onnx",
     val models: List<String> = RemoteServerBackend.SERVER_MODELS,
@@ -186,7 +189,6 @@ data class MainUiState(
     val errorMessage: String = "",
     val jobId: String? = null,
     val showModelPicker: Boolean = false,
-    val showModeDialog: Boolean = false,
     val downloading: Boolean = false,
     val sharing: Boolean = false,
     val checkingPlay: Boolean = false,
@@ -726,29 +728,123 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // --- Basic state ---
+    /** Legacy callers may still pass 2 (the old Batch mode); it lands on Link. */
     fun setInputTab(tab: Int) {
-        _ui.value = _ui.value.copy(inputTab = tab, showModeDialog = false)
+        _ui.value = _ui.value.copy(inputTab = HomeInput.normalizeInputTab(tab))
     }
 
-    fun showModeDialog() {
-        _ui.value = _ui.value.copy(showModeDialog = true)
-    }
-
-    fun dismissModeDialog() {
-        _ui.value = _ui.value.copy(showModeDialog = false)
-    }
-
-    fun onBatchTextChange(text: String) {
-        _ui.value = _ui.value.copy(batchText = text)
-    }
-
+    /** Text holding several links (paste, typing) becomes list rows; one link or other text stays in the field. */
     fun onUrlChange(url: String) {
         previewJob?.cancel()
+        val found = HomeInput.extractLinks(url)
+        // Typing one char at a time must not cut a half-typed second link; a paste inserts many at once
+        if (found.size >= 2 && HomeInput.isLinkListInput(_ui.value.url, url)) {
+            addLinks(found)
+            _ui.value = _ui.value.copy(url = "", urlPreview = null, loadingPreview = false)
+            return
+        }
+        // With a list shown, the field only adds rows; its preview card is hidden, so skip the fetch
+        if (_ui.value.links.isNotEmpty()) {
+            _ui.value = _ui.value.copy(url = url, urlPreview = null, loadingPreview = false)
+            return
+        }
         if (looksLikeUrl(url)) {
             _ui.value = _ui.value.copy(url = url, urlPreview = null, loadingPreview = true)
             fetchUrlPreview(url)
         } else {
             _ui.value = _ui.value.copy(url = url, urlPreview = null, loadingPreview = false)
+        }
+    }
+
+    /** Appends [urls] to the Link list (distinct, order kept) and shows Link mode. */
+    fun addLinks(urls: List<String>) {
+        val s = _ui.value
+        _ui.value = s.copy(links = (s.links + urls).distinct(), inputTab = HomeInput.TAB_LINK)
+    }
+
+    /** "Add another link": moves the field's link into the list so the field is free for the next one. */
+    fun addFieldLinkToList() {
+        val found = HomeInput.extractLinks(_ui.value.url)
+        if (found.isEmpty()) {
+            showTransientError(str(R.string.enter_url_or_file))
+            return
+        }
+        previewJob?.cancel()
+        addLinks(found)
+        _ui.value = _ui.value.copy(url = "", urlPreview = null, loadingPreview = false)
+    }
+
+    fun removeLink(index: Int) {
+        val links = _ui.value.links
+        if (index !in links.indices) return
+        _ui.value = _ui.value.copy(links = links.toMutableList().apply { removeAt(index) })
+    }
+
+    fun clearLinks() {
+        _ui.value = _ui.value.copy(links = emptyList())
+    }
+
+    /** "Import .txt": the file's links join the list for review; Remove music starts them. */
+    fun importLinkText(text: String) {
+        val found = HomeInput.extractLinks(text)
+        if (found.isEmpty()) {
+            showTransientError(str(R.string.link_import_none))
+            return
+        }
+        // A link typed in the field joins the list first, so it is not lost behind the rows
+        val field = HomeInput.extractLinks(_ui.value.url)
+        addLinks(field + found)
+        if (field.isNotEmpty()) _ui.value = _ui.value.copy(url = "", urlPreview = null, loadingPreview = false)
+        showTransientError(getApplication<Application>().getString(R.string.links_added, found.size))
+    }
+
+    /** Widget Links button: Home opens the .txt import once. */
+    fun requestLinkImport() {
+        _ui.value = _ui.value.copy(pendingLinkImport = true, inputTab = HomeInput.TAB_LINK)
+    }
+
+    fun consumeLinkImport() {
+        _ui.value = _ui.value.copy(pendingLinkImport = false)
+    }
+
+    /**
+     * Picker or shared file: name/size query and a cache copy off the main thread, then File mode.
+     * [persist] takes a persistable grant (picker); share grants are temporary, so the copy happens now.
+     */
+    fun importFile(uri: android.net.Uri, persist: Boolean) {
+        val context = getApplication<Application>()
+        bgScope.launch {
+            if (persist) {
+                // Take persistable permission so we can re-read this file later
+                try {
+                    context.contentResolver.takePersistableUriPermission(
+                        uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                } catch (_: Exception) {}
+            }
+            var name: String? = null
+            var size: Long? = null
+            try {
+                context.contentResolver.query(uri, null, null, null, null)?.use {
+                    if (it.moveToFirst()) {
+                        val n = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                        if (n >= 0) name = it.getString(n)
+                        val s = it.getColumnIndex(android.provider.OpenableColumns.SIZE)
+                        if (s >= 0 && !it.isNull(s)) size = it.getLong(s)
+                    }
+                }
+            } catch (_: Exception) {}
+            // Copy to cache for immediate processing (original URI kept for redo)
+            val cachedUri = try {
+                val fileName = name ?: "video.mp4"
+                val cacheFile = java.io.File(context.cacheDir, "upload_${System.currentTimeMillis()}_$fileName")
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    cacheFile.outputStream().use { output -> input.copyTo(output) }
+                }
+                android.net.Uri.fromFile(cacheFile)
+            } catch (_: Exception) { uri }
+            onFileSelected(cachedUri, name, size, uri.toString())
+            setInputTab(HomeInput.TAB_FILE)
         }
     }
 
@@ -1269,43 +1365,41 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _ui.value = _ui.value.copy(noticeDialog = NoticeRequest(selected, NoticeTrigger.Process))
             return
         }
-        // Handle batch mode
-        if (_ui.value.inputTab == 2) {
-            val urls = _ui.value.batchText.lines().map { it.trim() }.filter { it.isNotEmpty() }
-            if (urls.isEmpty()) {
-                showTransientError(str(R.string.enter_url_or_file))
-                return
-            }
-            queueUrls(urls)
-            _ui.value = _ui.value.copy(batchText = "")
-            return
-        }
+        val s = _ui.value
+        val fileUri = s.selectedFileUri
+        val source = HomeInput.pickSource(s.inputTab, s.links, s.url, fileUri != null)
 
-        val fileUri = _ui.value.selectedFileUri
-        val url = _ui.value.url.trim()
-
-        if (fileUri == null && url.isEmpty()) {
+        if (source == HomeInput.Source.None) {
             showTransientError(str(R.string.enter_url_or_file))
             return
         }
 
+        // Several links: the existing queue (appends while processing, else starts the first)
+        if (source is HomeInput.Source.Links) {
+            queueUrls(source.urls)
+            _ui.value = _ui.value.copy(links = emptyList(), url = "", urlPreview = null)
+            return
+        }
+
         // If already processing, add to queue instead
-        if (_ui.value.state == UiState.Processing) {
-            if (fileUri != null) {
+        if (s.state == UiState.Processing) {
+            if (source == HomeInput.Source.File && fileUri != null) {
                 addFileToQueue(fileUri)
                 clearFile()
-            } else if (url.isNotEmpty()) {
-                addToQueue(url)
-                _ui.value = _ui.value.copy(url = "", urlPreview = null)
+            } else if (source is HomeInput.Source.Single) {
+                addToQueue(source.text)
+                _ui.value = _ui.value.copy(url = "", urlPreview = null, links = emptyList())
             }
             return
         }
 
-        if (fileUri != null) {
+        if (source == HomeInput.Source.File && fileUri != null) {
             processFile(fileUri)
             clearFile()
-        } else if (url.isNotEmpty()) {
-            processUrl(url)
+        } else if (source is HomeInput.Source.Single) {
+            // A one-row list runs like the field did
+            if (s.links.isNotEmpty()) _ui.value = _ui.value.copy(url = source.text, links = emptyList())
+            processUrl(source.text)
             _ui.value = _ui.value.copy(url = "", urlPreview = null)
         }
         hapticTick()

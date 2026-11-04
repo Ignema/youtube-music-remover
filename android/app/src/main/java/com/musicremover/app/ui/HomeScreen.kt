@@ -39,8 +39,13 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.UploadFile
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.CloudDownload
@@ -73,7 +78,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -93,11 +102,13 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
+import com.musicremover.app.HomeInput
 import com.musicremover.app.MainUiState
 import com.musicremover.app.MainViewModel
 import com.musicremover.app.R
@@ -241,40 +252,6 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
         }
     }
 
-    // Mode picker dialog (long-press on FAB)
-    if (ui.showModeDialog) {
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = vm::dismissModeDialog,
-            title = { Text(stringResource(R.string.input_mode)) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    ModeDialogOption(
-                        icon = Icons.Outlined.MusicOff,
-                        title = stringResource(R.string.tab_url),
-                        desc = stringResource(R.string.mode_url_desc),
-                        selected = ui.inputTab == 0,
-                        onClick = { vm.setInputTab(0) },
-                    )
-                    ModeDialogOption(
-                        icon = Icons.Outlined.VideoFile,
-                        title = stringResource(R.string.tab_file),
-                        desc = stringResource(R.string.mode_file_desc),
-                        selected = ui.inputTab == 1,
-                        onClick = { vm.setInputTab(1) },
-                    )
-                    ModeDialogOption(
-                        icon = Icons.Outlined.ContentPaste,
-                        title = stringResource(R.string.tab_batch),
-                        desc = stringResource(R.string.mode_batch_desc),
-                        selected = ui.inputTab == 2,
-                        onClick = { vm.setInputTab(2) },
-                    )
-                }
-            },
-            confirmButton = {},
-        )
-    }
-
     ModelNoticeDialog(vm)
 
     // Video info bottom sheet
@@ -298,58 +275,27 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
     val filePicker = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.GetContent(),
     ) { uri ->
-        if (uri != null) {
-            // Take persistable permission so we can re-read this file later
-            try {
-                context.contentResolver.takePersistableUriPermission(
-                    uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
-            } catch (_: Exception) {}
-            val name = try {
-                val cursor = context.contentResolver.query(uri, null, null, null, null)
-                cursor?.use {
-                    if (it.moveToFirst()) {
-                        val idx = it.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-                        if (idx >= 0) it.getString(idx) else null
-                    } else null
-                }
-            } catch (_: Exception) { null }
-            val size = try {
-                val cursor = context.contentResolver.query(uri, null, null, null, null)
-                cursor?.use {
-                    if (it.moveToFirst()) {
-                        val idx = it.getColumnIndex(android.provider.OpenableColumns.SIZE)
-                        if (idx >= 0) it.getLong(idx) else null
-                    } else null
-                }
-            } catch (_: Exception) { null }
-            // Copy to cache for immediate processing (original URI kept for redo)
-            val cachedUri = try {
-                val fileName = name ?: "video.mp4"
-                val cacheFile = java.io.File(context.cacheDir, "upload_${System.currentTimeMillis()}_$fileName")
-                context.contentResolver.openInputStream(uri)?.use { input ->
-                    cacheFile.outputStream().use { output -> input.copyTo(output) }
-                }
-                android.net.Uri.fromFile(cacheFile)
-            } catch (_: Exception) { uri }
-            vm.onFileSelected(cachedUri, name, size, uri.toString())
-        }
+        if (uri != null) vm.importFile(uri, persist = true)
     }
 
-    // URL file picker (txt with URLs, one per line)
+    // Link file picker (.txt with links); they join the Link list for review
     val urlFilePicker = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.GetContent(),
     ) { uri ->
         if (uri != null) {
             try {
                 val text = context.contentResolver.openInputStream(uri)?.bufferedReader()?.readText() ?: ""
-                val urls = text.lines().map { it.trim() }.filter { it.isNotEmpty() }
-                if (urls.isNotEmpty()) {
-                    vm.queueUrls(urls)
-                }
+                vm.importLinkText(text)
             } catch (_: Exception) {
-                vm.showTransientError("Failed to read URL file")
+                vm.showTransientError(context.getString(R.string.link_import_failed))
             }
+        }
+    }
+    // Widget Links button: open the import once
+    androidx.compose.runtime.LaunchedEffect(ui.pendingLinkImport) {
+        if (ui.pendingLinkImport) {
+            vm.consumeLinkImport()
+            urlFilePicker.launch("text/*")
         }
     }
 
@@ -364,10 +310,10 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
             Spacer(Modifier.height(16.dp))
         }
 
-        // Swipeable input modes
+        // Swipeable input modes: Link, File
         val pagerState = androidx.compose.foundation.pager.rememberPagerState(
-            initialPage = ui.inputTab,
-            pageCount = { 3 },
+            initialPage = HomeInput.normalizeInputTab(ui.inputTab),
+            pageCount = { 2 },
         )
         // Sync pager with ViewModel
         androidx.compose.runtime.LaunchedEffect(pagerState.settledPage) {
@@ -381,6 +327,25 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
             }
         }
 
+        // Labeled mode switcher; follows the page under the finger, a tap animates the pager via ui.inputTab
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            listOf(
+                Icons.Outlined.Link to R.string.home_mode_link,
+                Icons.Outlined.VideoFile to R.string.home_mode_file,
+            ).forEachIndexed { index, (icon, label) ->
+                SegmentedButton(
+                    selected = pagerState.currentPage == index,
+                    onClick = { vm.setInputTab(index) },
+                    shape = SegmentedButtonDefaults.itemShape(index = index, count = 2),
+                    // The label is the accessible name; the icon is decorative
+                    icon = { Icon(icon, null, Modifier.size(SegmentedButtonDefaults.IconSize)) },
+                ) {
+                    Text(stringResource(label))
+                }
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+
         androidx.compose.foundation.pager.HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxWidth(),
@@ -389,38 +354,9 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
         ) { page ->
             Column(modifier = Modifier.fillMaxWidth()) {
                 when (page) {
-                    0 -> UrlInputTab(ui, vm)
+                    0 -> LinkInputTab(ui, vm, urlFilePicker)
                     1 -> FileInputTab(ui, vm, filePicker)
-                    2 -> BatchInputTab(ui, vm, urlFilePicker)
                 }
-            }
-        }
-
-        // Animated dot indicator
-        Spacer(Modifier.height(10.dp))
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-        ) {
-            val pageOffset = pagerState.currentPage + pagerState.currentPageOffsetFraction
-            repeat(3) { i ->
-                val distance = kotlin.math.abs(pageOffset - i).coerceIn(0f, 1f)
-                val dotSize by animateFloatAsState(
-                    targetValue = 8f - (distance * 2f),
-                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                    label = "dotSize$i",
-                )
-                val dotAlpha by animateFloatAsState(
-                    targetValue = 1f - (distance * 0.7f),
-                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                    label = "dotAlpha$i",
-                )
-                Box(
-                    modifier = Modifier
-                        .size(dotSize.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = dotAlpha)),
-                )
             }
         }
 
@@ -648,8 +584,12 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
         ) {
             Icon(Icons.Outlined.MusicOff, null, Modifier.size(20.dp))
             Spacer(Modifier.width(10.dp))
+            val linkCount = if (ui.inputTab == HomeInput.TAB_LINK) {
+                (ui.links + HomeInput.extractLinks(ui.url)).distinct().size
+            } else 0
             Text(
                 if (isQueueMode) stringResource(R.string.add_to_queue)
+                else if (linkCount >= 2) stringResource(R.string.remove_music_n, linkCount)
                 else stringResource(R.string.remove_music),
                 style = MaterialTheme.typography.titleMedium,
             )
@@ -1368,32 +1308,6 @@ private fun EmptyHistoryState() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ModeDialogOption(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, desc: String, selected: Boolean, onClick: () -> Unit) {
-    Card(
-        onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        ),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Row(modifier = Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, null, Modifier.size(22.dp), tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleSmall)
-                Text(desc, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            if (selected) {
-                Icon(Icons.Outlined.CheckCircle, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
-            }
-        }
-    }
-}
-
 @Composable
 private fun InfoChip(text: String) {
     Card(
@@ -1818,8 +1732,109 @@ private fun ModelOption(
 }
 
 
+/** Link mode: one link in the field (as before), or a list once several links are pasted, shared or imported. */
 @Composable
-private fun UrlInputTab(ui: MainUiState, vm: MainViewModel) {
+private fun LinkInputTab(ui: MainUiState, vm: MainViewModel, urlFilePicker: androidx.activity.result.ActivityResultLauncher<String>) {
+    if (ui.links.isEmpty()) {
+        SingleLinkField(ui, vm)
+    } else {
+        LinkList(ui, vm)
+    }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (ui.links.isEmpty() && HomeInput.extractLinks(ui.url).isNotEmpty()) {
+            TextButton(onClick = vm::addFieldLinkToList) {
+                Icon(Icons.Outlined.Add, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.link_add_another), style = MaterialTheme.typography.labelLarge)
+            }
+        }
+        TextButton(onClick = { urlFilePicker.launch("text/*") }) {
+            Icon(Icons.Outlined.UploadFile, null, Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(stringResource(R.string.link_import_txt), style = MaterialTheme.typography.labelLarge)
+        }
+    }
+}
+
+@Composable
+private fun LinkList(ui: MainUiState, vm: MainViewModel) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            stringResource(R.string.link_count, ui.links.size),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f).padding(start = 4.dp),
+        )
+        TextButton(onClick = vm::clearLinks) {
+            Text(stringResource(R.string.link_clear_all), style = MaterialTheme.typography.labelLarge)
+        }
+    }
+    // A plain Column: the page already sits in the screen's verticalScroll
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        ui.links.forEachIndexed { i, link ->
+            key(link) {
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(start = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(Icons.Outlined.Link, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            HomeInput.linkLabel(link),
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                        IconButton(onClick = { vm.removeLink(i) }) {
+                            Icon(Icons.Outlined.Close, stringResource(R.string.link_remove), Modifier.size(18.dp))
+                        }
+                    }
+                }
+            }
+        }
+    }
+    Spacer(Modifier.height(8.dp))
+    OutlinedTextField(
+        value = ui.url,
+        onValueChange = { vm.onUrlChange(it) },
+        label = { Text(stringResource(R.string.link_add_another)) },
+        singleLine = true,
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { vm.addFieldLinkToList() }),
+        trailingIcon = {
+            if (ui.url.isNotEmpty()) {
+                IconButton(onClick = vm::addFieldLinkToList) {
+                    Icon(Icons.Outlined.Add, stringResource(R.string.link_add_another), Modifier.size(20.dp))
+                }
+            } else {
+                val clip = androidx.compose.ui.platform.LocalClipboardManager.current
+                IconButton(onClick = {
+                    val text = clip.getText()?.text.orEmpty()
+                    val found = HomeInput.extractLinks(text)
+                    if (found.isNotEmpty()) vm.addLinks(found) else if (text.isNotEmpty()) vm.onUrlChange(text)
+                }) {
+                    Icon(Icons.Outlined.ContentPaste, "Paste", Modifier.size(18.dp))
+                }
+            }
+        },
+    )
+}
+
+/** The single-link field and its preview card, unchanged from the old URL mode. */
+@Composable
+private fun SingleLinkField(ui: MainUiState, vm: MainViewModel) {
     OutlinedTextField(
         value = ui.url,
         onValueChange = { vm.onUrlChange(it) },
@@ -1895,30 +1910,6 @@ private fun FileInputTab(ui: MainUiState, vm: MainViewModel, filePicker: android
             Icon(Icons.Outlined.VideoFile, null, Modifier.size(20.dp))
             Spacer(Modifier.width(10.dp))
             Text(stringResource(R.string.pick_video), style = MaterialTheme.typography.bodyLarge)
-        }
-    }
-}
-
-@Composable
-private fun BatchInputTab(ui: MainUiState, vm: MainViewModel, urlFilePicker: androidx.activity.result.ActivityResultLauncher<String>) {
-    OutlinedTextField(
-        value = ui.batchText,
-        onValueChange = vm::onBatchTextChange,
-        label = { Text(stringResource(R.string.batch_label)) },
-        placeholder = { Text(stringResource(R.string.batch_placeholder)) },
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth().height(120.dp),
-        maxLines = 6,
-    )
-    Spacer(Modifier.height(8.dp))
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        val count = ui.batchText.lines().count { it.trim().isNotEmpty() }
-        Text(
-            if (count > 0) "$count URL${if (count > 1) "s" else ""}" else "",
-            style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline,
-        )
-        androidx.compose.material3.TextButton(onClick = { urlFilePicker.launch("text/*") }) {
-            Text(stringResource(R.string.import_url_file), style = MaterialTheme.typography.labelMedium)
         }
     }
 }

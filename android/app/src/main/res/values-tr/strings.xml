@@ -4,10 +4,22 @@
 
     <!-- Home Screen -->
     <string name="url_label">YouTube URL\'si veya Video ID</string>
-    <string name="url_placeholder">Bir bağlantı yapıştır veya YouTube\'dan paylaş</string>
+    <string name="url_placeholder">Bir veya daha fazla bağlantı yapıştırın ya da herhangi bir uygulamadan paylaşın</string>
     <string name="or_divider">veya</string>
     <string name="pick_video">Video dosyası seç</string>
     <string name="remove_music">Müziği Kaldır</string>
+    <string name="home_mode_link">Bağlantı</string>
+    <string name="home_mode_file">Dosya</string>
+    <string name="link_add_another">Başka bağlantı ekle</string>
+    <string name="link_import_txt">.txt içe aktar</string>
+    <string name="link_remove">Bağlantıyı kaldır</string>
+    <string name="link_clear_all">Tümünü temizle</string>
+    <string name="link_count">Bağlantılar: %1$d</string>
+    <string name="link_import_none">Bu dosyada bağlantı bulunamadı</string>
+    <string name="link_import_failed">Bu dosya okunamadı</string>
+    <string name="links_added">Eklenen bağlantılar: %1$d</string>
+    <string name="remove_music_n">Müziği Kaldır (%1$d)</string>
+    <string name="share_first_file_only">Paylaşılan dosyalar: %1$d. İlki seçildi.</string>
     <string name="change">Değiştir</string>
     <string name="recent">Son</string>
     <string name="hold_for_info">bilgi için basılı tut</string>
@@ -106,13 +118,13 @@
     <string name="help_share_yt">YouTube\'dan Paylaş</string>
     <string name="help_ai_models">Yapay Zeka Modelleri</string>
     <string name="help_paste_link">YouTube bağlantısı yapıştır</string>
-    <string name="help_paste_desc">YouTube\'dan bir URL kopyalayıp giriş alanına yapıştırın. YouTube uygulamasından doğrudan da paylaşabilirsiniz.</string>
+    <string name="help_paste_desc">YouTube\'dan bir URL kopyalayıp giriş alanına yapıştırın. YouTube uygulamasından doğrudan da paylaşabilirsiniz. Birden fazla bağlantıyı aynı anda yapıştırın veya paylaşın; sırayla işlenen bir liste oluşur. Bağlantı içeren bir .txt dosyasını da içe aktarabilirsiniz.</string>
     <string name="help_tap_remove">Müziği Kaldır\'a dokunun</string>
     <string name="help_tap_remove_desc">Uygulama videoyu indirecek, yapay zeka ile vokalleri ayıracak ve her şeyi tekrar birleştirecek.</string>
     <string name="help_play_save">Oynat veya kaydet</string>
     <string name="help_play_save_desc">Tamamlandığında, sonucu doğrudan oynatın veya cihazınızda istediğiniz yere kaydedin.</string>
     <string name="help_pick_file">Video dosyası seç</string>
-    <string name="help_pick_file_desc">YouTube bağlantısı yerine, cihazınızdan video seçmek için "Video dosyası seç"e dokunun.</string>
+    <string name="help_pick_file_desc">YouTube bağlantısı yerine, cihazınızdan video seçmek için "Video dosyası seç"e dokunun. Herhangi bir uygulamadan Murem\'e video veya ses dosyası da paylaşabilirsiniz.</string>
     <string name="help_process_usual">Her zamanki gibi işle</string>
     <string name="help_process_usual_desc">Uygulama dosyayı sunucuya yükler, sesi çıkarır, vokalleri ayırır ve sonucu döndürür.</string>
     <string name="help_tap_share">YouTube\'da Paylaş\'a dokunun</string>
@@ -141,16 +153,8 @@
     <string name="server_timeout">Sunucu çevrimiçi olmadı. Hatalar için Termux\'u kontrol edin.</string>
 
     <!-- New strings -->
-    <string name="import_url_file">Dosyadan URL\'leri içe aktar</string>
     <string name="tab_url">URL</string>
     <string name="tab_file">Dosya</string>
-    <string name="tab_batch">Toplu</string>
-    <string name="batch_label">URL\'ler (her satıra bir tane)</string>
-    <string name="batch_placeholder">https://youtube.com/watch?v=…\nhttps://tiktok.com/…</string>
-    <string name="input_mode">Giriş Modu</string>
-    <string name="mode_url_desc">Desteklenen herhangi bir siteden video URL\'si yapıştırın</string>
-    <string name="mode_file_desc">Cihazınızdan bir video dosyası seçin</string>
-    <string name="mode_batch_desc">Birden fazla URL\'yi aynı anda işleyin</string>
     <string name="downloading_model">Yapay zeka modeli indiriliyor…</string>
     <string name="sharing">Paylaşılıyor…</string>
     <string name="bitrate">Bit hızı</string>
@@ -193,6 +197,6 @@
     <string name="widget_paste_process">Yapıştır ve İşle</string>
     <string name="widget_open">Murem\'i Aç</string>
     <string name="widget_file">Video Yükle</string>
-    <string name="widget_batch">Toplu</string>
-    <string name="widget_desc">Yapıştırma, yükleme, toplu işleme veya ayarları açma için hızlı erişim</string>
+    <string name="widget_batch">Bağlantılar</string>
+    <string name="widget_desc">Yapıştırma, yükleme, bağlantılar veya ayarlara hızlı erişim</string>
 </resources>

@@ -17,8 +17,8 @@ Download the latest APK from [Releases](https://github.com/Ignema/youtube-music-
 
 **Input:**
 - Paste a URL from any supported site or pick a local video file
-- Batch processing — import multiple URLs from a text file
-- Share directly from any app
+- Several links at once: paste, share or import a .txt; they run one after another
+- Share links, videos or audio files directly from any app
 
 **AI Models:**
 - Kim Vocal 2 (default) — best MDX-Net quality

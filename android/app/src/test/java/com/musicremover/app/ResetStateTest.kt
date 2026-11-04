@@ -24,6 +24,9 @@ class ResetStateTest {
     private val prev = MainUiState(
         state = UiState.Done,
         url = "https://example.com/v",
+        links = listOf("https://a.com/1", "https://b.com/2"),
+        pendingLinkImport = true,
+        inputTab = 1,
         selectedModel = "UVR_MDXNET_3_9662.onnx",
         progress = 100,
         statusText = "song-vocals-only.m4a",
@@ -90,6 +93,9 @@ class ResetStateTest {
         assertNull(r.jobId)
         assertNull(r.selectedFileName)
         assertNull(r.noticeDialog)
+        assertEquals(emptyList<String>(), r.links)
+        assertEquals(false, r.pendingLinkImport)
+        assertEquals(0, r.inputTab)
         // The selection returns to the default; applyModelsForMode sets the internal model afterwards
         assertEquals(d.selectedModel, r.selectedModel)
     }

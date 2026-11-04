@@ -4,10 +4,22 @@
 
     <!-- Home Screen -->
     <string name="url_label">URL YouTube atau ID Video</string>
-    <string name="url_placeholder">Tempel tautan atau bagikan dari YouTube</string>
+    <string name="url_placeholder">Tempel satu atau beberapa tautan, atau bagikan dari aplikasi apa pun</string>
     <string name="or_divider">atau</string>
     <string name="pick_video">Pilih file video</string>
     <string name="remove_music">Hapus Musik</string>
+    <string name="home_mode_link">Tautan</string>
+    <string name="home_mode_file">File</string>
+    <string name="link_add_another">Tambah tautan lain</string>
+    <string name="link_import_txt">Impor .txt</string>
+    <string name="link_remove">Hapus tautan</string>
+    <string name="link_clear_all">Hapus semua</string>
+    <string name="link_count">Tautan: %1$d</string>
+    <string name="link_import_none">Tidak ada tautan di file itu</string>
+    <string name="link_import_failed">Tidak dapat membaca file itu</string>
+    <string name="links_added">Tautan ditambahkan: %1$d</string>
+    <string name="remove_music_n">Hapus Musik (%1$d)</string>
+    <string name="share_first_file_only">File dibagikan: %1$d. File pertama dipilih.</string>
     <string name="change">Ubah</string>
     <string name="recent">Terbaru</string>
     <string name="hold_for_info">tahan untuk info</string>
@@ -106,13 +118,13 @@
     <string name="help_share_yt">Bagikan dari YouTube</string>
     <string name="help_ai_models">Model AI</string>
     <string name="help_paste_link">Tempel tautan YouTube</string>
-    <string name="help_paste_desc">Salin URL dari YouTube dan tempel di kolom input. Kamu juga bisa langsung membagikan dari aplikasi YouTube.</string>
+    <string name="help_paste_desc">Salin URL dari YouTube dan tempel di kolom input. Kamu juga bisa langsung membagikan dari aplikasi YouTube. Tempel atau bagikan beberapa tautan sekaligus untuk membuat daftar yang diproses satu per satu, atau impor file .txt berisi tautan.</string>
     <string name="help_tap_remove">Ketuk Hapus Musik</string>
     <string name="help_tap_remove_desc">Aplikasi akan mengunduh video, memisahkan vokal menggunakan AI, dan menggabungkan semuanya kembali.</string>
     <string name="help_play_save">Putar atau simpan</string>
     <string name="help_play_save_desc">Setelah selesai, putar hasilnya langsung atau simpan di mana saja di perangkatmu.</string>
     <string name="help_pick_file">Pilih file video</string>
-    <string name="help_pick_file_desc">Alih-alih tautan YouTube, ketuk "Pilih file video" untuk memilih video dari perangkatmu.</string>
+    <string name="help_pick_file_desc">Alih-alih tautan YouTube, ketuk "Pilih file video" untuk memilih video dari perangkatmu. Anda juga dapat membagikan file video atau audio ke Murem dari aplikasi apa pun.</string>
     <string name="help_process_usual">Proses seperti biasa</string>
     <string name="help_process_usual_desc">Aplikasi mengunggah file ke server, mengekstrak audio, memisahkan vokal, dan mengembalikan hasilnya.</string>
     <string name="help_tap_share">Ketuk Bagikan di YouTube</string>
@@ -141,16 +153,8 @@
     <string name="server_timeout">Server tidak bisa online. Periksa Termux untuk error.</string>
 
     <!-- New strings -->
-    <string name="import_url_file">Impor URL dari file</string>
     <string name="tab_url">URL</string>
     <string name="tab_file">File</string>
-    <string name="tab_batch">Batch</string>
-    <string name="batch_label">URL (satu per baris)</string>
-    <string name="batch_placeholder">https://youtube.com/watch?v=…\nhttps://tiktok.com/…</string>
-    <string name="input_mode">Mode Input</string>
-    <string name="mode_url_desc">Tempel URL video dari situs yang didukung</string>
-    <string name="mode_file_desc">Pilih file video dari perangkatmu</string>
-    <string name="mode_batch_desc">Proses beberapa URL sekaligus</string>
     <string name="downloading_model">Mengunduh model AI…</string>
     <string name="sharing">Membagikan…</string>
     <string name="bitrate">Bitrate</string>
@@ -193,6 +197,6 @@
     <string name="widget_paste_process">Tempel &amp; Proses</string>
     <string name="widget_open">Buka Murem</string>
     <string name="widget_file">Unggah Video</string>
-    <string name="widget_batch">Batch</string>
-    <string name="widget_desc">Akses cepat untuk menempel, mengunggah, proses batch, atau buka pengaturan</string>
+    <string name="widget_batch">Tautan</string>
+    <string name="widget_desc">Akses cepat untuk tempel, unggah, tautan, atau buka pengaturan</string>
 </resources>

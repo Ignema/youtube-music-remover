@@ -4,20 +4,24 @@
 
     <!-- Home Screen -->
     <string name="url_label">رابط فيديو أو معرّف YouTube</string>
-    <string name="url_placeholder">الصق رابط أو شاركه من أي تطبيق</string>
+    <string name="url_placeholder">الصق رابطًا أو أكثر، أو شارك من أي تطبيق</string>
     <string name="or_divider">أو</string>
     <string name="pick_video">اختر ملف فيديو</string>
-    <string name="import_url_file">استيراد روابط من ملف</string>
     <string name="tab_url">رابط</string>
     <string name="tab_file">ملف</string>
-    <string name="tab_batch">دفعة</string>
-    <string name="batch_label">روابط (واحد في كل سطر)</string>
-    <string name="batch_placeholder">https://youtube.com/watch?v=…\nhttps://tiktok.com/…</string>
-    <string name="input_mode">وضع الإدخال</string>
-    <string name="mode_url_desc">الصق رابط فيديو من أي موقع مدعوم</string>
-    <string name="mode_file_desc">اختر ملف فيديو من جهازك</string>
-    <string name="mode_batch_desc">عالج عدة روابط دفعة واحدة</string>
     <string name="remove_music">شيل الموسيقى</string>
+    <string name="home_mode_link">رابط</string>
+    <string name="home_mode_file">ملف</string>
+    <string name="link_add_another">إضافة رابط آخر</string>
+    <string name="link_import_txt">استيراد .txt</string>
+    <string name="link_remove">إزالة الرابط</string>
+    <string name="link_clear_all">مسح الكل</string>
+    <string name="link_count">الروابط: %1$d</string>
+    <string name="link_import_none">لم يتم العثور على روابط في هذا الملف</string>
+    <string name="link_import_failed">تعذّرت قراءة هذا الملف</string>
+    <string name="links_added">الروابط المضافة: %1$d</string>
+    <string name="remove_music_n">شيل الموسيقى (%1$d)</string>
+    <string name="share_first_file_only">الملفات المشارَكة: %1$d. تم تحديد الأول.</string>
     <string name="change">تغيير</string>
     <string name="recent">الأخيرة</string>
     <string name="hold_for_info">اضغط مطوّلاً للتفاصيل</string>
@@ -148,8 +152,8 @@
     <string name="widget_paste_process">لصق ومعالجة</string>
     <string name="widget_open">فتح Murem</string>
     <string name="widget_file">رفع فيديو</string>
-    <string name="widget_batch">دفعة</string>
-    <string name="widget_desc">وصول سريع للصق أو رفع أو معالجة دفعة أو الإعدادات</string>
+    <string name="widget_batch">روابط</string>
+    <string name="widget_desc">وصول سريع للصق أو الرفع أو الروابط أو الإعدادات</string>
 
     <!-- Help -->
     <string name="how_to_use">طريقة الاستخدام</string>
@@ -160,13 +164,13 @@
     <string name="help_share_yt">مشاركة من YouTube</string>
     <string name="help_ai_models">نماذج الذكاء الاصطناعي</string>
     <string name="help_paste_link">الصق رابط YouTube</string>
-    <string name="help_paste_desc">انسخ رابط من YouTube والصقه في حقل الإدخال. تقدر أيضاً تشارك مباشرة من تطبيق YouTube.</string>
+    <string name="help_paste_desc">انسخ رابط من YouTube والصقه في حقل الإدخال. تقدر أيضاً تشارك مباشرة من تطبيق YouTube. الصق أو شارك عدة روابط دفعة واحدة لتصبح قائمة تتم معالجتها واحدًا تلو الآخر، أو استورد ملف .txt يحتوي على روابط.</string>
     <string name="help_tap_remove">اضغط شيل الموسيقى</string>
     <string name="help_tap_remove_desc">التطبيق بيحمّل الفيديو، يفصل الأصوات باستخدام الذكاء الاصطناعي، ويدمج كل شي مع بعض.</string>
     <string name="help_play_save">شغّل أو احفظ</string>
     <string name="help_play_save_desc">لما يخلص، شغّل النتيجة مباشرة أو احفظها في أي مكان على جهازك.</string>
     <string name="help_pick_file">اختر ملف فيديو</string>
-    <string name="help_pick_file_desc">بدل رابط YouTube، اضغط "اختر ملف فيديو" عشان تختار فيديو من جهازك.</string>
+    <string name="help_pick_file_desc">بدل رابط YouTube، اضغط "اختر ملف فيديو" عشان تختار فيديو من جهازك. يمكنك أيضًا مشاركة ملف فيديو أو صوت مع Murem من أي تطبيق.</string>
     <string name="help_process_usual">عالج كالعادة</string>
     <string name="help_process_usual_desc">التطبيق يرفع الملف للسيرفر، يستخرج الصوت، يفصل الأصوات، ويرجع لك النتيجة.</string>
     <string name="help_tap_share">اضغط مشاركة في YouTube</string>

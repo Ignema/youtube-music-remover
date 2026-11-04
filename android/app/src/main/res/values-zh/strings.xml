@@ -4,10 +4,22 @@
 
     <!-- Home Screen -->
     <string name="url_label">YouTube 链接或视频 ID</string>
-    <string name="url_placeholder">粘贴链接或从 YouTube 分享</string>
+    <string name="url_placeholder">粘贴一个或多个链接，或从任意应用分享</string>
     <string name="or_divider">或</string>
     <string name="pick_video">选择视频文件</string>
     <string name="remove_music">去除音乐</string>
+    <string name="home_mode_link">链接</string>
+    <string name="home_mode_file">文件</string>
+    <string name="link_add_another">再添加一个链接</string>
+    <string name="link_import_txt">导入 .txt</string>
+    <string name="link_remove">移除链接</string>
+    <string name="link_clear_all">全部清除</string>
+    <string name="link_count">链接：%1$d</string>
+    <string name="link_import_none">该文件中未找到链接</string>
+    <string name="link_import_failed">无法读取该文件</string>
+    <string name="links_added">已添加链接：%1$d</string>
+    <string name="remove_music_n">去除音乐 (%1$d)</string>
+    <string name="share_first_file_only">已分享文件：%1$d，已选择第一个。</string>
     <string name="change">更改</string>
     <string name="recent">最近</string>
     <string name="hold_for_info">长按查看详情</string>
@@ -106,13 +118,13 @@
     <string name="help_share_yt">从 YouTube 分享</string>
     <string name="help_ai_models">AI 模型</string>
     <string name="help_paste_link">粘贴 YouTube 链接</string>
-    <string name="help_paste_desc">从 YouTube 复制链接并粘贴到输入框中。你也可以直接从 YouTube 应用分享。</string>
+    <string name="help_paste_desc">从 YouTube 复制链接并粘贴到输入框中。你也可以直接从 YouTube 应用分享。 一次粘贴或分享多个链接会生成一个列表，并按顺序依次处理；也可以导入包含链接的 .txt 文件。</string>
     <string name="help_tap_remove">点击去除音乐</string>
     <string name="help_tap_remove_desc">应用会下载视频，使用 AI 分离人声，然后将所有内容重新合并。</string>
     <string name="help_play_save">播放或保存</string>
     <string name="help_play_save_desc">完成后，直接播放结果或保存到设备上的任意位置。</string>
     <string name="help_pick_file">选择视频文件</string>
-    <string name="help_pick_file_desc">除了 YouTube 链接，你也可以点击"选择视频文件"从设备中选择视频。</string>
+    <string name="help_pick_file_desc">除了 YouTube 链接，你也可以点击"选择视频文件"从设备中选择视频。 你也可以从任意应用将视频或音频文件分享到 Murem。</string>
     <string name="help_process_usual">照常处理</string>
     <string name="help_process_usual_desc">应用将文件上传到服务器，提取音频，分离人声，然后返回结果。</string>
     <string name="help_tap_share">在 YouTube 中点击分享</string>
@@ -141,16 +153,8 @@
     <string name="server_timeout">服务器未能上线。请检查 Termux 中的错误信息。</string>
 
     <!-- New strings -->
-    <string name="import_url_file">从文件导入链接</string>
     <string name="tab_url">链接</string>
     <string name="tab_file">文件</string>
-    <string name="tab_batch">批量</string>
-    <string name="batch_label">链接（每行一个）</string>
-    <string name="batch_placeholder">https://youtube.com/watch?v=…\nhttps://tiktok.com/…</string>
-    <string name="input_mode">输入模式</string>
-    <string name="mode_url_desc">粘贴任何支持网站的视频链接</string>
-    <string name="mode_file_desc">从设备中选择视频文件</string>
-    <string name="mode_batch_desc">一次处理多个链接</string>
     <string name="downloading_model">正在下载 AI 模型…</string>
     <string name="sharing">正在分享…</string>
     <string name="bitrate">比特率</string>
@@ -193,6 +197,6 @@
     <string name="widget_paste_process">粘贴并处理</string>
     <string name="widget_open">打开 Murem</string>
     <string name="widget_file">上传视频</string>
-    <string name="widget_batch">批量</string>
-    <string name="widget_desc">快速访问：粘贴、上传、批量处理或打开设置</string>
+    <string name="widget_batch">链接</string>
+    <string name="widget_desc">快速粘贴、上传、链接或打开设置</string>
 </resources>

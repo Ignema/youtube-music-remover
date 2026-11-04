@@ -4,10 +4,22 @@
 
     <!-- Home Screen -->
     <string name="url_label">YouTube-URL oder Video-ID</string>
-    <string name="url_placeholder">Link einfügen oder von YouTube teilen</string>
+    <string name="url_placeholder">Einen oder mehrere Links einfügen oder aus einer App teilen</string>
     <string name="or_divider">oder</string>
     <string name="pick_video">Videodatei auswählen</string>
     <string name="remove_music">Musik entfernen</string>
+    <string name="home_mode_link">Link</string>
+    <string name="home_mode_file">Datei</string>
+    <string name="link_add_another">Weiteren Link hinzufügen</string>
+    <string name="link_import_txt">.txt importieren</string>
+    <string name="link_remove">Link entfernen</string>
+    <string name="link_clear_all">Alle löschen</string>
+    <string name="link_count">Links: %1$d</string>
+    <string name="link_import_none">Keine Links in dieser Datei gefunden</string>
+    <string name="link_import_failed">Datei konnte nicht gelesen werden</string>
+    <string name="links_added">Links hinzugefügt: %1$d</string>
+    <string name="remove_music_n">Musik entfernen (%1$d)</string>
+    <string name="share_first_file_only">Geteilte Dateien: %1$d. Die erste ist ausgewählt.</string>
     <string name="change">Ändern</string>
     <string name="recent">Zuletzt</string>
     <string name="hold_for_info">gedrückt halten für Info</string>
@@ -106,13 +118,13 @@
     <string name="help_share_yt">Von YouTube teilen</string>
     <string name="help_ai_models">KI-Modelle</string>
     <string name="help_paste_link">YouTube-Link einfügen</string>
-    <string name="help_paste_desc">Kopiere eine URL von YouTube und füge sie in das Eingabefeld ein. Du kannst auch direkt aus der YouTube-App teilen.</string>
+    <string name="help_paste_desc">Kopiere eine URL von YouTube und füge sie in das Eingabefeld ein. Du kannst auch direkt aus der YouTube-App teilen. Füge mehrere Links auf einmal ein oder teile sie, um eine Liste zu erhalten, die nacheinander verarbeitet wird, oder importiere eine .txt-Datei mit Links.</string>
     <string name="help_tap_remove">Tippe auf Musik entfernen</string>
     <string name="help_tap_remove_desc">Die App lädt das Video herunter, trennt den Gesang mit KI und fügt alles wieder zusammen.</string>
     <string name="help_play_save">Abspielen oder speichern</string>
     <string name="help_play_save_desc">Wenn fertig, spiele das Ergebnis direkt ab oder speichere es irgendwo auf deinem Gerät.</string>
     <string name="help_pick_file">Videodatei auswählen</string>
-    <string name="help_pick_file_desc">Statt eines YouTube-Links tippe auf „Videodatei auswählen", um ein Video von deinem Gerät zu wählen.</string>
+    <string name="help_pick_file_desc">Statt eines YouTube-Links tippe auf „Videodatei auswählen", um ein Video von deinem Gerät zu wählen. Du kannst auch eine Video- oder Audiodatei aus jeder App mit Murem teilen.</string>
     <string name="help_process_usual">Wie gewohnt verarbeiten</string>
     <string name="help_process_usual_desc">Die App lädt die Datei auf den Server hoch, extrahiert Audio, trennt den Gesang und gibt das Ergebnis zurück.</string>
     <string name="help_tap_share">Tippe auf Teilen in YouTube</string>
@@ -141,16 +153,8 @@
     <string name="server_timeout">Server ist nicht online gegangen. Prüfe Termux auf Fehler.</string>
 
     <!-- New strings -->
-    <string name="import_url_file">URLs aus Datei importieren</string>
     <string name="tab_url">URL</string>
     <string name="tab_file">Datei</string>
-    <string name="tab_batch">Stapel</string>
-    <string name="batch_label">URLs (eine pro Zeile)</string>
-    <string name="batch_placeholder">https://youtube.com/watch?v=…\nhttps://tiktok.com/…</string>
-    <string name="input_mode">Eingabemodus</string>
-    <string name="mode_url_desc">Video-URL von einer unterstützten Seite einfügen</string>
-    <string name="mode_file_desc">Videodatei von deinem Gerät auswählen</string>
-    <string name="mode_batch_desc">Mehrere URLs auf einmal verarbeiten</string>
     <string name="downloading_model">KI-Modell wird heruntergeladen…</string>
     <string name="sharing">Wird geteilt…</string>
     <string name="bitrate">Bitrate</string>
@@ -193,6 +197,6 @@
     <string name="widget_paste_process">Einfügen &amp; Verarbeiten</string>
     <string name="widget_open">Murem öffnen</string>
     <string name="widget_file">Video hochladen</string>
-    <string name="widget_batch">Stapel</string>
-    <string name="widget_desc">Schnellzugriff zum Einfügen, Hochladen, Stapelverarbeitung oder Einstellungen öffnen</string>
+    <string name="widget_batch">Links</string>
+    <string name="widget_desc">Schnellzugriff: Einfügen, Hochladen, Links oder Einstellungen</string>
 </resources>

@@ -4,20 +4,24 @@
 
     <!-- Home Screen -->
     <string name="url_label">Video URL or YouTube ID</string>
-    <string name="url_placeholder">Paste a link or share from any app</string>
+    <string name="url_placeholder">Paste one or more links, or share from any app</string>
     <string name="or_divider">or</string>
     <string name="pick_video">Pick a video file</string>
-    <string name="import_url_file">Import URLs from file</string>
     <string name="tab_url">URL</string>
     <string name="tab_file">File</string>
-    <string name="tab_batch">Batch</string>
-    <string name="batch_label">URLs (one per line)</string>
-    <string name="batch_placeholder">https://youtube.com/watch?v=…\nhttps://tiktok.com/…</string>
-    <string name="input_mode">Input Mode</string>
-    <string name="mode_url_desc">Paste a video URL from any supported site</string>
-    <string name="mode_file_desc">Pick a video file from your device</string>
-    <string name="mode_batch_desc">Process multiple URLs at once</string>
     <string name="remove_music">Remove Music</string>
+    <string name="home_mode_link">Link</string>
+    <string name="home_mode_file">File</string>
+    <string name="link_add_another">Add another link</string>
+    <string name="link_import_txt">Import .txt</string>
+    <string name="link_remove">Remove link</string>
+    <string name="link_clear_all">Clear all</string>
+    <string name="link_count">Links: %1$d</string>
+    <string name="link_import_none">No links found in that file</string>
+    <string name="link_import_failed">Couldn\'t read that file</string>
+    <string name="links_added">Links added: %1$d</string>
+    <string name="remove_music_n">Remove Music (%1$d)</string>
+    <string name="share_first_file_only">Files shared: %1$d. The first one is selected.</string>
     <string name="change">Change</string>
     <string name="recent">Recent</string>
     <string name="hold_for_info">hold for info</string>
@@ -152,8 +156,8 @@
     <string name="widget_paste_process">Paste \&amp; Process</string>
     <string name="widget_open">Open Murem</string>
     <string name="widget_file">Video Upload</string>
-    <string name="widget_batch">Batch</string>
-    <string name="widget_desc">Quick access to paste, upload, batch process, or open settings</string>
+    <string name="widget_batch">Links</string>
+    <string name="widget_desc">Quick access to paste, upload, links, or open settings</string>
 
     <!-- Help -->
     <string name="how_to_use">How to Use</string>
@@ -164,13 +168,13 @@
     <string name="help_share_yt">Share from YouTube</string>
     <string name="help_ai_models">AI Models</string>
     <string name="help_paste_link">Paste a YouTube link</string>
-    <string name="help_paste_desc">Copy a URL from YouTube and paste it in the input field. You can also share directly from the YouTube app.</string>
+    <string name="help_paste_desc">Copy a URL from YouTube and paste it in the input field. You can also share directly from the YouTube app. Paste or share several links at once to get a list that is processed one after another, or import a .txt file of links.</string>
     <string name="help_tap_remove">Tap Remove Music</string>
     <string name="help_tap_remove_desc">The app will download the video, separate the vocals using AI, and merge everything back together.</string>
     <string name="help_play_save">Play or save</string>
     <string name="help_play_save_desc">Once done, play the result directly or save it anywhere on your device.</string>
     <string name="help_pick_file">Pick a video file</string>
-    <string name="help_pick_file_desc">Instead of a YouTube link, tap "Pick a video file" to select a video from your device.</string>
+    <string name="help_pick_file_desc">Instead of a YouTube link, tap "Pick a video file" to select a video from your device. You can also share a video or audio file to Murem from any app.</string>
     <string name="help_process_usual">Process as usual</string>
     <string name="help_process_usual_desc">The app uploads the file to the server, extracts audio, separates vocals, and returns the result.</string>
     <string name="help_tap_share">Tap Share in YouTube</string>

@@ -64,7 +64,7 @@ class MuremWidget : AppWidgetProvider() {
                 makePendingIntent(context, ACTION_FILE, 2),
             )
 
-            // Batch — opens app in batch mode
+            // Links — opens Link mode with the .txt import (action name kept for placed widgets)
             views.setOnClickPendingIntent(
                 R.id.widget_batch,
                 makePendingIntent(context, ACTION_BATCH, 3),

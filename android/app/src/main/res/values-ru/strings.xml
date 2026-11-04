@@ -4,10 +4,22 @@
 
     <!-- Home Screen -->
     <string name="url_label">Ссылка YouTube или ID видео</string>
-    <string name="url_placeholder">Вставьте ссылку или поделитесь из YouTube</string>
+    <string name="url_placeholder">Вставьте одну или несколько ссылок или поделитесь из любого приложения</string>
     <string name="or_divider">или</string>
     <string name="pick_video">Выбрать видеофайл</string>
     <string name="remove_music">Убрать музыку</string>
+    <string name="home_mode_link">Ссылка</string>
+    <string name="home_mode_file">Файл</string>
+    <string name="link_add_another">Добавить ещё ссылку</string>
+    <string name="link_import_txt">Импорт .txt</string>
+    <string name="link_remove">Удалить ссылку</string>
+    <string name="link_clear_all">Очистить всё</string>
+    <string name="link_count">Ссылок: %1$d</string>
+    <string name="link_import_none">В этом файле нет ссылок</string>
+    <string name="link_import_failed">Не удалось прочитать файл</string>
+    <string name="links_added">Добавлено ссылок: %1$d</string>
+    <string name="remove_music_n">Убрать музыку (%1$d)</string>
+    <string name="share_first_file_only">Файлов отправлено: %1$d. Выбран первый.</string>
     <string name="change">Изменить</string>
     <string name="recent">Недавние</string>
     <string name="hold_for_info">удерживайте для подробностей</string>
@@ -106,13 +118,13 @@
     <string name="help_share_yt">Поделиться из YouTube</string>
     <string name="help_ai_models">Модели ИИ</string>
     <string name="help_paste_link">Вставьте ссылку YouTube</string>
-    <string name="help_paste_desc">Скопируйте URL из YouTube и вставьте в поле ввода. Также можно поделиться напрямую из приложения YouTube.</string>
+    <string name="help_paste_desc">Скопируйте URL из YouTube и вставьте в поле ввода. Также можно поделиться напрямую из приложения YouTube. Вставьте или отправьте сразу несколько ссылок, и они станут списком, который обработается по очереди. Можно также импортировать .txt-файл со ссылками.</string>
     <string name="help_tap_remove">Нажмите Убрать музыку</string>
     <string name="help_tap_remove_desc">Приложение скачает видео, отделит вокал с помощью ИИ и соберёт всё обратно.</string>
     <string name="help_play_save">Воспроизвести или сохранить</string>
     <string name="help_play_save_desc">После завершения воспроизведите результат или сохраните его в любое место на устройстве.</string>
     <string name="help_pick_file">Выбрать видеофайл</string>
-    <string name="help_pick_file_desc">Вместо ссылки YouTube нажмите «Выбрать видеофайл», чтобы выбрать видео с устройства.</string>
+    <string name="help_pick_file_desc">Вместо ссылки YouTube нажмите «Выбрать видеофайл», чтобы выбрать видео с устройства. Также можно поделиться видео- или аудиофайлом с Murem из любого приложения.</string>
     <string name="help_process_usual">Обработать как обычно</string>
     <string name="help_process_usual_desc">Приложение загружает файл на сервер, извлекает аудио, разделяет вокал и возвращает результат.</string>
     <string name="help_tap_share">Нажмите Поделиться в YouTube</string>
@@ -141,16 +153,8 @@
     <string name="server_timeout">Сервер не запустился. Проверьте Termux на наличие ошибок.</string>
 
     <!-- New strings -->
-    <string name="import_url_file">Импорт URL из файла</string>
     <string name="tab_url">URL</string>
     <string name="tab_file">Файл</string>
-    <string name="tab_batch">Пакет</string>
-    <string name="batch_label">URL-адреса (по одному на строку)</string>
-    <string name="batch_placeholder">https://youtube.com/watch?v=…\nhttps://tiktok.com/…</string>
-    <string name="input_mode">Режим ввода</string>
-    <string name="mode_url_desc">Вставьте URL видео с любого поддерживаемого сайта</string>
-    <string name="mode_file_desc">Выберите видеофайл с устройства</string>
-    <string name="mode_batch_desc">Обработайте несколько URL за раз</string>
     <string name="downloading_model">Загрузка модели ИИ…</string>
     <string name="sharing">Отправка…</string>
     <string name="bitrate">Битрейт</string>
@@ -193,6 +197,6 @@
     <string name="widget_paste_process">Вставить и обработать</string>
     <string name="widget_open">Открыть Murem</string>
     <string name="widget_file">Загрузить видео</string>
-    <string name="widget_batch">Пакет</string>
-    <string name="widget_desc">Быстрый доступ: вставить, загрузить, пакетная обработка или настройки</string>
+    <string name="widget_batch">Ссылки</string>
+    <string name="widget_desc">Быстрый доступ: вставка, загрузка, ссылки или настройки</string>
 </resources>

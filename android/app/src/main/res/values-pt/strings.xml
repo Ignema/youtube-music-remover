@@ -4,10 +4,22 @@
 
     <!-- Home Screen -->
     <string name="url_label">URL do YouTube ou ID do vídeo</string>
-    <string name="url_placeholder">Cole um link ou compartilhe do YouTube</string>
+    <string name="url_placeholder">Cole um ou mais links, ou compartilhe de qualquer app</string>
     <string name="or_divider">ou</string>
     <string name="pick_video">Escolher um arquivo de vídeo</string>
     <string name="remove_music">Remover Música</string>
+    <string name="home_mode_link">Link</string>
+    <string name="home_mode_file">Arquivo</string>
+    <string name="link_add_another">Adicionar outro link</string>
+    <string name="link_import_txt">Importar .txt</string>
+    <string name="link_remove">Remover link</string>
+    <string name="link_clear_all">Limpar tudo</string>
+    <string name="link_count">Links: %1$d</string>
+    <string name="link_import_none">Nenhum link encontrado nesse arquivo</string>
+    <string name="link_import_failed">Não foi possível ler esse arquivo</string>
+    <string name="links_added">Links adicionados: %1$d</string>
+    <string name="remove_music_n">Remover Música (%1$d)</string>
+    <string name="share_first_file_only">Arquivos compartilhados: %1$d. O primeiro está selecionado.</string>
     <string name="change">Alterar</string>
     <string name="recent">Recentes</string>
     <string name="hold_for_info">segure para mais info</string>
@@ -106,13 +118,13 @@
     <string name="help_share_yt">Compartilhar do YouTube</string>
     <string name="help_ai_models">Modelos de IA</string>
     <string name="help_paste_link">Cole um link do YouTube</string>
-    <string name="help_paste_desc">Copie uma URL do YouTube e cole no campo de entrada. Você também pode compartilhar diretamente do app do YouTube.</string>
+    <string name="help_paste_desc">Copie uma URL do YouTube e cole no campo de entrada. Você também pode compartilhar diretamente do app do YouTube. Cole ou compartilhe vários links de uma vez para criar uma lista processada um após o outro, ou importe um arquivo .txt com links.</string>
     <string name="help_tap_remove">Toque em Remover Música</string>
     <string name="help_tap_remove_desc">O app vai baixar o vídeo, separar os vocais usando IA e juntar tudo de volta.</string>
     <string name="help_play_save">Reproduzir ou salvar</string>
     <string name="help_play_save_desc">Quando terminar, reproduza o resultado diretamente ou salve em qualquer lugar no seu dispositivo.</string>
     <string name="help_pick_file">Escolher um arquivo de vídeo</string>
-    <string name="help_pick_file_desc">Em vez de um link do YouTube, toque em "Escolher um arquivo de vídeo" para selecionar um vídeo do seu dispositivo.</string>
+    <string name="help_pick_file_desc">Em vez de um link do YouTube, toque em "Escolher um arquivo de vídeo" para selecionar um vídeo do seu dispositivo. Você também pode compartilhar um arquivo de vídeo ou áudio com o Murem de qualquer app.</string>
     <string name="help_process_usual">Processar normalmente</string>
     <string name="help_process_usual_desc">O app envia o arquivo para o servidor, extrai o áudio, separa os vocais e retorna o resultado.</string>
     <string name="help_tap_share">Toque em Compartilhar no YouTube</string>
@@ -141,16 +153,8 @@
     <string name="server_timeout">O servidor não ficou online. Verifique o Termux por erros.</string>
 
     <!-- New strings -->
-    <string name="import_url_file">Importar URLs de arquivo</string>
     <string name="tab_url">URL</string>
     <string name="tab_file">Arquivo</string>
-    <string name="tab_batch">Lote</string>
-    <string name="batch_label">URLs (uma por linha)</string>
-    <string name="batch_placeholder">https://youtube.com/watch?v=…\nhttps://tiktok.com/…</string>
-    <string name="input_mode">Modo de entrada</string>
-    <string name="mode_url_desc">Cole uma URL de vídeo de qualquer site compatível</string>
-    <string name="mode_file_desc">Escolha um arquivo de vídeo do seu dispositivo</string>
-    <string name="mode_batch_desc">Processe várias URLs de uma vez</string>
     <string name="downloading_model">Baixando modelo de IA…</string>
     <string name="sharing">Compartilhando…</string>
     <string name="bitrate">Taxa de bits</string>
@@ -193,6 +197,6 @@
     <string name="widget_paste_process">Colar &amp; Processar</string>
     <string name="widget_open">Abrir Murem</string>
     <string name="widget_file">Enviar Vídeo</string>
-    <string name="widget_batch">Lote</string>
-    <string name="widget_desc">Acesso rápido para colar, enviar, processar em lote ou abrir configurações</string>
+    <string name="widget_batch">Links</string>
+    <string name="widget_desc">Acesso rápido para colar, enviar, links ou configurações</string>
 </resources>
