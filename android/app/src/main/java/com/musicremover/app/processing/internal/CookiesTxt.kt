@@ -62,6 +62,72 @@ object CookiesTxt {
         line.split('\t').takeIf { it.size == 7 }?.get(6)?.takeIf { it.length >= 6 }
     }
 
+    /** One captured cookie; [domain] has a leading dot (it covers subdomains). */
+    data class Entry(val domain: String, val name: String, val value: String, val expirySec: Long) {
+        // Keeps the value out of logs and test failure messages
+        override fun toString() = "Entry(domain=$domain, name=$name)"
+    }
+
+    const val CAPTURED_LIFETIME_SEC = 365L * 24 * 60 * 60
+
+    /**
+     * Parses a `Cookie:`-style header (`a=1; b=2`, as returned by `CookieManager.getCookie`) into entries
+     * for [domain], expiring [CAPTURED_LIFETIME_SEC] after [nowSec]. Values may contain `=`. Pairs with an
+     * empty name, or a name or value containing a tab, CR, LF or `;`, are dropped; the first of two pairs
+     * with the same name wins. An invalid [domain] gives no entries.
+     */
+    fun fromCookieHeader(header: String?, domain: String, nowSec: Long): List<Entry> {
+        if (header.isNullOrBlank()) return emptyList()
+        val dotted = "." + domain.trim().removePrefix(".").lowercase()
+        if (dotted == "." || !DOMAIN.matches(dotted) || dotted.contains("..")) return emptyList()
+        val seen = mutableSetOf<String>()
+        return header.split(';').mapNotNull { part ->
+            val pair = part.trim()
+            val eq = pair.indexOf('=')
+            if (eq <= 0) return@mapNotNull null
+            val name = pair.substring(0, eq).trim()
+            val value = pair.substring(eq + 1).trim()
+            if (name.isEmpty() || BAD_CHARS.any { it in name || it in value } || !seen.add(name)) return@mapNotNull null
+            Entry(dotted, name, value, nowSec + CAPTURED_LIFETIME_SEC)
+        }
+    }
+
+    /** The Netscape line for [e]: include-subdomains TRUE, path `/`, secure TRUE. */
+    fun toLine(e: Entry): String = listOf(e.domain, "TRUE", "/", "TRUE", e.expirySec.toString(), e.name, e.value)
+        .joinToString("\t")
+
+    /**
+     * [existing] (a stored cookies.txt, or null) with [captured] added. Lines with the same domain and
+     * name as a captured entry are replaced; all other lines, `#HttpOnly_` ones included, are kept as
+     * they are. The result starts with the Netscape header.
+     */
+    fun merge(existing: String?, captured: List<Entry>): String {
+        val newKeys = captured.mapTo(mutableSetOf()) { key(it.domain, it.name) }
+        val out = mutableListOf(NETSCAPE_HEADER)
+        existing?.removePrefix("\uFEFF")?.lines()?.forEach { raw ->
+            val line = raw.trimEnd('\r')
+            when {
+                line.isBlank() -> Unit
+                line.startsWith(HTTP_ONLY_PREFIX) -> if (!replaced(line.removePrefix(HTTP_ONLY_PREFIX), newKeys)) out += line
+                line.startsWith("#") -> if (!HEADER.containsMatchIn(line)) out += line
+                else -> if (!replaced(line, newKeys)) out += line
+            }
+        }
+        val written = mutableSetOf<String>()
+        for (e in captured) if (written.add(key(e.domain, e.name))) out += toLine(e)
+        return out.joinToString("\n", postfix = "\n")
+    }
+
+    private fun replaced(line: String, keys: Set<String>): Boolean {
+        val f = line.split('\t')
+        return f.size == 7 && key(f[0], f[5]) in keys
+    }
+
+    private fun key(domain: String, name: String) = domain.removePrefix(".").lowercase() + "\t" + name
+
+    private const val NETSCAPE_HEADER = "# Netscape HTTP Cookie File"
+    private val BAD_CHARS = charArrayOf('\t', '\r', '\n', ';')
+
     private fun cookieDomain(line: String): String? {
         val f = line.split('\t')
         if (f.size != 7) return null

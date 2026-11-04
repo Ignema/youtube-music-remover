@@ -63,6 +63,103 @@ class CookiesTxtTest {
     }
 
     @Test
+    fun cookieHeaderBecomesEntriesForTheDomain() {
+        val now = 1_700_000_000L
+        val e = CookiesTxt.fromCookieHeader(
+            "sessionid=S_1; csrftoken=C=2==;ds_user_id=42 ; mid=; sessionid=DUP",
+            "instagram.com", now,
+        )
+        val exp = now + 365L * 24 * 60 * 60
+        assertEquals(
+            listOf(
+                CookiesTxt.Entry(".instagram.com", "sessionid", "S_1", exp),
+                CookiesTxt.Entry(".instagram.com", "csrftoken", "C=2==", exp),
+                CookiesTxt.Entry(".instagram.com", "ds_user_id", "42", exp),
+                CookiesTxt.Entry(".instagram.com", "mid", "", exp),
+            ),
+            e,
+        )
+        // Leading dot and case are normalized
+        assertEquals(".a.com", CookiesTxt.fromCookieHeader("n=v", ".A.com", now).single().domain)
+    }
+
+    @Test
+    fun garbageHeadersAndUnsafePairsAreDropped() {
+        assertEquals(emptyList<CookiesTxt.Entry>(), CookiesTxt.fromCookieHeader(null, ".a.com", 0))
+        assertEquals(emptyList<CookiesTxt.Entry>(), CookiesTxt.fromCookieHeader("  ", ".a.com", 0))
+        assertEquals(emptyList<CookiesTxt.Entry>(), CookiesTxt.fromCookieHeader("novalue; =v; ;;", ".a.com", 0))
+        assertEquals(
+            listOf("ok"),
+            CookiesTxt.fromCookieHeader("tab=a\tb; nl=a\nb; cr=a\rb; ok=1", ".a.com", 0).map { it.name },
+        )
+        assertEquals(emptyList<CookiesTxt.Entry>(), CookiesTxt.fromCookieHeader("n=v", "bad domain", 0))
+        assertEquals(emptyList<CookiesTxt.Entry>(), CookiesTxt.fromCookieHeader("n=v", "", 0))
+        assertFalse(CookiesTxt.Entry(".a.com", "n", "SECRET_VALUE", 0).toString().contains("SECRET"))
+    }
+
+    @Test
+    fun lineHasSevenNetscapeFields() {
+        assertEquals(
+            ".instagram.com\tTRUE\t/\tTRUE\t1731536000\tsessionid\tS_1",
+            CookiesTxt.toLine(CookiesTxt.Entry(".instagram.com", "sessionid", "S_1", 1_731_536_000L)),
+        )
+    }
+
+    @Test
+    fun mergeReplacesSameDomainAndNameAndKeepsTheRest() {
+        val captured = CookiesTxt.fromCookieHeader("sessionid=NEW_SESSION; ds_user_id=NEW_UID", "instagram.com", 1_700_000_000L)
+        val merged = CookiesTxt.merge(valid, captured)
+        val lines = merged.lines()
+        assertEquals("# Netscape HTTP Cookie File", lines.first())
+        assertEquals(1, lines.count { it.contains("\tsessionid\t") })
+        assertTrue(lines.any { it.endsWith("\tsessionid\tNEW_SESSION") })
+        assertFalse(merged.contains("SECRET_SESSION_1"))
+        // Other names on the domain, #HttpOnly_ lines and other domains are kept verbatim
+        assertTrue("#HttpOnly_.instagram.com\tTRUE\t/\tTRUE\t1793423521\tcsrftoken\tSECRET_CSRF_2" in lines)
+        assertTrue("www.youtube.com\tFALSE\t/\tFALSE\t0\tPREF\tf6=40000000" in lines)
+        assertEquals(1, lines.count { it.startsWith("# Netscape HTTP Cookie File") })
+        assertEquals(
+            Result.Valid(CookiesTxt.Summary(4, listOf("instagram.com", "www.youtube.com"))),
+            CookiesTxt.validate(merged),
+        )
+    }
+
+    @Test
+    fun mergeReplacesHttpOnlyLineWithSameKey() {
+        val captured = CookiesTxt.fromCookieHeader("csrftoken=NEW_CSRF", ".instagram.com", 0)
+        val merged = CookiesTxt.merge(valid, captured)
+        assertFalse(merged.contains("SECRET_CSRF_2"))
+        assertEquals(1, merged.lines().count { it.contains("\tcsrftoken\t") })
+    }
+
+    @Test
+    fun instagramAndCustomSitesCoexist() {
+        val ig = CookiesTxt.merge(null, CookiesTxt.fromCookieHeader("sessionid=IG_SESSION", ".instagram.com", 0))
+        val both = CookiesTxt.merge(ig, CookiesTxt.fromCookieHeader("sessionid=EX_SESSION", ".example.com", 0))
+        assertEquals(Result.Valid(CookiesTxt.Summary(2, listOf("example.com", "instagram.com"))), CookiesTxt.validate(both))
+        // Saving Instagram again replaces only its line
+        val again = CookiesTxt.merge(both, CookiesTxt.fromCookieHeader("sessionid=IG_SESSION_2", ".instagram.com", 0))
+        assertTrue(again.contains("EX_SESSION"))
+        assertTrue(again.contains("IG_SESSION_2"))
+        assertFalse(again.contains("IG_SESSION\n"))
+        assertEquals(Result.Valid(CookiesTxt.Summary(2, listOf("example.com", "instagram.com"))), CookiesTxt.validate(again))
+    }
+
+    @Test
+    fun mergeOfNothingIntoNothingIsEmpty() {
+        assertEquals(Result.Rejected(Invalid.EMPTY), CookiesTxt.validate(CookiesTxt.merge(null, emptyList())))
+    }
+
+    @Test
+    fun oversizedMergeIsRejected() {
+        val big = (0 until 20_000).joinToString("; ") { "n$it=${"v".repeat(60)}" }
+        val merged = CookiesTxt.merge(null, CookiesTxt.fromCookieHeader(big, ".a.com", 0))
+        val size = merged.toByteArray(Charsets.UTF_8).size.toLong()
+        assertTrue(size > CookiesTxt.MAX_BYTES)
+        assertEquals(Result.Rejected(Invalid.TOO_LARGE), CookiesTxt.validate(merged, size))
+    }
+
+    @Test
     fun valuesForScrubbingSkipShortOnes() {
         assertEquals(setOf("SECRET_SESSION_1", "SECRET_CSRF_2", "f6=40000000"), CookiesTxt.values(valid))
         assertEquals(emptySet<String>(), CookiesTxt.values(".a.com\tTRUE\t/\tFALSE\t0\tn\tabc"))

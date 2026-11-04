@@ -393,6 +393,36 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Login screen "Save cookies": stores the WebView's cookies for [site] and clears the WebView. The
+     * message names only the cookie count and domains.
+     */
+    suspend fun saveWebCookies(
+        site: com.musicremover.app.processing.internal.LoginSites.Site,
+        currentUrl: String?,
+        webView: android.webkit.WebView?,
+    ) {
+        val app = getApplication<Application>()
+        val store = CookieStore(app)
+        val r = com.musicremover.app.processing.internal.WebLoginCookies.saveAndClear(store, site, currentUrl, webView)
+        val msg = when (r) {
+            is CookieStore.SaveResult.Saved -> {
+                _ui.value = _ui.value.copy(cookies = r.summary)
+                app.resources.getQuantityString(
+                    R.plurals.cookies_login_saved, r.captured.count, r.captured.count, r.captured.domains.joinToString(", "),
+                )
+            }
+            is CookieStore.SaveResult.Rejected -> when (r.reason) {
+                CookiesTxt.Invalid.TOO_LARGE -> str(R.string.cookies_invalid_too_large)
+                CookiesTxt.Invalid.EMPTY -> str(R.string.cookies_login_none)
+                else -> str(R.string.cookies_invalid_format)
+            }
+            CookieStore.SaveResult.NoCookies -> str(R.string.cookies_login_none)
+            CookieStore.SaveResult.Unwritable -> str(R.string.cookies_login_save_failed)
+        }
+        showTransientError(msg)
+    }
+
     /** Settings "Update yt-dlp"; a second tap while it runs is ignored. */
     fun updateYtDlp() {
         if (_ui.value.ytDlpUpdate == YtDlpUpdateState.Running) return

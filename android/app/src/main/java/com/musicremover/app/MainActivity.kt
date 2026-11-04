@@ -17,6 +17,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.musicremover.app.processing.internal.LoginSites
+import com.musicremover.app.ui.CookieLoginScreen
 import com.musicremover.app.ui.HelpScreen
 import com.musicremover.app.ui.HomeScreen
 import com.musicremover.app.ui.PermissionsScreen
@@ -99,7 +101,26 @@ class MainActivity : AppCompatActivity() {
                             vm = vm,
                             onBack = { navController.popBackStack() },
                             onPermissionsClick = { navController.navigate("permissions") },
+                            onLoginClick = { url -> navController.navigate(cookieLoginRoute(url)) },
                         )
+                    }
+                    composable(
+                        "cookie_login?url={url}",
+                        arguments = listOf(navArgument("url") {
+                            type = NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        }),
+                    ) { backStackEntry ->
+                        // No url: the Instagram preset
+                        val site = backStackEntry.arguments?.getString("url")
+                            ?.let { LoginSites.custom(it) } // Navigation decodes the Uri.encode()d arg
+                            ?: LoginSites.INSTAGRAM.takeIf { backStackEntry.arguments?.getString("url") == null }
+                        if (site == null) {
+                            androidx.compose.runtime.LaunchedEffect(Unit) { navController.popBackStack() }
+                        } else {
+                            CookieLoginScreen(vm = vm, site = site, onBack = { navController.popBackStack() })
+                        }
                     }
                     composable("help") {
                         HelpScreen(onBack = { navController.popBackStack() })
@@ -195,6 +216,10 @@ class MainActivity : AppCompatActivity() {
         val route = "player/${java.net.URLEncoder.encode(url, "UTF-8")}/${java.net.URLEncoder.encode(title, "UTF-8")}"
         return if (jobId != null) "$route?jobId=${java.net.URLEncoder.encode(jobId, "UTF-8")}" else route
     }
+
+    /** [url] null opens the Instagram login; otherwise a custom https login URL. */
+    private fun cookieLoginRoute(url: String?): String =
+        if (url == null) "cookie_login" else "cookie_login?url=${android.net.Uri.encode(url)}"
 
     private fun handleWidgetPaste(intent: Intent?) {
         if (intent?.action == MuremWidget.ACTION_PASTE_PROCESS) {

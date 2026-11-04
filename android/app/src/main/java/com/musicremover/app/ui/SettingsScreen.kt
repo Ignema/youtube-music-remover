@@ -30,7 +30,14 @@ import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material.icons.outlined.Terminal
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -65,12 +72,18 @@ import com.musicremover.app.R
 import com.musicremover.app.UiState
 import com.musicremover.app.YtDlpUpdateState
 import com.musicremover.app.processing.BackendProvider
+import com.musicremover.app.processing.internal.LoginSites
 import com.musicremover.app.processing.internal.ModelFailure
 import com.musicremover.app.processing.internal.ModelState
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: () -> Unit) {
+fun SettingsScreen(
+    vm: MainViewModel,
+    onBack: () -> Unit,
+    onPermissionsClick: () -> Unit,
+    onLoginClick: (url: String?) -> Unit,
+) {
     val ui by vm.ui.collectAsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -299,7 +312,7 @@ fun SettingsScreen(vm: MainViewModel, onBack: () -> Unit, onPermissionsClick: ()
                     Spacer(Modifier.height(12.dp))
                     YtDlpCard(vm)
                     Spacer(Modifier.height(12.dp))
-                    CookiesCard(vm)
+                    CookiesCard(vm, onLoginClick)
                 }
             }
 
@@ -755,10 +768,24 @@ private fun YtDlpCard(vm: MainViewModel) {
     }
 }
 
-/** cookies.txt for on-device links: count and domains (never values), Import (SAF) and Remove. */
+/**
+ * Cookies for on-device links: count and domains (never values), Log in with browser, Import (SAF) and
+ * Remove.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun CookiesCard(vm: MainViewModel) {
+private fun CookiesCard(vm: MainViewModel, onLoginClick: (url: String?) -> Unit) {
     val ui by vm.ui.collectAsState()
+    var showLogin by remember { mutableStateOf(false) }
+    if (showLogin) {
+        LoginSiteDialog(
+            onDismiss = { showLogin = false },
+            onContinue = { url ->
+                showLogin = false
+                onLoginClick(url)
+            },
+        )
+    }
     LaunchedEffect(Unit) { vm.loadCookies() }
     val picker = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
@@ -794,8 +821,12 @@ private fun CookiesCard(vm: MainViewModel) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(12.dp))
-            Row {
-                FilledTonalButton(
+            FilledTonalButton(onClick = { showLogin = true }, shape = RoundedCornerShape(12.dp)) {
+                Text(stringResource(R.string.cookies_login))
+            }
+            Spacer(Modifier.height(8.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
                     // cookies.txt has no registered MIME type; the file is validated on import
                     onClick = { picker.launch(arrayOf("*/*")) },
                     shape = RoundedCornerShape(12.dp),
@@ -803,7 +834,6 @@ private fun CookiesCard(vm: MainViewModel) {
                     Text(stringResource(R.string.cookies_import))
                 }
                 if (cookies != null) {
-                    Spacer(Modifier.width(8.dp))
                     OutlinedButton(onClick = vm::removeCookies, shape = RoundedCornerShape(12.dp)) {
                         Icon(Icons.Outlined.DeleteOutline, null, Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
@@ -822,6 +852,63 @@ private fun CookiesCard(vm: MainViewModel) {
 }
 
 private const val MAX_DOMAINS = 4
+
+/** Site picker and notice before the login screen; [onContinue] gets null for Instagram, else the https URL. */
+@Composable
+private fun LoginSiteDialog(onDismiss: () -> Unit, onContinue: (String?) -> Unit) {
+    var custom by remember { mutableStateOf(false) }
+    var url by remember { mutableStateOf("") }
+    val customOk = LoginSites.custom(url) != null
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.cookies_login_notice_title)) },
+        text = {
+            Column {
+                Text(stringResource(R.string.cookies_login_notice), style = MaterialTheme.typography.bodyMedium)
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth().selectable(selected = !custom, role = Role.RadioButton) { custom = false },
+                ) {
+                    RadioButton(selected = !custom, onClick = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.cookies_login_site_instagram))
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth().selectable(selected = custom, role = Role.RadioButton) { custom = true },
+                ) {
+                    RadioButton(selected = custom, onClick = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.cookies_login_site_custom))
+                }
+                if (custom) {
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = url,
+                        onValueChange = { url = it },
+                        placeholder = { Text(stringResource(R.string.cookies_login_url_hint)) },
+                        singleLine = true,
+                        isError = url.isNotBlank() && !customOk,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = !custom || customOk,
+                onClick = { onContinue(if (custom) url.trim() else null) },
+            ) {
+                Text(stringResource(R.string.cookies_login_continue))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cookies_login_cancel)) }
+        },
+    )
+}
 
 @Composable
 private fun TermuxNotInstalled() {

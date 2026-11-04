@@ -78,11 +78,28 @@
         <item quantity="one">%1$s and %2$d more site</item>
         <item quantity="other">%1$s and %2$d more sites</item>
     </plurals>
-    <string name="cookies_import">Import</string>
+    <string name="cookies_import">Import cookies.txt</string>
     <string name="cookies_remove">Remove</string>
     <string name="cookies_imported">Cookies imported</string>
     <string name="cookies_removed">Cookies removed</string>
-    <string name="cookies_help">Some posts can only be downloaded while logged in. On a computer, log in to the site in your browser, export a cookies.txt file (Netscape format) with a cookies.txt export extension, copy it to this phone and import it here. Murem only uses it for on-device links. Anyone who has this file can use your account: export only the sites you need, never share it, and remove it here when you are done.</string>
+    <string name="cookies_help">Some posts can only be downloaded while logged in. Tap Log in with browser and log in to the site inside Murem, or import a cookies.txt file (Netscape format) exported from a browser on a computer. The cookies are stored only on this device and are sent with every link in Internal mode, for all sites. YouTube downloads may change if YouTube cookies are included. Anyone who has these cookies can use your account: never share them, and tap Remove to delete them when you are done.</string>
+    <string name="cookies_login">Log in with browser</string>
+    <string name="cookies_login_site_instagram">Instagram</string>
+    <string name="cookies_login_site_custom">Other site (https URL)</string>
+    <string name="cookies_login_url_hint">https://example.com/login</string>
+    <string name="cookies_login_notice_title">Log in with browser</string>
+    <string name="cookies_login_notice">You are logging in inside Murem, not in your browser app. The site\'s cookies are stored only on this device and used for on-device links. Remove deletes them.</string>
+    <string name="cookies_login_continue">Continue</string>
+    <string name="cookies_login_cancel">Cancel</string>
+    <string name="cookies_login_title">Log in, then tap Save</string>
+    <string name="cookies_login_save">Save cookies</string>
+    <string name="cookies_login_oauth_hint">Google and Facebook sign-in may be blocked in embedded browsers. Log in with your username and password instead.</string>
+    <plurals name="cookies_login_saved">
+        <item quantity="one">Saved %1$d cookie for %2$s</item>
+        <item quantity="other">Saved %1$d cookies for %2$s</item>
+    </plurals>
+    <string name="cookies_login_none">No cookies found. Log in first, then tap Save.</string>
+    <string name="cookies_login_save_failed">Could not save the cookies. Free some storage space and try again.</string>
     <string name="cookies_invalid_too_large">This file is too large for a cookies.txt (over 1 MB)</string>
     <string name="cookies_invalid_empty">This cookies.txt contains no cookies</string>
     <string name="cookies_invalid_format">This is not a cookies.txt file. Export the cookies in Netscape format.</string>
