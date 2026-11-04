@@ -85,6 +85,22 @@ fun PlayerScreen(
         }
     }
 
+    // Keep the screen on only while the video is actually playing (paused/ended lets it sleep again)
+    val hostView = androidx.compose.ui.platform.LocalView.current
+    DisposableEffect(player, hostView) {
+        val listener = object : Player.Listener {
+            override fun onIsPlayingChanged(playing: Boolean) {
+                hostView.keepScreenOn = playing
+            }
+        }
+        player.addListener(listener)
+        hostView.keepScreenOn = player.isPlaying || player.playWhenReady
+        onDispose {
+            player.removeListener(listener)
+            hostView.keepScreenOn = false
+        }
+    }
+
     DisposableEffect(Unit) {
         onDispose {
             player.release()
@@ -273,11 +289,7 @@ fun PlayerScreen(
                 // Open in external player — bottom left
                 IconButton(
                     onClick = {
-                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
-                            setDataAndType(Uri.parse(url), "video/*")
-                            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                        context.startActivity(intent)
+                        openInExternalPlayer(context, Uri.parse(url))
                     },
                     modifier = Modifier
                         .align(Alignment.BottomStart)
@@ -491,4 +503,33 @@ private fun formatTime(ms: Long): String {
     val min = totalSec / 60
     val sec = totalSec % 60
     return "%d:%02d".format(min, sec)
+}
+
+/**
+ * Opens [uri] in another app. Cached results are FileProvider content:// URIs, so the receiving app needs
+ * a read grant (without it, players fail to open the file). The MIME type comes from the provider or the
+ * extension, so audio-only results (.m4a/.mp3) open in audio-capable apps too.
+ */
+internal fun openInExternalPlayer(context: android.content.Context, uri: Uri) {
+    val mime = (if (uri.scheme == "content") context.contentResolver.getType(uri) else null)
+        ?: android.webkit.MimeTypeMap.getSingleton()
+            .getMimeTypeFromExtension(android.webkit.MimeTypeMap.getFileExtensionFromUrl(uri.toString()).lowercase())
+        ?: "video/*"
+    val view = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+        setDataAndType(uri, mime)
+        if (uri.scheme == "content") {
+            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            // The chooser forwards the grant via ClipData
+            clipData = android.content.ClipData.newRawUri("", uri)
+        }
+    }
+    val chooser = android.content.Intent.createChooser(view, null).apply {
+        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (uri.scheme == "content") addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    try {
+        context.startActivity(chooser)
+    } catch (e: android.content.ActivityNotFoundException) {
+        android.widget.Toast.makeText(context, context.getString(com.musicremover.app.R.string.no_external_player), android.widget.Toast.LENGTH_SHORT).show()
+    }
 }
