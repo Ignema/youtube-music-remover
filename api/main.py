@@ -27,7 +27,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator
 
-from api.utils import normalize_url, is_valid_url, run_cmd
+from api.utils import normalize_url, is_valid_url, run_cmd, has_video_stream
 
 try:
     from slowapi import Limiter
@@ -626,6 +626,11 @@ def process_upload(job_id: str, file_path: Path, original_name: str,
             shutil.rmtree(temp_dir, ignore_errors=True)
             return
 
+        # Audio uploads (mp3, m4a...) have no video to merge back into.
+        if not audio_only and not has_video_stream(file_path):
+            audio_only = True
+            logger.info(f"Job {job_id[:8]} has no video stream, writing audio only")
+
         separate_and_merge(job_id, file_path, audio_file, model, batch_size,
                            Path(original_name).stem, temp_dir, output_dir,
                            audio_only, bitrate)
@@ -755,8 +760,10 @@ async def upload_processing(
     temp_dir = Path(tempfile.mkdtemp())
     suffix = Path(file.filename or "video.mp4").suffix or ".mp4"
     file_path = temp_dir / f"upload{suffix}"
+    # Copy in 1 MiB chunks so a large upload is never held in memory at once.
     with open(file_path, "wb") as f:
-        f.write(await file.read())
+        while chunk := await file.read(1024 * 1024):
+            f.write(chunk)
 
     threading.Thread(
         target=process_upload,

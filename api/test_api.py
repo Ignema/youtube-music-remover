@@ -1,7 +1,10 @@
 """Tests for Murem API."""
 
+import shutil
+import subprocess
+
 import pytest
-from api.utils import extract_video_id
+from api.utils import extract_video_id, has_video_stream
 
 
 class TestExtractVideoId:
@@ -31,6 +34,35 @@ class TestExtractVideoId:
     def test_url_with_extra_params(self):
         result = extract_video_id("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=42")
         assert result == "dQw4w9WgXcQ"
+
+
+def _ffmpeg(*args):
+    subprocess.run(["ffmpeg", "-v", "error", "-y", *args], check=True, timeout=60)
+
+
+@pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg not installed")
+class TestHasVideoStream:
+    def test_video_file(self, tmp_path):
+        out = tmp_path / "video.mp4"
+        _ffmpeg("-f", "lavfi", "-i", "testsrc=size=64x64:rate=10",
+                "-f", "lavfi", "-i", "sine=frequency=440",
+                "-t", "1", "-pix_fmt", "yuv420p", "-shortest", str(out))
+        assert has_video_stream(out) is True
+
+    def test_audio_file(self, tmp_path):
+        out = tmp_path / "audio.mp3"
+        _ffmpeg("-f", "lavfi", "-i", "sine=frequency=440:duration=1",
+                "-c:a", "libmp3lame", str(out))
+        assert has_video_stream(out) is False
+
+    def test_audio_file_with_cover_art(self, tmp_path):
+        cover = tmp_path / "cover.png"
+        _ffmpeg("-f", "lavfi", "-i", "color=c=red:size=64x64", "-frames:v", "1", str(cover))
+        out = tmp_path / "cover.mp3"
+        _ffmpeg("-f", "lavfi", "-i", "sine=frequency=440:duration=1", "-i", str(cover),
+                "-map", "0", "-map", "1", "-c:a", "libmp3lame", "-c:v", "mjpeg",
+                "-disposition:v", "attached_pic", str(out))
+        assert has_video_stream(out) is False
 
 
 class TestDbOperations:

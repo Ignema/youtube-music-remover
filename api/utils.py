@@ -64,6 +64,22 @@ def is_valid_url(input_str: str) -> bool:
     return YT_ID_RE.match(vid) is not None
 
 
+def has_video_stream(path) -> bool:
+    """True if the file has a real video stream. If ffprobe fails, assume video (old behavior)."""
+    # Capital V skips attached pictures such as cover art in mp3/m4a files.
+    try:
+        result = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "V",
+             "-show_entries", "stream=index", "-of", "csv=p=0", str(path)],
+            capture_output=True, text=True, timeout=30,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return True
+    if result.returncode != 0:
+        return True
+    return bool(result.stdout.strip())
+
+
 def run_cmd(*cmd, cwd=None, timeout=None) -> tuple[bool, str, str]:
     """Run a subprocess command and return (success, stdout, stderr)."""
     logger.debug(f"Running: {' '.join(cmd)}")
