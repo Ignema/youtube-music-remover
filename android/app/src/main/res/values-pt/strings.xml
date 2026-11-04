@@ -25,7 +25,7 @@
     <string name="hold_for_info">segure para mais info</string>
 
     <!-- Processing -->
-    <string name="leave_app_hint">Você pode sair do app — vamos te avisar quando terminar.</string>
+    <string name="leave_app_hint">Você pode sair do app. Vamos te avisar quando terminar.</string>
     <string name="downloading">Baixando vídeo…</string>
     <string name="separating">Separando vocais…</string>
     <string name="merging">Mesclando áudio…</string>
@@ -106,7 +106,7 @@
     <string name="retry">Tentar Novamente</string>
     <string name="enter_url_or_file">Insira uma URL do YouTube ou escolha um arquivo de vídeo</string>
     <string name="lost_connection">Conexão com o servidor perdida</string>
-    <string name="video_info_unavailable">Não foi possível carregar as informações do vídeo — o servidor pode estar offline</string>
+    <string name="video_info_unavailable">Não foi possível carregar as informações do vídeo. O servidor pode estar offline</string>
     <string name="remove_from_history">Remover do Histórico</string>
 
     <!-- Help -->
@@ -138,7 +138,7 @@
     <string name="help_start_pc">Iniciar o servidor no PC</string>
     <string name="help_start_pc_desc" tools:ignore="TypographyDashes">Primeiro, clone o repositório:\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\nDepois, inicie o servidor:\nuvx --with fastapi --with yt-dlp --with python-multipart --with \"audio-separator[gpu]\" --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000</string>
     <string name="help_docker">Docker (mais fácil para PC)</string>
-    <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\nPronto — não é preciso configurar Python nem ffmpeg.</string>
+    <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\nPronto. Não é preciso configurar Python nem ffmpeg.</string>
 
     <!-- Notifications -->
     <string name="notif_done">Concluído: %s</string>

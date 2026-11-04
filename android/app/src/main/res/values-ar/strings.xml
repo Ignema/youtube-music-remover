@@ -27,7 +27,7 @@
     <string name="hold_for_info">اضغط مطوّلاً للتفاصيل</string>
 
     <!-- Processing -->
-    <string name="leave_app_hint">تقدر تطلع من التطبيق — بنرسلك إشعار لما يخلص.</string>
+    <string name="leave_app_hint">تقدر تطلع من التطبيق، بنرسلك إشعار لما يخلص.</string>
     <string name="downloading">جاري تحميل الفيديو…</string>
     <string name="downloading_model">جاري تحميل نموذج الذكاء الاصطناعي…</string>
     <string name="separating">جاري فصل الأصوات…</string>
@@ -138,7 +138,7 @@
     <string name="queue_count">%d في الانتظار</string>
     <string name="enter_url_or_file">أدخل رابط فيديو أو اختر ملف فيديو</string>
     <string name="lost_connection">انقطع الاتصال بالسيرفر</string>
-    <string name="video_info_unavailable">ما قدرنا نجيب معلومات الفيديو — يمكن السيرفر مطفي</string>
+    <string name="video_info_unavailable">ما قدرنا نجيب معلومات الفيديو، يمكن السيرفر مطفي</string>
     <string name="remove_from_history">حذف من السجل</string>
     <string name="view_original">عرض الأصلي ↗</string>
     <string name="filter_history">بحث…</string>
@@ -180,7 +180,7 @@
     <string name="help_start_pc">شغّل السيرفر على الكمبيوتر</string>
     <string name="help_start_pc_desc">انسخ المشروع أولاً:\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\nثم شغّل السيرفر:\nuvx --with fastapi --with yt-dlp --with python-multipart --with \"audio-separator[gpu]\" --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000</string>
     <string name="help_docker">Docker (الأسهل للكمبيوتر)</string>
-    <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\nهذا كل شي — ما تحتاج Python أو ffmpeg.</string>
+    <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\nهذا كل شي، ما تحتاج Python أو ffmpeg.</string>
 
     <!-- Notifications -->
     <string name="notif_done">خلص: %s</string>

@@ -25,7 +25,7 @@
     <string name="hold_for_info">長押しで詳細</string>
 
     <!-- Processing -->
-    <string name="leave_app_hint">アプリを離れても大丈夫です — 完了したら通知します。</string>
+    <string name="leave_app_hint">アプリを離れても大丈夫です。完了したら通知します。</string>
     <string name="downloading">動画をダウンロード中…</string>
     <string name="separating">ボーカルを分離中…</string>
     <string name="merging">音声を結合中…</string>
@@ -106,7 +106,7 @@
     <string name="retry">再試行</string>
     <string name="enter_url_or_file">YouTube URLを入力するか動画ファイルを選択してください</string>
     <string name="lost_connection">サーバーとの接続が切れました</string>
-    <string name="video_info_unavailable">動画情報を読み込めませんでした — サーバーがオフラインかもしれません</string>
+    <string name="video_info_unavailable">動画情報を読み込めませんでした。サーバーがオフラインかもしれません</string>
     <string name="remove_from_history">履歴から削除</string>
 
     <!-- Help -->

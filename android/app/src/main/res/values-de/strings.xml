@@ -25,7 +25,7 @@
     <string name="hold_for_info">gedrückt halten für Info</string>
 
     <!-- Processing -->
-    <string name="leave_app_hint">Du kannst die App verlassen — wir benachrichtigen dich, wenn es fertig ist.</string>
+    <string name="leave_app_hint">Du kannst die App verlassen. Wir benachrichtigen dich, wenn es fertig ist.</string>
     <string name="downloading">Video wird heruntergeladen…</string>
     <string name="separating">Gesang wird getrennt…</string>
     <string name="merging">Audio wird zusammengeführt…</string>
@@ -106,7 +106,7 @@
     <string name="retry">Erneut versuchen</string>
     <string name="enter_url_or_file">YouTube-URL eingeben oder Videodatei auswählen</string>
     <string name="lost_connection">Verbindung zum Server verloren</string>
-    <string name="video_info_unavailable">Videoinfos konnten nicht geladen werden — Server ist möglicherweise offline</string>
+    <string name="video_info_unavailable">Videoinfos konnten nicht geladen werden. Der Server ist möglicherweise offline</string>
     <string name="remove_from_history">Aus Verlauf entfernen</string>
 
     <!-- Help -->

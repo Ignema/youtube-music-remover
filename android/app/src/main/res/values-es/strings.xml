@@ -25,7 +25,7 @@
     <string name="hold_for_info">mantén pulsado para más info</string>
 
     <!-- Processing -->
-    <string name="leave_app_hint">Puedes salir de la app — te avisaremos cuando termine.</string>
+    <string name="leave_app_hint">Puedes salir de la app. Te avisaremos cuando termine.</string>
     <string name="downloading">Descargando video…</string>
     <string name="separating">Separando voces…</string>
     <string name="merging">Fusionando audio…</string>
@@ -106,7 +106,7 @@
     <string name="retry">Reintentar</string>
     <string name="enter_url_or_file">Introduce una URL de YouTube o elige un archivo de video</string>
     <string name="lost_connection">Se perdió la conexión con el servidor</string>
-    <string name="video_info_unavailable">No se pudo cargar la info del video — el servidor podría estar desconectado</string>
+    <string name="video_info_unavailable">No se pudo cargar la info del video. El servidor podría estar desconectado</string>
     <string name="remove_from_history">Eliminar del historial</string>
 
     <!-- Help -->

@@ -25,7 +25,7 @@
     <string name="hold_for_info">길게 눌러 정보 보기</string>
 
     <!-- Processing -->
-    <string name="leave_app_hint">앱을 나가도 됩니다 — 완료되면 알려드릴게요.</string>
+    <string name="leave_app_hint">앱을 나가도 됩니다. 완료되면 알려드릴게요.</string>
     <string name="downloading">동영상 다운로드 중…</string>
     <string name="separating">보컬 분리 중…</string>
     <string name="merging">오디오 병합 중…</string>
@@ -106,7 +106,7 @@
     <string name="retry">재시도</string>
     <string name="enter_url_or_file">YouTube URL을 입력하거나 동영상 파일을 선택하세요</string>
     <string name="lost_connection">서버와의 연결이 끊어졌습니다</string>
-    <string name="video_info_unavailable">동영상 정보를 불러올 수 없습니다 — 서버가 오프라인일 수 있습니다</string>
+    <string name="video_info_unavailable">동영상 정보를 불러올 수 없습니다. 서버가 오프라인일 수 있습니다</string>
     <string name="remove_from_history">기록에서 삭제</string>
 
     <!-- Help -->
@@ -138,7 +138,7 @@
     <string name="help_start_pc">PC에서 서버 시작</string>
     <string name="help_start_pc_desc" tools:ignore="TypographyDashes">먼저 저장소를 클론하세요:\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\n그다음 서버를 시작하세요:\nuvx --with fastapi --with yt-dlp --with python-multipart --with \"audio-separator[gpu]\" --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000</string>
     <string name="help_docker">Docker (PC에서 가장 쉬움)</string>
-    <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\n끝입니다 — Python이나 ffmpeg를 설치할 필요가 없습니다.</string>
+    <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\n끝입니다. Python이나 ffmpeg를 설치할 필요가 없습니다.</string>
 
     <!-- Notifications -->
     <string name="notif_done">완료: %s</string>

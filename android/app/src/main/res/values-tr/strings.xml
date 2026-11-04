@@ -25,7 +25,7 @@
     <string name="hold_for_info">bilgi için basılı tut</string>
 
     <!-- Processing -->
-    <string name="leave_app_hint">Uygulamadan çıkabilirsin — bitince sana bildirim göndereceğiz.</string>
+    <string name="leave_app_hint">Uygulamadan çıkabilirsin. Bitince sana bildirim göndereceğiz.</string>
     <string name="downloading">Video indiriliyor…</string>
     <string name="separating">Vokaller ayrıştırılıyor…</string>
     <string name="merging">Ses birleştiriliyor…</string>
@@ -106,7 +106,7 @@
     <string name="retry">Tekrar Dene</string>
     <string name="enter_url_or_file">Bir YouTube URL\'si girin veya video dosyası seçin</string>
     <string name="lost_connection">Sunucu bağlantısı kesildi</string>
-    <string name="video_info_unavailable">Video bilgisi yüklenemedi — sunucu çevrimdışı olabilir</string>
+    <string name="video_info_unavailable">Video bilgisi yüklenemedi. Sunucu çevrimdışı olabilir</string>
     <string name="remove_from_history">Geçmişten Kaldır</string>
 
     <!-- Help -->
@@ -138,7 +138,7 @@
     <string name="help_start_pc">Sunucuyu PC\'de başlat</string>
     <string name="help_start_pc_desc" tools:ignore="TypographyDashes">Önce depoyu klonlayın:\ngit clone https://github.com/Ignema/youtube-music-remover.git\ncd youtube-music-remover\n\nArdından sunucuyu başlatın:\nuvx --with fastapi --with yt-dlp --with python-multipart --with \"audio-separator[gpu]\" --with zeroconf uvicorn api.main:app --host 0.0.0.0 --port 8000</string>
     <string name="help_docker">Docker (PC için en kolay)</string>
-    <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\nBu kadar — Python veya ffmpeg kurulumu gerekmez.</string>
+    <string name="help_docker_desc">docker build -t murem api/\ndocker run -p 8000:8000 murem\n\nBu kadar. Python veya ffmpeg kurulumu gerekmez.</string>
 
     <!-- Notifications -->
     <string name="notif_done">Tamamlandı: %s</string>
