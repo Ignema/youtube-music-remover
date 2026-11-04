@@ -188,6 +188,13 @@ internal fun resetState(prev: MainUiState, p: PersistedUi): MainUiState = MainUi
     widgetTheme = p.widgetTheme,
 )
 
+/**
+ * Done for [jobId] only if it is still the current job: after "Process another" a late event
+ * must not bring Done back. Otherwise [ui] is returned unchanged.
+ */
+internal fun doneForJob(ui: MainUiState, jobId: String, filename: String): MainUiState =
+    if (ui.jobId == jobId) ui.copy(state = UiState.Done, statusText = filename) else ui
+
 data class MainUiState(
     val state: UiState = UiState.Idle,
     val inputTab: Int = 0, // 0=Link, 1=File (HomeInput.normalizeInputTab)
@@ -1793,11 +1800,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     if (!managed) ProcessingService.start(getApplication(), text, e.progress)
                     if (e.status == "done") {
                         val filename = e.filename ?: "Done"
-                        // Show the result as soon as the job finishes, while it is stored locally.
-                        // Only for the current job: after "Process another" a late event must not bring Done back
-                        if (_ui.value.jobId == jobId) {
-                            _ui.value = _ui.value.copy(state = UiState.Done, statusText = filename)
-                        }
+                        // Show the result as soon as the job finishes, while it is stored locally
+                        _ui.value = doneForJob(_ui.value, jobId, filename)
                         // Write history before the result download starts, so a cancel cannot lose it
                         val meta = activeJobMeta
                         // Parse metadata from server (yt-dlp data)
@@ -1825,9 +1829,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 is JobEvent.Done -> {
                     val filename = e.filename
-                    if (_ui.value.jobId == jobId) {
-                        _ui.value = _ui.value.copy(state = UiState.Done, statusText = filename)
-                    }
+                    _ui.value = doneForJob(_ui.value, jobId, filename)
                     prefs.edit().remove("active_job_id").putString("last_done_job_id", jobId).apply()
                     if (!managed) {
                         ProcessingService.stop(getApplication())
