@@ -237,7 +237,7 @@ class MainActivity : AppCompatActivity() {
                 // File mode holds one file; the card appears once the cache copy is done
                 vm.setInputTab(HomeInput.TAB_FILE)
                 vm.importFile(streams.first(), persist = false)
-                if (entry.count > 1) vm.showTransientError(getString(R.string.share_first_file_only, entry.count))
+                if (entry.count > 1) vm.showTransientInfo(getString(R.string.share_first_file_only, entry.count))
             }
             HomeInput.Entry.WidgetPaste -> {
                 vm.setInputTab(HomeInput.TAB_LINK)
@@ -279,11 +279,12 @@ class MainActivity : AppCompatActivity() {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
         val clip = clipboard.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
         val links = HomeInput.extractLinks(clip)
-        if (links.size >= 2) {
-            vm.addLinks(links)
+        if (links.size >= 2 || (clip.isNotEmpty() && vm.ui.value.links.isNotEmpty())) {
+            // Several links, or a list is already pending: add to the list without starting it
+            vm.addLinks(links.ifEmpty { listOf(clip.trim()) })
         } else if (clip.isNotEmpty()) {
-            vm.onUrlChange(clip)
-            vm.process()
+            // Only the clipboard link is processed, never the pending list or field text
+            vm.processSingleUrl(clip.trim())
         }
     }
 

@@ -139,6 +139,11 @@ import java.util.Locale
 @Composable
 fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -> Unit, onPlay: (url: String, title: String, jobId: String?) -> Unit = { _, _, _ -> }) {
     val ui by vm.ui.collectAsState()
+    // The .txt picker lives in IdleContent; drop a pending widget request once the input is off screen,
+    // so it doesn't pop up later at an unrelated moment (e.g. after "Process another")
+    androidx.compose.runtime.LaunchedEffect(ui.state, ui.processingMinimized, ui.pendingLinkImport) {
+        if (ui.pendingLinkImport && !vm.isInputVisible(ui)) vm.consumeLinkImport()
+    }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val context = LocalContext.current
     // The yt-dlp card needs the version (first call unzips Python); only in Internal mode
@@ -566,9 +571,12 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
 
         // Transient error banner
         AnimatedVisibility(visible = ui.snackError != null) {
+            // Informational messages ("Links added") use neutral colors; errors keep the error container
+            val bannerBg = if (ui.snackIsInfo) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.errorContainer
+            val bannerFg = if (ui.snackIsInfo) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onErrorContainer
             Column {
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    colors = CardDefaults.cardColors(containerColor = bannerBg),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -578,12 +586,12 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                     ) {
                         Text(
                             text = ui.snackError ?: "",
-                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            color = bannerFg,
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.weight(1f),
                         )
                         IconButton(onClick = vm::dismissSnackError) {
-                            Icon(Icons.Outlined.Close, "Dismiss", Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onErrorContainer)
+                            Icon(Icons.Outlined.Close, "Dismiss", Modifier.size(16.dp), tint = bannerFg)
                         }
                     }
                 }
@@ -1845,7 +1853,7 @@ private fun LinkList(ui: MainUiState, vm: MainViewModel) {
                     val found = HomeInput.extractLinks(text)
                     if (found.isNotEmpty()) vm.addLinks(found) else if (text.isNotEmpty()) vm.onUrlChange(text)
                 }) {
-                    Icon(Icons.Outlined.ContentPaste, "Paste", Modifier.size(18.dp))
+                    Icon(Icons.Outlined.ContentPaste, stringResource(R.string.paste), Modifier.size(18.dp))
                 }
             }
         },
@@ -1874,7 +1882,7 @@ private fun SingleLinkField(ui: MainUiState, vm: MainViewModel) {
                 } else {
                     val clip = androidx.compose.ui.platform.LocalClipboardManager.current
                     IconButton(onClick = { clip.getText()?.text?.let { if (it.isNotEmpty()) vm.onUrlChange(it) } }) {
-                        Icon(Icons.Outlined.ContentPaste, "Paste", Modifier.size(18.dp))
+                        Icon(Icons.Outlined.ContentPaste, stringResource(R.string.paste), Modifier.size(18.dp))
                     }
                 }
             }

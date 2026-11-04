@@ -225,6 +225,8 @@ data class MainUiState(
     val serverChecking: Boolean = true,
     // Transient error (auto-dismissing)
     val snackError: String? = null,
+    /** [snackError] is informational (neutral style), not an error */
+    val snackIsInfo: Boolean = false,
     // Appearance
     val themeMode: String = "system",
     val dynamicColor: Boolean = true,
@@ -798,12 +800,35 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val field = HomeInput.extractLinks(_ui.value.url)
         addLinks(field + found)
         if (field.isNotEmpty()) _ui.value = _ui.value.copy(url = "", urlPreview = null, loadingPreview = false)
-        showTransientError(getApplication<Application>().getString(R.string.links_added, found.size))
+        showTransientInfo(getApplication<Application>().getString(R.string.links_added, found.size))
     }
 
-    /** Widget Links button: Home opens the .txt import once. */
+    /**
+     * Widget Links button: Home opens the .txt import once, but only while the input is on screen
+     * (Idle/Error, or minimized processing). Otherwise the picker would pop up later at an unrelated moment.
+     */
     fun requestLinkImport() {
-        _ui.value = _ui.value.copy(pendingLinkImport = true, inputTab = HomeInput.TAB_LINK)
+        val s = _ui.value
+        _ui.value = s.copy(pendingLinkImport = isInputVisible(s), inputTab = HomeInput.TAB_LINK)
+    }
+
+    /** Whether Home shows the Link/File input (where the .txt picker lives). */
+    fun isInputVisible(s: MainUiState = _ui.value): Boolean =
+        s.state == UiState.Idle || s.state == UiState.Error || (s.state == UiState.Processing && s.processingMinimized)
+
+    /**
+     * Widget Paste with one link: processes (or queues, if busy) only that link. The Link list and the
+     * field are left untouched.
+     */
+    fun processSingleUrl(url: String) {
+        setInputTab(HomeInput.TAB_LINK)
+        if (_ui.value.processingMode == BackendProvider.MODE_INTERNAL && modelManager.needsNotice(_ui.value.selectedModel)) {
+            // Same gate as Process: the license dialog first; the link waits in the field
+            _ui.value = _ui.value.copy(url = url, noticeDialog = NoticeRequest(_ui.value.selectedModel, NoticeTrigger.Process))
+            return
+        }
+        if (_ui.value.state == UiState.Processing) addToQueue(url) else processUrl(url)
+        hapticTick()
     }
 
     fun consumeLinkImport() {
@@ -816,6 +841,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun importFile(uri: android.net.Uri, persist: Boolean) {
         val context = getApplication<Application>()
+        // Switch once, up front: a switch back to Link during a long copy is not undone when it finishes
+        setInputTab(HomeInput.TAB_FILE)
         bgScope.launch {
             if (persist) {
                 // Take persistable permission so we can re-read this file later
@@ -847,7 +874,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 android.net.Uri.fromFile(cacheFile)
             } catch (_: Exception) { uri }
             onFileSelected(cachedUri, name, size, uri.toString())
-            setInputTab(HomeInput.TAB_FILE)
         }
     }
 
@@ -1377,10 +1403,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
 
+        // Field text that is not a link is not part of the job; keep it instead of dropping it silently
+        val leftoverText = if (s.links.isNotEmpty() && HomeInput.extractLinks(s.url).isEmpty()) s.url else ""
+
         // Several links: the existing queue (appends while processing, else starts the first)
         if (source is HomeInput.Source.Links) {
             queueUrls(source.urls)
-            _ui.value = _ui.value.copy(links = emptyList(), url = "", urlPreview = null)
+            _ui.value = _ui.value.copy(links = emptyList(), url = leftoverText, urlPreview = null)
             return
         }
 
@@ -1391,7 +1420,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 clearFile()
             } else if (source is HomeInput.Source.Single) {
                 addToQueue(source.text)
-                _ui.value = _ui.value.copy(url = "", urlPreview = null, links = emptyList())
+                _ui.value = _ui.value.copy(url = leftoverText, urlPreview = null, links = emptyList())
             }
             return
         }
@@ -1403,7 +1432,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             // A one-row list runs like the field did
             if (s.links.isNotEmpty()) _ui.value = _ui.value.copy(url = source.text, links = emptyList())
             processUrl(source.text)
-            _ui.value = _ui.value.copy(url = "", urlPreview = null)
+            _ui.value = _ui.value.copy(url = leftoverText, urlPreview = null)
         }
         hapticTick()
     }
@@ -1445,7 +1474,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             saveQueue(rest)
             processUrl(first.url, first)
         }
-        showTransientError("${urls.size} URLs queued")
+        showTransientInfo(getApplication<Application>().resources.getQuantityString(R.plurals.links_queued, urls.size, urls.size))
         hapticTick()
     }
 
@@ -1600,9 +1629,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     @Volatile
     var settingsVisible: Int = 0
 
-    fun showTransientError(msg: String) {
+    /** A neutral (non-error) transient message, e.g. "Links added". Same lifetime as [showTransientError]. */
+    fun showTransientInfo(msg: String) = showTransient(msg, isInfo = true)
+
+    fun showTransientError(msg: String) = showTransient(msg, isInfo = false)
+
+    private fun showTransient(msg: String, isInfo: Boolean) {
         snackJob?.cancel()
-        _ui.value = _ui.value.copy(snackError = msg)
+        _ui.value = _ui.value.copy(snackError = msg, snackIsInfo = isInfo)
         // Also show a Toast so it's visible even when scrolled (Home); Settings screens use their Snackbar
         if (SnackPolicy.showToast(settingsVisible)) try {
             val app = getApplication<Application>()

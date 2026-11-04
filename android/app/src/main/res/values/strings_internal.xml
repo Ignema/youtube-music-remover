@@ -250,6 +250,11 @@
         <item quantity="other">Saved %1$d cookies for %2$s</item>
     </plurals>
     <string name="cookies_login_none">No cookies found. Log in first, then tap Save.</string>
+    <string name="paste">Paste</string>
+    <plurals name="links_queued">
+        <item quantity="one">%1$d link queued</item>
+        <item quantity="other">%1$d links queued</item>
+    </plurals>
     <string name="cookies_login_not_logged_in">You don\'t seem to be logged in yet, so nothing was saved. Log in first, then tap Save.</string>
     <string name="cookies_login_save_failed">Could not save the cookies. Free some storage space and try again.</string>
     <string name="cookies_invalid_too_large">This file is too large for a cookies.txt (over 1 MB)</string>
