@@ -1,7 +1,6 @@
 AntiFeatures:
   NonFreeNet:
-    en-US: Downloads AI models and yt-dlp updates from GitHub and Hugging Face, and processes
-      links from sites such as YouTube.
+    en-US: Uses GitHub, Hugging Face and video sites such as YouTube.
 Categories:
   - Multimedia
 License: MIT
@@ -62,6 +61,6 @@ VercodeOperation:
   - 10*%c+1
   - 10*%c+2
   - 10*%c+3
-UpdateCheckData: android/app/build.gradle.kts|versionCode\s=\s(\d+)|android/app/build.gradle.kts|versionName\s=\s"(.*)"
+UpdateCheckData: android/app/build.gradle.kts|versionCode\s=\s(\d+)||v(.*)
 CurrentVersion: 4.0.0
 CurrentVersionCode: 53
