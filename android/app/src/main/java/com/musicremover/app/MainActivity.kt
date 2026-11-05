@@ -3,27 +3,41 @@ package com.musicremover.app
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.IntentCompat
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.movableContentOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.musicremover.app.processing.internal.LoginSites
 import com.musicremover.app.processing.internal.WebLoginCookies
 import kotlinx.coroutines.launch
@@ -32,6 +46,7 @@ import com.musicremover.app.ui.HelpScreen
 import com.musicremover.app.ui.HomeScreen
 import com.musicremover.app.ui.PermissionsScreen
 import com.musicremover.app.ui.PlayerScreen
+import com.musicremover.app.ui.adaptive.AdaptiveLayout
 import com.musicremover.app.ui.adaptive.LocalWindowLayout
 import com.musicremover.app.ui.adaptive.rememberWindowLayout
 import com.musicremover.app.ui.settings.AboutSettingsScreen
@@ -41,8 +56,12 @@ import com.musicremover.app.ui.settings.ModelsSettingsScreen
 import com.musicremover.app.ui.settings.OutputSettingsScreen
 import com.musicremover.app.ui.settings.PerformanceSettingsScreen
 import com.musicremover.app.ui.settings.ProcessingSettingsScreen
+import com.musicremover.app.ui.settings.SettingsListState
 import com.musicremover.app.ui.settings.SettingsMainScreen
+import com.musicremover.app.ui.settings.SettingsNav
+import com.musicremover.app.ui.settings.SettingsNavAction
 import com.musicremover.app.ui.settings.SettingsRoutes
+import com.musicremover.app.ui.settings.SettingsTwoPane
 import com.musicremover.app.ui.settings.StorageSettingsScreen
 import com.musicremover.app.ui.settings.YtDlpSettingsScreen
 import com.musicremover.app.ui.theme.MusicRemoverTheme
@@ -85,6 +104,62 @@ class MainActivity : AppCompatActivity() {
                 val isFirstRun = !prefs.getBoolean("setup_done", false)
 
                 val windowLayout = rememberWindowLayout()
+                // The holder itself (not `by`), so settingsRoute and its transitions read the current value
+                val settingsTwoPane: State<Boolean> = rememberUpdatedState(AdaptiveLayout.settingsTwoPane(windowLayout.width))
+                // Remembered once; they capture only navController, vm and the settingsTwoPane holder, so the
+                // NavHost graph and the per-entry movable content in settingsRoute stay valid across resizes
+                val exitSettings: () -> Unit = remember(navController) {
+                    { navController.popBackStack(SettingsRoutes.GRAPH, inclusive = true) }
+                }
+                val selectSettings: (String) -> Unit = remember(navController) {
+                    { target ->
+                        val current = navController.currentDestination?.route ?: SettingsRoutes.MAIN
+                        when (val action = SettingsNav.select(current, target, settingsTwoPane.value)) {
+                            is SettingsNavAction.Push -> navController.navigate(action.route)
+                            is SettingsNavAction.ReplaceDetail -> navController.navigate(action.route) {
+                                popUpTo(SettingsRoutes.MAIN)
+                                launchSingleTop = true
+                            }
+                            SettingsNavAction.PopToMain -> {
+                                if (!navController.popBackStack(SettingsRoutes.MAIN, inclusive = false)) {
+                                    Log.w("Murem", "settings pop to main failed from $current")
+                                }
+                            }
+                            SettingsNavAction.None -> {}
+                        }
+                    }
+                }
+                val settingsDetail = remember<@Composable (String) -> Unit>(navController) {
+                    { r ->
+                        val back: () -> Unit = { navController.popBackStack() }
+                        when (r) {
+                            SettingsRoutes.PROCESSING -> ProcessingSettingsScreen(vm, back)
+                            SettingsRoutes.MODELS -> ModelsSettingsScreen(vm, back)
+                            SettingsRoutes.OUTPUT -> OutputSettingsScreen(vm, back)
+                            SettingsRoutes.PERFORMANCE -> PerformanceSettingsScreen(vm, back)
+                            // cookie_login is outside the settings graph, so leaving it returns here
+                            SettingsRoutes.ACCOUNTS ->
+                                AccountsSettingsScreen(vm, back, onLogin = { url -> navController.navigate(cookieLoginRoute(url)) })
+                            SettingsRoutes.YTDLP -> YtDlpSettingsScreen(vm, back)
+                            SettingsRoutes.APPEARANCE -> AppearanceSettingsScreen(vm, back)
+                            SettingsRoutes.STORAGE -> StorageSettingsScreen(vm, back)
+                            SettingsRoutes.ABOUT ->
+                                AboutSettingsScreen(vm, back, onHelp = { navController.navigate(SettingsRoutes.HELP) })
+                            else -> {} // MAIN is never a detail (SettingsNav.detailFor)
+                        }
+                    }
+                }
+                // I2: entering two-pane with Processing pushed over main shows the same thing as main, so drop it
+                val topEntry by navController.currentBackStackEntryAsState()
+                LaunchedEffect(settingsTwoPane.value, topEntry) {
+                    val top = topEntry?.destination?.route ?: return@LaunchedEffect
+                    val previous = navController.previousBackStackEntry?.destination?.route
+                    if (SettingsNav.needsNormalize(top, previous, settingsTwoPane.value)) {
+                        if (!navController.popBackStack(SettingsRoutes.MAIN, inclusive = false)) {
+                            Log.w("Murem", "settings pop to main failed from $top")
+                        }
+                    }
+                }
                 CompositionLocalProvider(LocalWindowLayout provides windowLayout) {
                     NavHost(
                         navController = navController,
@@ -126,23 +201,8 @@ class MainActivity : AppCompatActivity() {
                         }
                         // navigate("settings") (Home gear, widget) opens settings/main; system back pops to it, then Home
                         navigation(route = SettingsRoutes.GRAPH, startDestination = SettingsRoutes.MAIN) {
-                            val back: () -> Unit = { navController.popBackStack() }
-                            settingsRoute(SettingsRoutes.MAIN) {
-                                SettingsMainScreen(vm = vm, onBack = back, onNavigate = { navController.navigate(it) })
-                            }
-                            settingsRoute(SettingsRoutes.PROCESSING) { ProcessingSettingsScreen(vm, back) }
-                            settingsRoute(SettingsRoutes.MODELS) { ModelsSettingsScreen(vm, back) }
-                            settingsRoute(SettingsRoutes.OUTPUT) { OutputSettingsScreen(vm, back) }
-                            settingsRoute(SettingsRoutes.PERFORMANCE) { PerformanceSettingsScreen(vm, back) }
-                            settingsRoute(SettingsRoutes.ACCOUNTS) {
-                                // cookie_login is outside this graph, so leaving it returns here
-                                AccountsSettingsScreen(vm, back, onLogin = { url -> navController.navigate(cookieLoginRoute(url)) })
-                            }
-                            settingsRoute(SettingsRoutes.YTDLP) { YtDlpSettingsScreen(vm, back) }
-                            settingsRoute(SettingsRoutes.APPEARANCE) { AppearanceSettingsScreen(vm, back) }
-                            settingsRoute(SettingsRoutes.STORAGE) { StorageSettingsScreen(vm, back) }
-                            settingsRoute(SettingsRoutes.ABOUT) {
-                                AboutSettingsScreen(vm, back, onHelp = { navController.navigate(SettingsRoutes.HELP) })
+                            SettingsRoutes.SCREENS.forEach { route ->
+                                settingsRoute(route, navController, settingsTwoPane, exitSettings, selectSettings, settingsDetail)
                             }
                         }
                         composable(
@@ -322,14 +382,57 @@ class MainActivity : AppCompatActivity() {
         return if (jobId != null) "$route?jobId=${java.net.URLEncoder.encode(jobId, "UTF-8")}" else route
     }
 
-    /** A Settings sub-screen; while it is composed, transient messages use its Snackbar instead of a Toast. */
-    private fun NavGraphBuilder.settingsRoute(route: String, content: @Composable () -> Unit) {
-        composable(route) {
+    /**
+     * A Settings screen; while it is composed, transient messages use its Snackbar instead of a Toast.
+     * In two-pane ([twoPane]) every entry draws the list next to its detail (main shows Processing), and
+     * moves between settings entries have no transition, so a row tap looks like a detail swap.
+     */
+    private fun NavGraphBuilder.settingsRoute(
+        route: String,
+        nav: NavHostController,
+        twoPane: State<Boolean>,
+        exitSettings: () -> Unit,
+        selectSettings: (String) -> Unit,
+        detailContent: @Composable (String) -> Unit,
+    ) {
+        val inPlace: AnimatedContentTransitionScope<NavBackStackEntry>.() -> Boolean = {
+            twoPane.value && initialState.destination.route in SettingsRoutes.SCREENS &&
+                targetState.destination.route in SettingsRoutes.SCREENS
+        }
+        // null falls back to the NavHost slides (compact, and Home <-> Settings)
+        composable(
+            route,
+            enterTransition = { if (inPlace()) EnterTransition.None else null },
+            exitTransition = { if (inPlace()) ExitTransition.None else null },
+            popEnterTransition = { if (inPlace()) EnterTransition.None else null },
+            popExitTransition = { if (inPlace()) ExitTransition.None else null },
+        ) { entry ->
             DisposableEffect(Unit) {
                 vm.settingsVisible++
                 onDispose { vm.settingsVisible-- }
             }
-            content()
+            val detailRoute = SettingsNav.detailFor(route)
+            // I5: one list position for the whole Settings session, owned by the settings graph entry
+            val graphEntry = remember(entry) { nav.getBackStackEntry(SettingsRoutes.GRAPH) }
+            val listState: SettingsListState = viewModel(viewModelStoreOwner = graphEntry)
+            // I3: list and detail are movable content created once per entry, so a pane-mode switch moves
+            // their composition (dialogs, sheets, scroll, launchers) instead of rebuilding it. They capture
+            // only stable objects; the selection is a parameter.
+            val list = remember {
+                movableContentOf { sel: String? ->
+                    SettingsMainScreen(vm, onBack = exitSettings, onNavigate = selectSettings, selectedRoute = sel, listState = listState)
+                }
+            }
+            val detail = remember { movableContentOf { detailContent(detailRoute) } }
+            val listWidthDp = AdaptiveLayout.settingsListWidthDp(LocalWindowLayout.current.widthDp)
+            // I2: the back stack is the selection at every size (home, main [, one sub-screen])
+            if (twoPane.value) {
+                SettingsTwoPane(listWidthDp.dp, list = { list(detailRoute) }, detail = { detail() })
+            } else if (route == SettingsRoutes.MAIN) {
+                list(null)
+            } else {
+                detail()
+            }
         }
     }
 

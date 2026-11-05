@@ -52,7 +52,7 @@ fun AboutSettingsScreen(vm: MainViewModel, onBack: () -> Unit, onHelp: () -> Uni
         Spacer(Modifier.height(4.dp))
         SettingsNote(stringResource(R.string.about_desc))
         Spacer(Modifier.height(8.dp))
-        NavRow(Icons.AutoMirrored.Outlined.HelpOutline, stringResource(R.string.about_help), null, onHelp)
+        NavRow(Icons.AutoMirrored.Outlined.HelpOutline, stringResource(R.string.about_help), null, onClick = onHelp)
         Spacer(Modifier.height(8.dp))
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         Spacer(Modifier.height(16.dp))

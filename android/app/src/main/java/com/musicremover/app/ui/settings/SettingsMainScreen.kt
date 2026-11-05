@@ -37,9 +37,16 @@ import com.musicremover.app.ui.theme.ColorPalettes
 /**
  * Top-level Settings list. Summaries come from the UI state only: nothing here starts network work or
  * the yt-dlp unzip ("Tap to check" until Home in Internal mode or the yt-dlp screen loaded the version).
+ * [selectedRoute] is the detail shown next to the list in two-pane (null in a single pane).
  */
 @Composable
-fun SettingsMainScreen(vm: MainViewModel, onBack: () -> Unit, onNavigate: (route: String) -> Unit) {
+fun SettingsMainScreen(
+    vm: MainViewModel,
+    onBack: () -> Unit,
+    onNavigate: (route: String) -> Unit,
+    selectedRoute: String? = null,
+    listState: SettingsListState? = null,
+) {
     val ui by vm.ui.collectAsState()
     // D3: reload the cookie list (also runs the lazy migration)
     LaunchedEffect(Unit) { vm.loadCookieSites() }
@@ -51,6 +58,7 @@ fun SettingsMainScreen(vm: MainViewModel, onBack: () -> Unit, onNavigate: (route
         onBack = onBack,
         snackMessage = ui.snackError,
         onSnackDismissed = vm::dismissSnackError,
+        listState = listState,
     ) {
         SectionLabel(stringResource(R.string.settings_group_processing))
         Spacer(Modifier.height(4.dp))
@@ -59,27 +67,32 @@ fun SettingsMainScreen(vm: MainViewModel, onBack: () -> Unit, onNavigate: (route
             com.musicremover.app.ui.processingSourceOf(ui.processingMode)?.icon ?: Icons.Outlined.Memory,
             stringResource(R.string.processing_mode),
             modeSummary(ui),
+            selected = selectedRoute?.let { SettingsRoutes.PROCESSING == it },
         ) { onNavigate(SettingsRoutes.PROCESSING) }
         NavRow(
             Icons.Outlined.Layers,
             stringResource(R.string.settings_row_models),
             onlyInternal(internal, modelsSummary(ui)),
+            selected = selectedRoute?.let { SettingsRoutes.MODELS == it },
         ) { onNavigate(SettingsRoutes.MODELS) }
         NavRow(
             Icons.Outlined.Speed,
             stringResource(R.string.settings_row_performance),
             onlyInternal(internal, performanceSummary(ui)),
+            selected = selectedRoute?.let { SettingsRoutes.PERFORMANCE == it },
         ) { onNavigate(SettingsRoutes.PERFORMANCE) }
         NavRow(
             Icons.Outlined.Cookie,
             stringResource(R.string.cookies_title),
             onlyInternal(internal, accountsSummary(ui)),
+            selected = selectedRoute?.let { SettingsRoutes.ACCOUNTS == it },
         ) { onNavigate(SettingsRoutes.ACCOUNTS) }
         // Opens the yt-dlp screen; it never starts an update by itself
         NavRow(
             Icons.Outlined.SystemUpdate,
             stringResource(R.string.settings_row_update_ytdlp),
             onlyInternal(internal, ytDlpSummary(ui)),
+            selected = selectedRoute?.let { SettingsRoutes.YTDLP == it },
         ) { onNavigate(SettingsRoutes.YTDLP) }
 
         SettingsDivider()
@@ -89,6 +102,7 @@ fun SettingsMainScreen(vm: MainViewModel, onBack: () -> Unit, onNavigate: (route
             Icons.Outlined.AudioFile,
             stringResource(R.string.settings_row_output),
             outputSummary(ui),
+            selected = selectedRoute?.let { SettingsRoutes.OUTPUT == it },
         ) { onNavigate(SettingsRoutes.OUTPUT) }
 
         SettingsDivider()
@@ -98,21 +112,25 @@ fun SettingsMainScreen(vm: MainViewModel, onBack: () -> Unit, onNavigate: (route
             Icons.Outlined.Palette,
             stringResource(R.string.appearance),
             appearanceSummary(ui),
+            selected = selectedRoute?.let { SettingsRoutes.APPEARANCE == it },
         ) { onNavigate(SettingsRoutes.APPEARANCE) }
         NavRow(
             Icons.Outlined.History,
             stringResource(R.string.settings_row_storage),
             storageSummary(ui, vm),
+            selected = selectedRoute?.let { SettingsRoutes.STORAGE == it },
         ) { onNavigate(SettingsRoutes.STORAGE) }
         NavRow(
             Icons.Outlined.Security,
             stringResource(R.string.permissions),
             stringResource(R.string.permissions_desc),
+            selected = selectedRoute?.let { SettingsRoutes.PERMISSIONS == it },
         ) { onNavigate(SettingsRoutes.PERMISSIONS) }
         NavRow(
             Icons.Outlined.Info,
             stringResource(R.string.settings_row_about),
             stringResource(R.string.settings_about_summary, BuildConfig.VERSION_NAME),
+            selected = selectedRoute?.let { SettingsRoutes.ABOUT == it },
         ) { onNavigate(SettingsRoutes.ABOUT) }
     }
 }

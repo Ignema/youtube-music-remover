@@ -14,12 +14,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -40,6 +47,7 @@ import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -56,6 +64,8 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.musicremover.app.R
+import com.musicremover.app.ui.adaptive.AdaptiveLayout
+import com.musicremover.app.ui.adaptive.LocalWindowLayout
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -88,8 +98,15 @@ fun PermissionsScreen(onBack: () -> Unit) {
         ActivityResultContracts.RequestPermission()
     ) { refreshKey++ }
 
+    val windowLayout = LocalWindowLayout.current
+    val max = AdaptiveLayout.docMaxDp(windowLayout.width)
+    // Off compact, keep content and the back arrow out of a display cutout; compact keeps the defaults
+    val cutoutInsets = AdaptiveLayout.useCutoutInsets(windowLayout.width)
+
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        contentWindowInsets = if (cutoutInsets) WindowInsets.systemBars.union(WindowInsets.displayCutout)
+        else ScaffoldDefaults.contentWindowInsets,
         topBar = {
             LargeTopAppBar(
                 title = { Text(stringResource(R.string.permissions)) },
@@ -98,6 +115,10 @@ fun PermissionsScreen(onBack: () -> Unit) {
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
                     }
                 },
+                windowInsets = if (cutoutInsets) {
+                    WindowInsets.systemBars.union(WindowInsets.displayCutout)
+                        .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
+                } else TopAppBarDefaults.windowInsets,
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.largeTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
@@ -113,101 +134,108 @@ fun PermissionsScreen(onBack: () -> Unit) {
                 .padding(horizontal = 24.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
-            Text(
-                stringResource(R.string.grant_permissions_hint),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            // I3: always emitted, only the modifier changes with the size, so the content keeps its slot
+            Column(
+                Modifier
+                    .then(if (max != null) Modifier.align(Alignment.CenterHorizontally).widthIn(max = max.dp) else Modifier)
+                    .fillMaxWidth(),
+            ) {
+                Text(
+                    stringResource(R.string.grant_permissions_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
 
-            Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(24.dp))
 
-            // Notifications
-            PermissionCard(
-                icon = Icons.Outlined.Notifications,
-                title = stringResource(R.string.notifications),
-                description = stringResource(R.string.notifications_desc),
-                granted = notifGranted,
-                onGrant = {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    } else {
-                        // Pre-13, open notification settings
-                        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                        }
-                        context.startActivity(intent)
-                    }
-                },
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            // Battery optimization
-            PermissionCard(
-                icon = Icons.Outlined.BatteryAlert,
-                title = stringResource(R.string.unrestricted_battery),
-                description = stringResource(R.string.battery_desc),
-                granted = batteryExempt,
-                onGrant = {
-                    val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                        data = Uri.parse("package:${context.packageName}")
-                    }
-                    context.startActivity(intent)
-                },
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            // Termux
-            if (termuxInstalled) {
+                // Notifications
                 PermissionCard(
-                    icon = Icons.Outlined.Terminal,
-                    title = stringResource(R.string.termux_commands),
-                    description = stringResource(R.string.termux_commands_desc),
-                    granted = termuxGranted,
+                    icon = Icons.Outlined.Notifications,
+                    title = stringResource(R.string.notifications),
+                    description = stringResource(R.string.notifications_desc),
+                    granted = notifGranted,
                     onGrant = {
-                        // Open app info where "Additional permissions" lives
-                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        } else {
+                            // Pre-13, open notification settings
+                            val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                            }
+                            context.startActivity(intent)
+                        }
+                    },
+                )
+
+                Spacer(Modifier.height(12.dp))
+
+                // Battery optimization
+                PermissionCard(
+                    icon = Icons.Outlined.BatteryAlert,
+                    title = stringResource(R.string.unrestricted_battery),
+                    description = stringResource(R.string.battery_desc),
+                    granted = batteryExempt,
+                    onGrant = {
+                        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
                             data = Uri.parse("package:${context.packageName}")
                         }
                         context.startActivity(intent)
                     },
-                    grantLabel = stringResource(R.string.open_app_info),
                 )
-            }
 
-            Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(12.dp))
 
-            val allDone = notifGranted && batteryExempt && (!termuxInstalled || termuxGranted)
-            if (allDone) {
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
+                // Termux
+                if (termuxInstalled) {
+                    PermissionCard(
+                        icon = Icons.Outlined.Terminal,
+                        title = stringResource(R.string.termux_commands),
+                        description = stringResource(R.string.termux_commands_desc),
+                        granted = termuxGranted,
+                        onGrant = {
+                            // Open app info where "Additional permissions" lives
+                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.parse("package:${context.packageName}")
+                            }
+                            context.startActivity(intent)
+                        },
+                        grantLabel = stringResource(R.string.open_app_info),
+                    )
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                val allDone = notifGranted && batteryExempt && (!termuxInstalled || termuxGranted)
+                if (allDone) {
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Icon(
-                            Icons.Outlined.CheckCircle,
-                            null,
-                            Modifier.size(24.dp),
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Text(
-                            stringResource(R.string.all_set),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                Icons.Outlined.CheckCircle,
+                                null,
+                                Modifier.size(24.dp),
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Text(
+                                stringResource(R.string.all_set),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
                     }
                 }
-            }
 
-            Spacer(Modifier.height(32.dp))
+                Spacer(Modifier.height(32.dp))
+            }
         }
     }
 }

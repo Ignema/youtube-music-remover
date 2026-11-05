@@ -179,7 +179,8 @@ fun AppearanceSettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
 
     if (showThemePicker) {
         ModalBottomSheet(onDismissRequest = { showThemePicker = false }) {
-            Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp)) {
+            // Scrolls when a short window (landscape phone) can't fit the options
+            Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp).verticalScroll(rememberScrollState())) {
                 Text(stringResource(R.string.theme), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.height(16.dp))
                 listOf(
@@ -223,7 +224,7 @@ fun AppearanceSettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
 
     if (showWidgetThemePicker) {
         ModalBottomSheet(onDismissRequest = { showWidgetThemePicker = false }) {
-            Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp).verticalScroll(rememberScrollState())) {
                 Text(stringResource(R.string.widget_theme), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.height(16.dp))
                 listOf(
