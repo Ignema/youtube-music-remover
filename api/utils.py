@@ -65,7 +65,10 @@ def is_valid_url(input_str: str) -> bool:
 
 
 def has_video_stream(path) -> bool:
-    """True if the file has a real video stream. If ffprobe fails, assume video (old behavior)."""
+    """True if the file has a real video stream.
+
+    If ffprobe fails, assume video (the old behavior).
+    """
     # Capital V skips attached pictures such as cover art in mp3/m4a files.
     try:
         result = subprocess.run(

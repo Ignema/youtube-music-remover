@@ -57,7 +57,8 @@ class TestHasVideoStream:
 
     def test_audio_file_with_cover_art(self, tmp_path):
         cover = tmp_path / "cover.png"
-        _ffmpeg("-f", "lavfi", "-i", "color=c=red:size=64x64", "-frames:v", "1", str(cover))
+        _ffmpeg("-f", "lavfi", "-i", "color=c=red:size=64x64",
+                "-frames:v", "1", str(cover))
         out = tmp_path / "cover.mp3"
         _ffmpeg("-f", "lavfi", "-i", "sine=frequency=440:duration=1", "-i", str(cover),
                 "-map", "0", "-map", "1", "-c:a", "libmp3lame", "-c:v", "mjpeg",
@@ -111,7 +112,10 @@ class TestDbOperations:
 
 @pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg not installed")
 class TestUploadEndpoint:
-    """POST /api/upload copies the file in bounded chunks (#3); inputs without video run audio only (#1)."""
+    """POST /api/upload copies the file in bounded chunks (#3).
+
+    Inputs without a video stream run audio only (#1).
+    """
 
     CHUNK = 1024 * 1024
 
@@ -158,7 +162,10 @@ class TestUploadEndpoint:
         monkeypatch.setattr(m, "separate_and_merge", fake_separate)
         with open(path, "rb") as f:
             resp = TestClient(m.app).post(
-                "/api/upload", files={"file": (path.name, f, content_type)}, data={"bitrate": "192k"})
+                "/api/upload",
+                files={"file": (path.name, f, content_type)},
+                data={"bitrate": "192k"},
+            )
         assert resp.status_code == 200
         assert done.wait(60), "process_upload did not reach separate_and_merge"
         return seen, reads
