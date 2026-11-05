@@ -19,6 +19,7 @@ Repo: https://github.com/Ignema/youtube-music-remover.git
 # Since v4.0.0 the build makes one APK per ABI, with
 # versionCode = defaultConfig.versionCode * 10 + abiCode (armeabi-v7a 1, arm64-v8a 2, x86_64 3).
 # Each ABI is its own Builds entry that picks its APK with `output`. See fdroid/README.md.
+# The 4.0.0 commit is the v4.0.0 tag plus fdroid/ and fastlane/ metadata only (same app code), so F-Droid gets the v4 store text and screenshots.
 Builds:
   - versionName: 3.0.0
     versionCode: 4
@@ -29,7 +30,7 @@ Builds:
 
   - versionName: 4.0.0
     versionCode: 51
-    commit: 3dc74ddac830d24a6bddcfe17051623d2b129dc6
+    commit: d2d6dbb342fffc1b882646c84e98a3475c20044b
     subdir: android/app
     gradle:
       - yes
@@ -38,7 +39,7 @@ Builds:
 
   - versionName: 4.0.0
     versionCode: 52
-    commit: 3dc74ddac830d24a6bddcfe17051623d2b129dc6
+    commit: d2d6dbb342fffc1b882646c84e98a3475c20044b
     subdir: android/app
     gradle:
       - yes
@@ -47,7 +48,7 @@ Builds:
 
   - versionName: 4.0.0
     versionCode: 53
-    commit: 3dc74ddac830d24a6bddcfe17051623d2b129dc6
+    commit: d2d6dbb342fffc1b882646c84e98a3475c20044b
     subdir: android/app
     gradle:
       - yes

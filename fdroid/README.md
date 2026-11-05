@@ -30,6 +30,10 @@ This was checked locally on v4.0.0 by running the same `sed` and `assembleReleas
 
 Keep the per-ABI scheme and the APK names as they are, or the copied Builds entries stop matching.
 
+## Store metadata
+
+F-Droid reads the description, changelog and screenshots from `fastlane/metadata/android/en-US/` at the commit it builds. Changelogs are named by versionCode, so v4.0.0 has `51.txt`, `52.txt` and `53.txt` with the same text. The 4.0.0 Builds entries point at the commit that added the v4.0.0 fastlane metadata, not at the `v4.0.0` tag. Between the tag and that commit only `fdroid/` and `fastlane/` changed, so the APKs are built from the same app code as the tag. For later releases, commit the new changelogs (`<base>1.txt`, `<base>2.txt`, `<base>3.txt`) before tagging, so the tag already contains them.
+
 ## Submitting the update
 
 Open a merge request on fdroiddata that replaces `metadata/com.musicremover.app.yml` with this file. The pipeline runs `fdroid lint` and a test build. Things the reviewers may ask about:
