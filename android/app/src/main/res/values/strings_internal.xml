@@ -264,6 +264,7 @@
     <string name="cookies_login_none">No cookies found. Log in first, then tap Save.</string>
     <string name="paste">Paste</string>
     <string name="no_external_player">No app found to open this file</string>
+    <string name="server_job_gone">The server no longer has this job. Results are kept for 7 days.</string>
     <plurals name="links_queued">
         <item quantity="one">%1$d link queued</item>
         <item quantity="other">%1$d links queued</item>

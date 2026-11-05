@@ -42,6 +42,7 @@ class RemoteServerBackend(
     }
 
     private val resolver = context.applicationContext.contentResolver
+    private val appContext = context.applicationContext
 
     private fun api() = ApiClient.getService(baseUrl)
 
@@ -96,6 +97,20 @@ class RemoteServerBackend(
                 api().status(jobId)
             } catch (e: CancellationException) {
                 throw e
+            } catch (e: retrofit2.HttpException) {
+                // The server answered: the job is gone (expired after 7 days, or the server was reset).
+                // Retrying cannot bring it back, so fail at once instead of ~9 min of "Resuming…".
+                if (e.code() == 404) {
+                    emit(JobEvent.Failed("error", appContext.getString(com.musicremover.app.R.string.server_job_gone)))
+                    return@flow
+                }
+                retries++
+                if (retries >= 30) {
+                    emit(JobEvent.ConnectionLost)
+                    return@flow
+                }
+                delay(retries * 1000L)
+                continue
             } catch (_: Exception) {
                 retries++
                 if (retries >= 30) {

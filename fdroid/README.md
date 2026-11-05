@@ -12,7 +12,7 @@ From the release after v3.0.0 on, the Android build (`android/app/build.gradle.k
 
 ## Builds entries for the next release
 
-Add one Builds entry per ABI. The `release` build type is signed with the debug key (`signingConfig = signingConfigs.getByName("debug")`), which would produce `app-<abi>-release.apk`. F-Droid signs APKs itself, so remove that line in `prebuild`. Gradle then writes `app-<abi>-release-unsigned.apk`.
+Add one Builds entry per ABI. The `release` build type is signed with the debug key (`signingConfig = signingConfigs.getByName("debug")`), which would produce `murem-<abi>-release.apk`. F-Droid signs APKs itself, so remove that line in `prebuild`. Gradle then writes `murem-<abi>-release-unsigned.apk`.
 
 Example for a base versionCode `N` and version `X.Y.Z` (replace `N*10+k` with the computed number):
 
@@ -24,7 +24,7 @@ Example for a base versionCode `N` and version `X.Y.Z` (replace `N*10+k` with th
     gradle:
       - yes
     prebuild: sed -i -e '/signingConfig/d' build.gradle.kts
-    output: build/outputs/apk/release/app-armeabi-v7a-release-unsigned.apk
+    output: build/outputs/apk/release/murem-armeabi-v7a-release-unsigned.apk
 
   - versionName: X.Y.Z
     versionCode: N*10+2
@@ -33,7 +33,7 @@ Example for a base versionCode `N` and version `X.Y.Z` (replace `N*10+k` with th
     gradle:
       - yes
     prebuild: sed -i -e '/signingConfig/d' build.gradle.kts
-    output: build/outputs/apk/release/app-arm64-v8a-release-unsigned.apk
+    output: build/outputs/apk/release/murem-arm64-v8a-release-unsigned.apk
 
   - versionName: X.Y.Z
     versionCode: N*10+3
@@ -42,7 +42,7 @@ Example for a base versionCode `N` and version `X.Y.Z` (replace `N*10+k` with th
     gradle:
       - yes
     prebuild: sed -i -e '/signingConfig/d' build.gradle.kts
-    output: build/outputs/apk/release/app-x86_64-release-unsigned.apk
+    output: build/outputs/apk/release/murem-x86_64-release-unsigned.apk
 ```
 
 Then set `CurrentVersionCode` to the highest code (`N*10+3`).
@@ -70,9 +70,9 @@ gradle assembleRelease
 
 which writes to `android/app/build/outputs/apk/release/`:
 
-- `app-arm64-v8a-release.apk`
-- `app-armeabi-v7a-release.apk`
-- `app-x86_64-release.apk`
-- `app-universal-release.apk`
+- `murem-arm64-v8a-release.apk`
+- `murem-armeabi-v7a-release.apk`
+- `murem-x86_64-release.apk`
+- `murem-universal-release.apk`
 
 `output-metadata.json` in the same folder lists each APK's versionCode.

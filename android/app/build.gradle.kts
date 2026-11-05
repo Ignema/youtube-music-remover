@@ -4,6 +4,11 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+// APK file names start with "murem" instead of the module name: murem-<abi>-<buildType>.apk
+base {
+    archivesName = "murem"
+}
+
 android {
     namespace = "com.musicremover.app"
     compileSdk = 35
