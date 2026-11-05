@@ -12,6 +12,7 @@ import androidx.core.content.IntentCompat
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -31,6 +32,8 @@ import com.musicremover.app.ui.HelpScreen
 import com.musicremover.app.ui.HomeScreen
 import com.musicremover.app.ui.PermissionsScreen
 import com.musicremover.app.ui.PlayerScreen
+import com.musicremover.app.ui.adaptive.LocalWindowLayout
+import com.musicremover.app.ui.adaptive.rememberWindowLayout
 import com.musicremover.app.ui.settings.AboutSettingsScreen
 import com.musicremover.app.ui.settings.AccountsSettingsScreen
 import com.musicremover.app.ui.settings.AppearanceSettingsScreen
@@ -81,132 +84,135 @@ class MainActivity : AppCompatActivity() {
                 val prefs = getSharedPreferences("app", MODE_PRIVATE)
                 val isFirstRun = !prefs.getBoolean("setup_done", false)
 
-                NavHost(
-                    navController = navController,
-                    startDestination = if (isFirstRun) "permissions" else "home",
-                    enterTransition = { slideInHorizontally { it } },
-                    exitTransition = { slideOutHorizontally { -it / 3 } },
-                    popEnterTransition = { slideInHorizontally { -it / 3 } },
-                    popExitTransition = { slideOutHorizontally { it } },
-                ) {
-                    composable("home") {
-                        // Handle pending play from notification
-                        androidx.compose.runtime.LaunchedEffect(vm.pendingPlayUrl) {
-                            val url = vm.pendingPlayUrl
-                            val title = vm.pendingPlayTitle
-                            val jobId = vm.pendingPlayJobId
-                            if (url != null && title != null) {
-                                vm.pendingPlayUrl = null
-                                vm.pendingPlayTitle = null
-                                vm.pendingPlayJobId = null
-                                navController.navigate(playerRoute(url, title, jobId))
-                            }
-                        }
-                        // Handle pending navigation from widget
-                        androidx.compose.runtime.LaunchedEffect(vm.pendingNavigation) {
-                            val nav = vm.pendingNavigation
-                            if (nav != null) {
-                                vm.pendingNavigation = null
-                                navController.navigate(nav)
-                            }
-                        }
-                        HomeScreen(
-                            vm = vm,
-                            onSettingsClick = { navController.navigate("settings") },
-                            onHelpClick = { navController.navigate("help") },
-                            onPlay = { url, title, jobId ->
-                                navController.navigate(playerRoute(url, title, jobId))
-                            },
-                        )
-                    }
-                    // navigate("settings") (Home gear, widget) opens settings/main; system back pops to it, then Home
-                    navigation(route = SettingsRoutes.GRAPH, startDestination = SettingsRoutes.MAIN) {
-                        val back: () -> Unit = { navController.popBackStack() }
-                        settingsRoute(SettingsRoutes.MAIN) {
-                            SettingsMainScreen(vm = vm, onBack = back, onNavigate = { navController.navigate(it) })
-                        }
-                        settingsRoute(SettingsRoutes.PROCESSING) { ProcessingSettingsScreen(vm, back) }
-                        settingsRoute(SettingsRoutes.MODELS) { ModelsSettingsScreen(vm, back) }
-                        settingsRoute(SettingsRoutes.OUTPUT) { OutputSettingsScreen(vm, back) }
-                        settingsRoute(SettingsRoutes.PERFORMANCE) { PerformanceSettingsScreen(vm, back) }
-                        settingsRoute(SettingsRoutes.ACCOUNTS) {
-                            // cookie_login is outside this graph, so leaving it returns here
-                            AccountsSettingsScreen(vm, back, onLogin = { url -> navController.navigate(cookieLoginRoute(url)) })
-                        }
-                        settingsRoute(SettingsRoutes.YTDLP) { YtDlpSettingsScreen(vm, back) }
-                        settingsRoute(SettingsRoutes.APPEARANCE) { AppearanceSettingsScreen(vm, back) }
-                        settingsRoute(SettingsRoutes.STORAGE) { StorageSettingsScreen(vm, back) }
-                        settingsRoute(SettingsRoutes.ABOUT) {
-                            AboutSettingsScreen(vm, back, onHelp = { navController.navigate(SettingsRoutes.HELP) })
-                        }
-                    }
-                    composable(
-                        "cookie_login?url={url}",
-                        arguments = listOf(navArgument("url") {
-                            type = NavType.StringType
-                            nullable = true
-                            defaultValue = null
-                        }),
-                    ) { backStackEntry ->
-                        // No url: the Instagram preset
-                        val site = backStackEntry.arguments?.getString("url")
-                            ?.let { LoginSites.custom(it) } // Navigation decodes the Uri.encode()d arg
-                            ?: LoginSites.INSTAGRAM.takeIf { backStackEntry.arguments?.getString("url") == null }
-                        if (site == null) {
-                            androidx.compose.runtime.LaunchedEffect(Unit) { navController.popBackStack() }
-                        } else {
-                            // Counts as a Settings screen, so the save result shows once (Accounts Snackbar), not also as a Toast
-                            androidx.compose.runtime.DisposableEffect(Unit) {
-                                vm.settingsVisible++
-                                onDispose { vm.settingsVisible-- }
-                            }
-                            CookieLoginScreen(vm = vm, site = site, onBack = { navController.popBackStack() })
-                        }
-                    }
-                    composable("help") {
-                        HelpScreen(onBack = { navController.popBackStack() })
-                    }
-                    composable(
-                        "player/{url}/{title}?jobId={jobId}",
-                        arguments = listOf(navArgument("jobId") {
-                            type = NavType.StringType
-                            nullable = true
-                            defaultValue = null
-                        }),
-                    ) { backStackEntry ->
-                        val url = java.net.URLDecoder.decode(backStackEntry.arguments?.getString("url") ?: "", "UTF-8")
-                        val title = java.net.URLDecoder.decode(backStackEntry.arguments?.getString("title") ?: "", "UTF-8")
-                        val jobId = backStackEntry.arguments?.getString("jobId")?.let { java.net.URLDecoder.decode(it, "UTF-8") }
-                        PlayerScreen(
-                            url = url,
-                            title = title,
-                            onBack = { navController.popBackStack() },
-                            jobId = jobId,
-                            loadServerWaveform = { vm.serverWaveform(it) },
-                        )
-                    }
-                    composable("permissions") {
-                        // Handle system back press on first run
-                        if (isFirstRun) {
-                            androidx.activity.compose.BackHandler {
-                                prefs.edit().putBoolean("setup_done", true).apply()
-                                navController.navigate("home") {
-                                    popUpTo("permissions") { inclusive = true }
+                val windowLayout = rememberWindowLayout()
+                CompositionLocalProvider(LocalWindowLayout provides windowLayout) {
+                    NavHost(
+                        navController = navController,
+                        startDestination = if (isFirstRun) "permissions" else "home",
+                        enterTransition = { slideInHorizontally { it } },
+                        exitTransition = { slideOutHorizontally { -it / 3 } },
+                        popEnterTransition = { slideInHorizontally { -it / 3 } },
+                        popExitTransition = { slideOutHorizontally { it } },
+                    ) {
+                        composable("home") {
+                            // Handle pending play from notification
+                            androidx.compose.runtime.LaunchedEffect(vm.pendingPlayUrl) {
+                                val url = vm.pendingPlayUrl
+                                val title = vm.pendingPlayTitle
+                                val jobId = vm.pendingPlayJobId
+                                if (url != null && title != null) {
+                                    vm.pendingPlayUrl = null
+                                    vm.pendingPlayTitle = null
+                                    vm.pendingPlayJobId = null
+                                    navController.navigate(playerRoute(url, title, jobId))
                                 }
                             }
+                            // Handle pending navigation from widget
+                            androidx.compose.runtime.LaunchedEffect(vm.pendingNavigation) {
+                                val nav = vm.pendingNavigation
+                                if (nav != null) {
+                                    vm.pendingNavigation = null
+                                    navController.navigate(nav)
+                                }
+                            }
+                            HomeScreen(
+                                vm = vm,
+                                onSettingsClick = { navController.navigate("settings") },
+                                onHelpClick = { navController.navigate("help") },
+                                onPlay = { url, title, jobId ->
+                                    navController.navigate(playerRoute(url, title, jobId))
+                                },
+                            )
                         }
-                        PermissionsScreen(
-                            onBack = {
-                                prefs.edit().putBoolean("setup_done", true).apply()
-                                if (isFirstRun) {
+                        // navigate("settings") (Home gear, widget) opens settings/main; system back pops to it, then Home
+                        navigation(route = SettingsRoutes.GRAPH, startDestination = SettingsRoutes.MAIN) {
+                            val back: () -> Unit = { navController.popBackStack() }
+                            settingsRoute(SettingsRoutes.MAIN) {
+                                SettingsMainScreen(vm = vm, onBack = back, onNavigate = { navController.navigate(it) })
+                            }
+                            settingsRoute(SettingsRoutes.PROCESSING) { ProcessingSettingsScreen(vm, back) }
+                            settingsRoute(SettingsRoutes.MODELS) { ModelsSettingsScreen(vm, back) }
+                            settingsRoute(SettingsRoutes.OUTPUT) { OutputSettingsScreen(vm, back) }
+                            settingsRoute(SettingsRoutes.PERFORMANCE) { PerformanceSettingsScreen(vm, back) }
+                            settingsRoute(SettingsRoutes.ACCOUNTS) {
+                                // cookie_login is outside this graph, so leaving it returns here
+                                AccountsSettingsScreen(vm, back, onLogin = { url -> navController.navigate(cookieLoginRoute(url)) })
+                            }
+                            settingsRoute(SettingsRoutes.YTDLP) { YtDlpSettingsScreen(vm, back) }
+                            settingsRoute(SettingsRoutes.APPEARANCE) { AppearanceSettingsScreen(vm, back) }
+                            settingsRoute(SettingsRoutes.STORAGE) { StorageSettingsScreen(vm, back) }
+                            settingsRoute(SettingsRoutes.ABOUT) {
+                                AboutSettingsScreen(vm, back, onHelp = { navController.navigate(SettingsRoutes.HELP) })
+                            }
+                        }
+                        composable(
+                            "cookie_login?url={url}",
+                            arguments = listOf(navArgument("url") {
+                                type = NavType.StringType
+                                nullable = true
+                                defaultValue = null
+                            }),
+                        ) { backStackEntry ->
+                            // No url: the Instagram preset
+                            val site = backStackEntry.arguments?.getString("url")
+                                ?.let { LoginSites.custom(it) } // Navigation decodes the Uri.encode()d arg
+                                ?: LoginSites.INSTAGRAM.takeIf { backStackEntry.arguments?.getString("url") == null }
+                            if (site == null) {
+                                androidx.compose.runtime.LaunchedEffect(Unit) { navController.popBackStack() }
+                            } else {
+                                // Counts as a Settings screen, so the save result shows once (Accounts Snackbar), not also as a Toast
+                                androidx.compose.runtime.DisposableEffect(Unit) {
+                                    vm.settingsVisible++
+                                    onDispose { vm.settingsVisible-- }
+                                }
+                                CookieLoginScreen(vm = vm, site = site, onBack = { navController.popBackStack() })
+                            }
+                        }
+                        composable("help") {
+                            HelpScreen(onBack = { navController.popBackStack() })
+                        }
+                        composable(
+                            "player/{url}/{title}?jobId={jobId}",
+                            arguments = listOf(navArgument("jobId") {
+                                type = NavType.StringType
+                                nullable = true
+                                defaultValue = null
+                            }),
+                        ) { backStackEntry ->
+                            val url = java.net.URLDecoder.decode(backStackEntry.arguments?.getString("url") ?: "", "UTF-8")
+                            val title = java.net.URLDecoder.decode(backStackEntry.arguments?.getString("title") ?: "", "UTF-8")
+                            val jobId = backStackEntry.arguments?.getString("jobId")?.let { java.net.URLDecoder.decode(it, "UTF-8") }
+                            PlayerScreen(
+                                url = url,
+                                title = title,
+                                onBack = { navController.popBackStack() },
+                                jobId = jobId,
+                                loadServerWaveform = { vm.serverWaveform(it) },
+                            )
+                        }
+                        composable("permissions") {
+                            // Handle system back press on first run
+                            if (isFirstRun) {
+                                androidx.activity.compose.BackHandler {
+                                    prefs.edit().putBoolean("setup_done", true).apply()
                                     navController.navigate("home") {
                                         popUpTo("permissions") { inclusive = true }
                                     }
-                                } else {
-                                    navController.popBackStack()
                                 }
-                            },
-                        )
+                            }
+                            PermissionsScreen(
+                                onBack = {
+                                    prefs.edit().putBoolean("setup_done", true).apply()
+                                    if (isFirstRun) {
+                                        navController.navigate("home") {
+                                            popUpTo("permissions") { inclusive = true }
+                                        }
+                                    } else {
+                                        navController.popBackStack()
+                                    }
+                                },
+                            )
+                        }
                     }
                 }
             }
