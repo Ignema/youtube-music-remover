@@ -154,6 +154,7 @@ fun PlayerScreen(
     var videoAspectRatio by remember { mutableFloatStateOf(16f / 9f) }
     val fr = remember { FocusRequester() }
     var rootFocused by remember { mutableStateOf(false) }
+    var rootHasFocus by remember { mutableStateOf(false) }
     val urlState by rememberUpdatedState(url)
     val titleState by rememberUpdatedState(title)
     val onBackState by rememberUpdatedState(onBack)
@@ -300,7 +301,7 @@ fun PlayerScreen(
             .background(MaterialTheme.colorScheme.surface)
             .onGloballyPositioned { rootTopInWindow = it.positionInWindow().y }
             .focusRequester(fr)
-            .onFocusChanged { rootFocused = it.isFocused }
+            .onFocusChanged { rootFocused = it.isFocused; rootHasFocus = it.hasFocus }
             .focusable()
             .onPreviewKeyEvent { e ->
                 if (e.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
@@ -328,6 +329,9 @@ fun PlayerScreen(
         } else null
         val mode = AdaptiveLayout.playerMode(maxWidth.value, maxHeight.value, wl.tabletop, hinge, density.density, isFullscreen)
         val panelWidthDp = AdaptiveLayout.playerPanelWidthDp(maxWidth.value)
+        // A mode switch can remove the focused button (the panel leaves in FULLSCREEN), which leaves nothing
+        // focused; give focus back to the root so Space and Escape keep working
+        LaunchedEffect(mode) { if (!rootHasFocus) fr.requestFocus() }
         when (mode) {
             PlayerMode.STACKED -> Column(modifier = Modifier.fillMaxSize()) {
                 // Video area — no bottom corners (bottom card overlaps)
