@@ -39,6 +39,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -1039,8 +1040,9 @@ private fun ProcessingContent(ui: MainUiState, vm: MainViewModel, maxWidth: Dp?)
     }
 
     Column(
-        // The cap must come before fillMaxWidth, or fillMaxWidth would already fix the width
-        modifier = Modifier.then(if (maxWidth != null) Modifier.widthIn(max = maxWidth) else Modifier)
+        // The cap must come before fillMaxWidth, or fillMaxWidth would already fix the width.
+        // AnimatedContent passes a tight width, so wrapContentWidth frees it and centers the capped column.
+        modifier = Modifier.then(if (maxWidth != null) Modifier.wrapContentWidth().widthIn(max = maxWidth) else Modifier)
             .fillMaxWidth().padding(top = 48.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -1320,8 +1322,9 @@ private fun DoneContent(
     onPlay: (String, String, String?) -> Unit,
 ) {
     Column(
-        // The cap must come before fillMaxWidth, or fillMaxWidth would already fix the width
-        modifier = Modifier.then(if (maxWidth != null) Modifier.widthIn(max = maxWidth) else Modifier)
+        // The cap must come before fillMaxWidth, or fillMaxWidth would already fix the width.
+        // AnimatedContent passes a tight width, so wrapContentWidth frees it and centers the capped column.
+        modifier = Modifier.then(if (maxWidth != null) Modifier.wrapContentWidth().widthIn(max = maxWidth) else Modifier)
             .fillMaxWidth().padding(top = 48.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
