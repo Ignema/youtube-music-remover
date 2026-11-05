@@ -88,9 +88,34 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.ScrollState
+import androidx.compose.material3.ScaffoldDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.unit.Dp
+import com.musicremover.app.ui.adaptive.AdaptiveLayout
+import com.musicremover.app.ui.adaptive.HomePaneMode
+import com.musicremover.app.ui.adaptive.LocalWindowLayout
+import com.musicremover.app.ui.adaptive.TopBarStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
@@ -158,142 +183,24 @@ fun HomeScreen(vm: MainViewModel, onSettingsClick: () -> Unit, onHelpClick: () -
     androidx.compose.runtime.LaunchedEffect(ui.state, ui.processingMinimized, ui.pendingLinkImport) {
         if (ui.pendingLinkImport && !vm.isInputVisible(ui)) vm.consumeLinkImport()
     }
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val windowLayout = LocalWindowLayout.current
+    val mode = AdaptiveLayout.homePaneMode(windowLayout.width)
+    val bar = AdaptiveLayout.topBarStyle(windowLayout.width, windowLayout.height)
+    val stateMax = AdaptiveLayout.stateContentMaxDp(windowLayout.width)?.dp
+    val submit = AdaptiveLayout.submitOnEnter(windowLayout.width)
+    // Both behaviors always exist, so switching LARGE <-> SMALL doesn't change the slots above the Scaffold;
+    // the shown bar's behavior also drives the Scaffold's nestedScroll
+    val largeBar = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val smallBar = TopAppBarDefaults.pinnedScrollBehavior()
+    val scrollBehavior = if (bar == TopBarStyle.LARGE) largeBar else smallBar
     val context = LocalContext.current
     // The yt-dlp card needs the version (first call unzips Python); only in Internal mode
     androidx.compose.runtime.LaunchedEffect(ui.processingMode) {
         if (ui.processingMode == BackendProvider.MODE_INTERNAL) vm.loadYtDlpVersion()
     }
 
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            LargeTopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        MuremLogo(size = 28.dp)
-                        Spacer(Modifier.width(12.dp))
-                        Text(stringResource(R.string.app_name))
-                        Spacer(Modifier.width(8.dp))
-                        // Server status dot
-                        val statusText = if (ui.processingMode == BackendProvider.MODE_INTERNAL) {
-                            if (ui.serverConnected) stringResource(R.string.status_ready_on_device)
-                            else ui.internalUnsupportedReason ?: stringResource(R.string.status_model_unavailable)
-                        } else if (ui.serverConnected)
-                            stringResource(R.string.server_online)
-                        else stringResource(R.string.lost_connection)
-
-                        val pulseTransition = rememberInfiniteTransition(label = "serverPulse")
-                        val pulseAlpha by pulseTransition.animateFloat(
-                            initialValue = 0.3f,
-                            targetValue = 1f,
-                            animationSpec = infiniteRepeatable(
-                                animation = tween(600),
-                                repeatMode = RepeatMode.Reverse,
-                            ),
-                            label = "dotPulse",
-                        )
-
-                        val dotColor = when {
-                            ui.serverChecking -> Color(0xFFBDBDBD).copy(alpha = pulseAlpha)
-                            ui.serverConnected -> Color(0xFF4CAF50)
-                            else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(dotColor)
-                                .clickable {
-                                    android.widget.Toast.makeText(context, statusText, android.widget.Toast.LENGTH_SHORT).show()
-                                },
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onHelpClick) {
-                        Icon(Icons.Outlined.HelpOutline, "Help", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    IconButton(onClick = onSettingsClick) {
-                        Icon(Icons.Outlined.Settings, "Settings", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                ),
-            )
-        },
-    ) { padding ->
-        val scrollState = rememberScrollState()
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 24.dp)
-                .verticalScroll(scrollState)
-                .imePadding(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Spacer(Modifier.height(8.dp))
-
-            // Mini progress banner when processing is minimized
-            if (ui.state == UiState.Processing && ui.processingMinimized) {
-                ProcessingBanner(ui, vm)
-                Spacer(Modifier.height(16.dp))
-                IdleContent(ui, vm)
-            } else {
-                AnimatedContent(
-                    targetState = ui.state,
-                    transitionSpec = {
-                        (fadeIn() + slideInVertically { it / 3 }) togetherWith fadeOut()
-                    },
-                    label = "state",
-                ) { state ->
-                    when (state) {
-                        UiState.Idle, UiState.Error -> IdleContent(ui, vm)
-                        UiState.Processing -> ProcessingContent(ui, vm)
-                        UiState.Done -> DoneContent(ui, vm, context, onPlay)
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(32.dp))
-
-            if ((ui.state == UiState.Idle ||
-                (ui.state == UiState.Processing && ui.processingMinimized))) {
-                if (ui.history.isNotEmpty()) {
-                    HistorySection(ui.history, vm, onPlay)
-                } else {
-                    EmptyHistoryState()
-                }
-            }
-        }
-    }
-
-    ModelNoticeDialog(vm)
-
-    // Video info bottom sheet
-    if (ui.showInfoSheet) {
-        androidx.compose.material3.ModalBottomSheet(
-            onDismissRequest = vm::dismissInfoSheet,
-        ) {
-            val item = vm.currentInfoItem
-            if (item != null) {
-                ItemInfoSheet(item, ui)
-                SheetActions(item = item, vm = vm, context = context)
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-@Composable
-private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
-    val context = LocalContext.current
+    // I3: the launchers are registered here, where the composition position never changes, so a picker
+    // or Save dialog opened before a rotation/resize (which may switch the pane mode) still delivers its result
     val filePicker = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = GetMediaContent(),
     ) { uri ->
@@ -313,6 +220,306 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
             }
         }
     }
+
+    val saveLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = CreateResultDocument(),
+    ) { uri ->
+        if (uri != null) vm.saveToUri(context, uri)
+    }
+
+    // Shared by the single column and the two-pane left pane; Recent's own scroll is used in two panes only
+    val inputScroll = rememberScrollState()
+    val recentScroll = rememberScrollState()
+    var historyFilter by rememberSaveable { mutableStateOf("") }
+    var historySearchOpen by rememberSaveable { mutableStateOf(false) }
+
+    // I3: the input and Recent blocks are the same two movable instances in every pane mode, so a pane-mode
+    // switch moves them with their local state (cancel confirm, bitrate menu, page heights, AnimatedContent).
+    // Only stable objects and State delegates are captured; per-composition values are parameters.
+    val onPlayState by rememberUpdatedState(onPlay)
+    val inputPane = remember {
+        movableContentOf { paneUi: MainUiState, paneStateMax: Dp?, paneSubmit: Boolean ->
+            InputPaneContent(paneUi, vm, filePicker, urlFilePicker, saveLauncher, paneStateMax, paneSubmit, onPlayState)
+        }
+    }
+    val recentPane = remember {
+        movableContentOf { paneUi: MainUiState, showReprocess: Boolean ->
+            RecentPaneContent(
+                ui = paneUi,
+                vm = vm,
+                onPlay = onPlayState,
+                filter = historyFilter,
+                onFilter = { historyFilter = it },
+                searchOpen = historySearchOpen,
+                onSearchOpen = { historySearchOpen = it },
+                showReprocess = showReprocess,
+            )
+        }
+    }
+    // Recent sits under the input in a single column only while the input is shown (as on master)
+    val singleColumnRecent = ui.state == UiState.Idle ||
+        (ui.state == UiState.Processing && ui.processingMinimized)
+
+    // Off compact, keep content and bar actions out of a display cutout (landscape phone); compact keeps the defaults
+    val cutoutInsets = AdaptiveLayout.useCutoutInsets(windowLayout.width)
+    val contentInsets = if (cutoutInsets) WindowInsets.systemBars.union(WindowInsets.displayCutout)
+    else ScaffoldDefaults.contentWindowInsets
+    val barInsets = if (cutoutInsets) {
+        WindowInsets.systemBars.union(WindowInsets.displayCutout)
+            .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
+    } else TopAppBarDefaults.windowInsets
+
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        contentWindowInsets = contentInsets,
+        topBar = {
+            if (bar == TopBarStyle.LARGE) {
+                LargeTopAppBar(
+                    title = { HomeBarTitle(ui) },
+                    actions = { HomeBarActions(onHelpClick, onSettingsClick) },
+                    windowInsets = barInsets,
+                    scrollBehavior = largeBar,
+                    colors = TopAppBarDefaults.largeTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    ),
+                )
+            } else {
+                // Short window that isn't compact-width (landscape phone): a 64dp pinned bar
+                TopAppBar(
+                    title = { HomeBarTitle(ui) },
+                    actions = { HomeBarActions(onHelpClick, onSettingsClick) },
+                    windowInsets = barInsets,
+                    scrollBehavior = smallBar,
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    ),
+                )
+            }
+        },
+    ) { padding ->
+        when (mode) {
+            HomePaneMode.SINGLE -> Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 24.dp)
+                    .verticalScroll(inputScroll)
+                    .imePadding(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Spacer(Modifier.height(8.dp))
+                inputPane(ui, null, false)
+                Spacer(Modifier.height(32.dp))
+                if (singleColumnRecent) recentPane(ui, true)
+            }
+
+            // Medium: one column centered in the window; the scroll container stays full width
+            HomePaneMode.SINGLE_CENTERED -> Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(inputScroll)
+                    .imePadding(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .widthIn(max = AdaptiveLayout.HOME_COLUMN_MAX_DP.dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Spacer(Modifier.height(8.dp))
+                    inputPane(ui, stateMax, submit)
+                    Spacer(Modifier.height(32.dp))
+                    if (singleColumnRecent) recentPane(ui, true)
+                }
+            }
+
+            // Expanded: input left, Recent right, each scrolling on its own, in a centered capped row
+            HomePaneMode.TWO_PANE -> Box(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                Row(
+                    modifier = Modifier
+                        .widthIn(max = AdaptiveLayout.HOME_ROW_MAX_DP.dp)
+                        .fillMaxSize()
+                        .padding(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .verticalScroll(inputScroll)
+                            .imePadding(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Spacer(Modifier.height(8.dp))
+                        inputPane(ui, stateMax, submit)
+                        Spacer(Modifier.height(32.dp))
+                    }
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .verticalScroll(recentScroll)
+                            .imePadding(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Spacer(Modifier.height(8.dp))
+                        recentPane(ui, AdaptiveLayout.recentReprocessVisible(vm.isInputVisible(ui)))
+                        Spacer(Modifier.height(32.dp))
+                    }
+                }
+            }
+        }
+    }
+
+    ModelNoticeDialog(vm)
+
+    // Video info bottom sheet
+    if (ui.showInfoSheet) {
+        androidx.compose.material3.ModalBottomSheet(
+            onDismissRequest = vm::dismissInfoSheet,
+        ) {
+            val item = vm.currentInfoItem
+            if (item != null) {
+                // Scrolls on a short window (landscape phone) so Remove stays reachable
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    ItemInfoSheet(item, ui)
+                    SheetActions(item = item, vm = vm, context = context)
+                }
+            }
+        }
+    }
+}
+
+/** Logo, app name and the server status dot; shared by the large and the small top bar. */
+@Composable
+private fun HomeBarTitle(ui: MainUiState) {
+    val context = LocalContext.current
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        MuremLogo(size = 28.dp)
+        Spacer(Modifier.width(12.dp))
+        Text(stringResource(R.string.app_name))
+        Spacer(Modifier.width(8.dp))
+        // Server status dot
+        val statusText = if (ui.processingMode == BackendProvider.MODE_INTERNAL) {
+            if (ui.serverConnected) stringResource(R.string.status_ready_on_device)
+            else ui.internalUnsupportedReason ?: stringResource(R.string.status_model_unavailable)
+        } else if (ui.serverConnected)
+            stringResource(R.string.server_online)
+        else stringResource(R.string.lost_connection)
+
+        val pulseTransition = rememberInfiniteTransition(label = "serverPulse")
+        val pulseAlpha by pulseTransition.animateFloat(
+            initialValue = 0.3f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(600),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "dotPulse",
+        )
+
+        val dotColor = when {
+            ui.serverChecking -> Color(0xFFBDBDBD).copy(alpha = pulseAlpha)
+            ui.serverConnected -> Color(0xFF4CAF50)
+            else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+        }
+
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .clip(CircleShape)
+                .background(dotColor)
+                .clickable {
+                    android.widget.Toast.makeText(context, statusText, android.widget.Toast.LENGTH_SHORT).show()
+                },
+        )
+    }
+}
+
+@Composable
+private fun HomeBarActions(onHelpClick: () -> Unit, onSettingsClick: () -> Unit) {
+    IconButton(onClick = onHelpClick) {
+        Icon(Icons.Outlined.HelpOutline, "Help", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+    IconButton(onClick = onSettingsClick) {
+        Icon(Icons.Outlined.Settings, "Settings", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** Processing banner + input, or the animated Idle/Processing/Done content. Emits into the caller's Column. */
+@Composable
+private fun InputPaneContent(
+    ui: MainUiState,
+    vm: MainViewModel,
+    filePicker: androidx.activity.result.ActivityResultLauncher<String>,
+    urlFilePicker: androidx.activity.result.ActivityResultLauncher<String>,
+    saveLauncher: androidx.activity.result.ActivityResultLauncher<String>,
+    stateMax: Dp?,
+    submit: Boolean,
+    onPlay: (String, String, String?) -> Unit,
+) {
+    val context = LocalContext.current
+    // Mini progress banner when processing is minimized
+    if (ui.state == UiState.Processing && ui.processingMinimized) {
+        ProcessingBanner(ui, vm)
+        Spacer(Modifier.height(16.dp))
+        IdleContent(ui, vm, filePicker, urlFilePicker, submit)
+    } else {
+        AnimatedContent(
+            targetState = ui.state,
+            // Full width and top-centered, so capped Processing/Done content stays centered while animating
+            modifier = Modifier.fillMaxWidth(),
+            transitionSpec = {
+                (fadeIn() + slideInVertically { it / 3 }) togetherWith fadeOut()
+            },
+            contentAlignment = Alignment.TopCenter,
+            label = "state",
+        ) { state ->
+            when (state) {
+                UiState.Idle, UiState.Error -> IdleContent(ui, vm, filePicker, urlFilePicker, submit)
+                UiState.Processing -> ProcessingContent(ui, vm, stateMax)
+                UiState.Done -> DoneContent(ui, vm, context, saveLauncher, stateMax, onPlay)
+            }
+        }
+    }
+}
+
+/** Recent list, or the empty state. */
+@Composable
+private fun RecentPaneContent(
+    ui: MainUiState,
+    vm: MainViewModel,
+    onPlay: (String, String, String?) -> Unit,
+    filter: String,
+    onFilter: (String) -> Unit,
+    searchOpen: Boolean,
+    onSearchOpen: (Boolean) -> Unit,
+    showReprocess: Boolean,
+) {
+    if (ui.history.isNotEmpty()) {
+        HistorySection(ui.history, vm, onPlay, filter, onFilter, searchOpen, onSearchOpen, showReprocess)
+    } else {
+        EmptyHistoryState()
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+private fun IdleContent(
+    ui: MainUiState,
+    vm: MainViewModel,
+    filePicker: androidx.activity.result.ActivityResultLauncher<String>,
+    urlFilePicker: androidx.activity.result.ActivityResultLauncher<String>,
+    submitOnEnter: Boolean,
+) {
     // Widget Links button: open the import once
     androidx.compose.runtime.LaunchedEffect(ui.pendingLinkImport) {
         if (ui.pendingLinkImport) {
@@ -348,6 +555,12 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                 pagerState.animateScrollToPage(ui.inputTab)
             }
         }
+
+        // The CTA's rule; Go / hardware Enter in the link field (Medium and Expanded only) follows it too
+        val hasSource = HomeInput.pickSource(ui.inputTab, ui.links, ui.url, ui.selectedFileUri != null) != HomeInput.Source.None
+        val onSubmit: (() -> Unit)? = if (submitOnEnter) {
+            { if (hasSource) { vm.hapticTick(); vm.process() } }
+        } else null
 
         // One card holds the mode tabs, the input pages and the options
         val homeColors = homeCardColors()
@@ -393,7 +606,7 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
                                 .padding(top = 16.dp),
                         ) {
                             when (page) {
-                                0 -> LinkInputTab(ui, vm, urlFilePicker, homeColors.field)
+                                0 -> LinkInputTab(ui, vm, urlFilePicker, homeColors.field, onSubmit)
                                 1 -> FileInputTab(ui, vm, filePicker, homeColors.field)
                             }
                         }
@@ -571,7 +784,6 @@ private fun IdleContent(ui: MainUiState, vm: MainViewModel) {
 
         // CTA: dimmed with a hint while Process would find nothing (same rule as MainViewModel.process)
         val isQueueMode = ui.state == UiState.Processing && ui.processingMinimized
-        val hasSource = HomeInput.pickSource(ui.inputTab, ui.links, ui.url, ui.selectedFileUri != null) != HomeInput.Source.None
         Button(
             onClick = { vm.hapticTick(); vm.process() },
             enabled = hasSource,
@@ -786,7 +998,7 @@ private fun OptionsRow(ui: MainUiState, vm: MainViewModel, modifier: Modifier = 
 }
 
 @Composable
-private fun ProcessingContent(ui: MainUiState, vm: MainViewModel) {
+private fun ProcessingContent(ui: MainUiState, vm: MainViewModel, maxWidth: Dp?) {
     val animatedProgress by animateFloatAsState(
         targetValue = ui.progress / 100f,
         animationSpec = spring(stiffness = Spring.StiffnessLow),
@@ -827,7 +1039,9 @@ private fun ProcessingContent(ui: MainUiState, vm: MainViewModel) {
     }
 
     Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 48.dp),
+        // The cap must come before fillMaxWidth, or fillMaxWidth would already fix the width
+        modifier = Modifier.then(if (maxWidth != null) Modifier.widthIn(max = maxWidth) else Modifier)
+            .fillMaxWidth().padding(top = 48.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // Animated step icon
@@ -1097,15 +1311,18 @@ private fun ProcessingBanner(ui: MainUiState, vm: MainViewModel) {
 }
 
 @Composable
-private fun DoneContent(ui: MainUiState, vm: MainViewModel, context: android.content.Context, onPlay: (String, String, String?) -> Unit) {
-    val saveLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = CreateResultDocument(),
-    ) { uri ->
-        if (uri != null) vm.saveToUri(context, uri)
-    }
-
+private fun DoneContent(
+    ui: MainUiState,
+    vm: MainViewModel,
+    context: android.content.Context,
+    saveLauncher: androidx.activity.result.ActivityResultLauncher<String>,
+    maxWidth: Dp?,
+    onPlay: (String, String, String?) -> Unit,
+) {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 48.dp),
+        // The cap must come before fillMaxWidth, or fillMaxWidth would already fix the width
+        modifier = Modifier.then(if (maxWidth != null) Modifier.widthIn(max = maxWidth) else Modifier)
+            .fillMaxWidth().padding(top = 48.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // Animated check icon
@@ -1191,9 +1408,19 @@ private fun DoneContent(ui: MainUiState, vm: MainViewModel, context: android.con
 }
 
 @Composable
-private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay: (String, String, String?) -> Unit) {
-    var filterText by remember { mutableStateOf("") }
-    var searchExpanded by remember { mutableStateOf(false) }
+private fun HistorySection(
+    history: List<HistoryItem>,
+    vm: MainViewModel,
+    onPlay: (String, String, String?) -> Unit,
+    filter: String,
+    onFilter: (String) -> Unit,
+    searchOpen: Boolean,
+    onSearchOpen: (Boolean) -> Unit,
+    showReprocess: Boolean,
+) {
+    // Filter text and search state are owned by HomeScreen (rememberSaveable), so they survive layout switches
+    val filterText = filter
+    val searchExpanded = searchOpen
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -1204,7 +1431,7 @@ private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay
                 // Expanded search field
                 OutlinedTextField(
                     value = filterText,
-                    onValueChange = { filterText = it },
+                    onValueChange = onFilter,
                     placeholder = { Text(stringResource(R.string.filter_history), style = MaterialTheme.typography.bodySmall) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -1212,8 +1439,8 @@ private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay
                     textStyle = MaterialTheme.typography.bodySmall,
                     trailingIcon = {
                         IconButton(onClick = {
-                            filterText = ""
-                            searchExpanded = false
+                            onFilter("")
+                            onSearchOpen(false)
                         }) {
                             Icon(Icons.Outlined.Close, "Close", Modifier.size(16.dp))
                         }
@@ -1234,7 +1461,7 @@ private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay
                     Text(stringResource(R.string.recent), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 if (history.size > 3) {
-                    IconButton(onClick = { searchExpanded = true }) {
+                    IconButton(onClick = { onSearchOpen(true) }) {
                         Icon(
                             Icons.Outlined.Search, "Search",
                             tint = MaterialTheme.colorScheme.outline,
@@ -1264,7 +1491,7 @@ private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay
 
         filtered.forEach { item ->
             key(item.jobId) {
-                HistoryCard(item, vm, onPlay)
+                HistoryCard(item, vm, onPlay, showReprocess)
                 Spacer(Modifier.height(8.dp))
             }
         }
@@ -1282,10 +1509,12 @@ private fun HistorySection(history: List<HistoryItem>, vm: MainViewModel, onPlay
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, String, String?) -> Unit) {
+private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, String, String?) -> Unit, showReprocess: Boolean) {
     val dateFormat = SimpleDateFormat("MMM d, h:mm a", Locale.getDefault())
     val dateStr = dateFormat.format(Date(item.timestamp))
     val hasUrl = item.url.isNotEmpty()
+    // The right-click handler restarts only on a new jobId, so it reads the latest item copy
+    val currentItem by rememberUpdatedState(item)
 
     val homeColors = homeCardColors()
     Card(
@@ -1297,6 +1526,27 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                // Right-click opens the info sheet. It reads the Initial pass and consumes the press and its
+                // release, so the tap detector behind combinedClickable (any button) never plays the item.
+                .pointerInput(item.jobId) {
+                    awaitPointerEventScope {
+                        var secondary = false
+                        while (true) {
+                            val e = awaitPointerEvent(PointerEventPass.Initial)
+                            when {
+                                e.type == PointerEventType.Press && e.buttons.isSecondaryPressed -> {
+                                    secondary = true
+                                    e.changes.forEach { it.consume() }
+                                    vm.showVideoInfoSheet(currentItem)
+                                }
+                                secondary && e.type == PointerEventType.Release -> {
+                                    secondary = false
+                                    e.changes.forEach { it.consume() }
+                                }
+                            }
+                        }
+                    }
+                }
                 .combinedClickable(
                     onClick = {
                         vm.playHistoryItem(item, onPlay)
@@ -1357,11 +1607,14 @@ private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, S
                     )
                 }
             }
-            IconButton(onClick = {
-                if (hasUrl) vm.onUrlChange(item.url)
-                else vm.reprocessFromHistory(item)
-            }) {
-                Icon(Icons.Outlined.ContentPaste, "Reprocess", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.outline)
+            // Hidden in the two-pane Recent while the input is off screen (Processing or Done)
+            if (showReprocess) {
+                IconButton(onClick = {
+                    if (hasUrl) vm.onUrlChange(item.url)
+                    else vm.reprocessFromHistory(item)
+                }) {
+                    Icon(Icons.Outlined.ContentPaste, "Reprocess", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.outline)
+                }
             }
         }
     }
@@ -1919,9 +2172,15 @@ private fun ModelOption(
 
 /** Link mode: one link in the field (as before), or a list once several links are pasted, shared or imported. */
 @Composable
-private fun LinkInputTab(ui: MainUiState, vm: MainViewModel, urlFilePicker: androidx.activity.result.ActivityResultLauncher<String>, fieldColor: Color) {
+private fun LinkInputTab(
+    ui: MainUiState,
+    vm: MainViewModel,
+    urlFilePicker: androidx.activity.result.ActivityResultLauncher<String>,
+    fieldColor: Color,
+    onSubmit: (() -> Unit)?,
+) {
     if (ui.links.isEmpty()) {
-        SingleLinkField(ui, vm, fieldColor)
+        SingleLinkField(ui, vm, fieldColor, onSubmit)
     } else {
         LinkList(ui, vm, fieldColor)
     }
@@ -2073,9 +2332,12 @@ private fun LinkList(ui: MainUiState, vm: MainViewModel, fieldColor: Color) {
     )
 }
 
-/** The single-link field and its preview card. */
+/**
+ * The single-link field and its preview card. A non-null [onSubmit] (Medium and Expanded) makes IME Go and
+ * hardware Enter submit; null keeps the default IME action.
+ */
 @Composable
-private fun SingleLinkField(ui: MainUiState, vm: MainViewModel, fieldColor: Color) {
+private fun SingleLinkField(ui: MainUiState, vm: MainViewModel, fieldColor: Color, onSubmit: (() -> Unit)?) {
     androidx.compose.material3.TextField(
         value = ui.url,
         onValueChange = { vm.onUrlChange(it) },
@@ -2083,7 +2345,17 @@ private fun SingleLinkField(ui: MainUiState, vm: MainViewModel, fieldColor: Colo
         singleLine = true,
         shape = RoundedCornerShape(16.dp),
         colors = filledFieldColors(fieldColor),
-        modifier = Modifier.fillMaxWidth().heightIn(min = LinkFieldHeight),
+        modifier = Modifier.fillMaxWidth().heightIn(min = LinkFieldHeight)
+            .then(
+                if (onSubmit != null) Modifier.onPreviewKeyEvent {
+                    val enter = it.key == Key.Enter || it.key == Key.NumPadEnter
+                    // Submit on key down; the matching key up is consumed too so the field never sees a lone Enter
+                    if (enter && it.type == KeyEventType.KeyDown) onSubmit()
+                    enter
+                } else Modifier,
+            ),
+        keyboardOptions = if (onSubmit != null) KeyboardOptions(imeAction = ImeAction.Go) else KeyboardOptions.Default,
+        keyboardActions = if (onSubmit != null) KeyboardActions(onGo = { onSubmit() }) else KeyboardActions.Default,
         leadingIcon = { Icon(Icons.Outlined.Link, null, Modifier.size(20.dp)) },
         trailingIcon = if (ui.loadingPreview || ui.url.isNotEmpty()) {
             {
@@ -2246,8 +2518,12 @@ private fun SheetActions(item: HistoryItem, vm: MainViewModel, context: android.
         // Delete
         OutlinedButton(
             onClick = {
+                // Removing the result Done is showing (possible from the two-pane Recent) also leaves Done,
+                // since its cached file is deleted; decided before the delete, from the state the user saw
+                val endDone = AdaptiveLayout.removeEndsDone(ui.state == UiState.Done, ui.jobId, item.jobId)
                 vm.deleteHistoryItem(item)
                 vm.dismissInfoSheet()
+                if (endDone) vm.reset()
                 vm.hapticTick()
             },
             shape = RoundedCornerShape(12.dp),
