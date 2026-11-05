@@ -119,6 +119,11 @@ class SettingsStore(context: Context) {
             prefs.edit().putString(KEY_PERF_ACCELERATOR, value).apply()
         }
 
+    /** Pause between chunks so the phone stays responsive (PacedModel). */
+    var perfLighter: Boolean
+        get() = try { prefs.getBoolean(KEY_PERF_LIGHTER, false) } catch (_: ClassCastException) { false }
+        set(value) = prefs.edit().putBoolean(KEY_PERF_LIGHTER, value).apply()
+
     /** The on-device model; a name that is not in the catalog is replaced by HQ3 where it is used. */
     var internalModel: String
         get() = prefs.getString(KEY_INTERNAL_MODEL, null)?.takeIf { it.isNotBlank() } ?: ModelCatalog.HQ3
@@ -160,6 +165,7 @@ class SettingsStore(context: Context) {
         const val KEY_PERF_QUALITY = "perf_quality"
         const val KEY_PERF_BATCH = "perf_batch"
         const val KEY_PERF_ACCELERATOR = "perf_accelerator"
+        const val KEY_PERF_LIGHTER = "perf_lighter"
         const val KEY_INTERNAL_MODEL = "internal_model"
 
         /** Prefix of the per-model license-notice acceptance flag (prefs [PREFS]), written by ModelManager. */
@@ -169,7 +175,7 @@ class SettingsStore(context: Context) {
         val USER_KEYS: Set<String> = setOf(
             KEY_THEME_MODE, KEY_DYNAMIC_COLOR, KEY_COLOR_PALETTE, KEY_LANGUAGE, KEY_WIDGET_THEME, KEY_PROCESSING_MODE,
             KEY_SERVER_URL, KEY_OUTPUT_FORMAT, KEY_BITRATE, KEY_AUDIO_ONLY, KEY_PERF_THREADS,
-            KEY_PERF_QUALITY, KEY_PERF_BATCH, KEY_PERF_ACCELERATOR, KEY_INTERNAL_MODEL,
+            KEY_PERF_QUALITY, KEY_PERF_BATCH, KEY_PERF_ACCELERATOR, KEY_PERF_LIGHTER, KEY_INTERNAL_MODEL,
         )
 
         /** Bookkeeping keys that are not settings, with why; prefix entries end in `*`. */

@@ -1137,6 +1137,12 @@ private fun ProcessingContent(ui: MainUiState, vm: MainViewModel, maxWidth: Dp?)
             trackColor = MaterialTheme.colorScheme.surfaceVariant,
         )
 
+        // Own CPU / memory / disk only mean something when the work runs in this app
+        if (ui.processingMode == BackendProvider.MODE_INTERNAL) {
+            Spacer(Modifier.height(16.dp))
+            SystemStatsCard()
+        }
+
         Spacer(Modifier.height(24.dp))
 
         Text(

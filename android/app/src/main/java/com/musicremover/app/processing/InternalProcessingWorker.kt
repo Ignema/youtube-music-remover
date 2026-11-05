@@ -34,6 +34,7 @@ import com.musicremover.app.processing.internal.Mp3Encoder
 import com.musicremover.app.processing.internal.Mp3Support
 import com.musicremover.app.processing.internal.StorageErrors
 import com.musicremover.app.processing.internal.OrtSpectrogramModel
+import com.musicremover.app.processing.internal.PacedModel
 import com.musicremover.app.processing.internal.PerformanceSettings
 import com.musicremover.app.processing.internal.PcmFileReader
 import com.musicremover.app.processing.internal.PcmFileWriter
@@ -158,6 +159,7 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
         }
         // Missing (work from an older version) or unknown values run on CPU
         val acceleratorPref = Accelerator.resolve(inputData.getString(InternalBackend.KEY_ACCELERATOR), Build.VERSION.SDK_INT)
+        val lighter = inputData.getBoolean(InternalBackend.KEY_LIGHTER, false)
         val outputFormat = when (val f = inputData.getString(InternalBackend.KEY_OUTPUT_FORMAT)) {
             null, Mp3Support.M4A -> Mp3Support.M4A
             Mp3Support.MP3 -> Mp3Support.MP3
@@ -293,11 +295,11 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
                 throw jobError(R.string.internal_model_mismatch, e)
             }
             model = ort
-            Log.i(TAG, "$jobId: accelerator ${ort.usedAccelerator.pref} (asked ${acceleratorPref.pref})")
+            Log.i(TAG, "$jobId: accelerator ${ort.usedAccelerator.pref} (asked ${acceleratorPref.pref}) lighter=$lighter")
             val params = MdxParams(spec.nFft, spec.dimF, spec.dimT, spec.hop, spec.compensate.toFloat(), cfg.overlap)
             val inputScale = if (decoded.peak > 0.9f) 0.9f / decoded.peak else 1f
             val vocalsFile = File(workDir, "vocals.f32")
-            val speedKey = PerformanceSettings.speedKey(modelName, cfg.threads, cfg.batch, ort.usedAccelerator)
+            val speedKey = PerformanceSettings.speedKey(modelName, cfg.threads, cfg.batch, ort.usedAccelerator, lighter)
             val appPrefs = ctx.getSharedPreferences(APP_PREFS, Context.MODE_PRIVATE)
             val priorMs = appPrefs.getLong(speedKey, -1L).takeIf { it > 0 }
             var chunks = 0
@@ -312,7 +314,8 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
                                 } else {
                                     VocalsSink(mixForSink, writer, inputScale, params.compensate)
                                 }
-                                val separator = MdxSeparator(params, ort)
+                                // Lighter: pauses after each chunk; the pauses count in the ETA and the speed hint
+                                val separator = MdxSeparator(params, if (lighter) PacedModel(ort) else ort)
                                 val eta = EtaEstimator(separator.chunkCount(src.frames))
                                 report("separating", 20, eta.prior(priorMs))
                                 val start = SystemClock.elapsedRealtime()

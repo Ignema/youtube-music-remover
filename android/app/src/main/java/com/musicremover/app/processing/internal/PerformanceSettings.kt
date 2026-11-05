@@ -117,8 +117,15 @@ object PerformanceSettings {
      * Prefs `app` key of the measured ms per chunk. CPU keeps the pre-accelerator key so earlier
      * measurements stay valid; other accelerators get their own suffix.
      */
-    fun speedKey(model: String, threads: Int, batch: Int, accelerator: Accelerator = Accelerator.CPU): String =
-        "perf_ms:$model:$threads:$batch" + if (accelerator == Accelerator.CPU) "" else ":${accelerator.pref}"
+    fun speedKey(
+        model: String,
+        threads: Int,
+        batch: Int,
+        accelerator: Accelerator = Accelerator.CPU,
+        lighter: Boolean = false,
+    ): String = "perf_ms:$model:$threads:$batch" +
+        (if (accelerator == Accelerator.CPU) "" else ":${accelerator.pref}") +
+        (if (lighter) ":light" else "")
 
     /** Exponential moving average; the first measurement is taken as is. */
     fun ema(previous: Long?, sample: Long): Long =

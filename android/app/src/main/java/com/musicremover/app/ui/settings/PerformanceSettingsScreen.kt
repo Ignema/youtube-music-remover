@@ -14,11 +14,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -155,6 +157,25 @@ fun PerformanceSettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
                 enabled = enabled,
                 onClick = { vm.setPerfAccelerator(acc.pref) },
             )
+        }
+
+        Spacer(Modifier.height(16.dp))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        Spacer(Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .toggleable(value = perf.lighter, role = Role.Switch, onValueChange = vm::setPerfLighter)
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(stringResource(R.string.perf_lighter), style = MaterialTheme.typography.bodyLarge)
+                SettingsNote(stringResource(R.string.perf_lighter_desc))
+            }
+            Spacer(Modifier.width(12.dp))
+            Switch(checked = perf.lighter, onCheckedChange = null)
         }
     }
 }
