@@ -18,8 +18,8 @@ android {
         applicationId = "com.musicremover.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "4.0.0"
+        versionCode = 6
+        versionName = "4.1.0"
 
         buildConfigField("String", "API_BASE_URL", "\"http://localhost:8000\"")
 

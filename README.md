@@ -98,6 +98,21 @@ On-device models download on first use (30 to 67 MB each) and can be deleted in 
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/12.jpg" width="180" alt="Dark theme with Teal palette" />
 </p>
 
+On tablets and other large screens, Murem uses two panes:
+
+<p align="center">
+  <img src="fastlane/metadata/android/en-US/images/tenInchScreenshots/1.jpg" width="400" alt="Tablet: home with recent results side by side" />
+  <img src="fastlane/metadata/android/en-US/images/tenInchScreenshots/2.jpg" width="400" alt="Tablet: on-device processing with start time" />
+</p>
+<p align="center">
+  <img src="fastlane/metadata/android/en-US/images/tenInchScreenshots/3.jpg" width="400" alt="Tablet: video next to the waveform player" />
+  <img src="fastlane/metadata/android/en-US/images/tenInchScreenshots/4.jpg" width="400" alt="Tablet: two-pane settings with on-device models" />
+</p>
+<p align="center">
+  <img src="fastlane/metadata/android/en-US/images/tenInchScreenshots/5.jpg" width="400" alt="Tablet: dark theme with Teal palette" />
+  <img src="fastlane/metadata/android/en-US/images/tenInchScreenshots/6.jpg" width="400" alt="Tablet: appearance settings in dark theme" />
+</p>
+
 ### Quick Start (On-Device, no setup)
 
 1. Install the APK

@@ -1658,6 +1658,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun showTransientError(msg: String) = showTransient(msg, isInfo = false)
 
+    /** The "not enough memory for on-device processing" refusal: a known device limit, not a bug to report. */
+    private fun isDeviceLimit(msg: String): Boolean =
+        msg == getApplication<Application>().getString(R.string.internal_device_unsupported)
+
     /** A failed job: the banner stays longer and offers Report, which opens a pre-filled GitHub issue. */
     fun showJobFailure(msg: String) = showTransient(msg, isInfo = false, report = msg)
 
@@ -1784,7 +1788,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun onStartError(backend: ProcessingBackend, e: Exception, fallback: String) {
         withContext(Dispatchers.Main) {
             if (!backend.managesNotifications) ProcessingService.stop(getApplication())
-            showJobFailure(e.message ?: fallback)
+            val msg = e.message ?: fallback
+            // A known device limit (not enough memory) is not a bug, so it does not offer Report
+            if (isDeviceLimit(msg)) {
+                showTransientError(msg)
+            } else {
+                showJobFailure(msg)
+            }
             if (_ui.value.queue.isNotEmpty()) {
                 processNextInQueue()
             } else {
@@ -1891,7 +1901,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         notif.showError(text)
                     }
                     // A cancel (e.g. from the server) is not a bug, so only errors offer Report
-                    if (e.status == "cancelled") showTransientError(text) else showJobFailure(text)
+                    if (e.status == "cancelled" || isDeviceLimit(text)) showTransientError(text) else showJobFailure(text)
                     if (_ui.value.queue.isNotEmpty()) {
                         processNextInQueue()
                     } else {

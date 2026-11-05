@@ -72,7 +72,7 @@
     <string name="internal_job_not_found">On-device job not found</string>
     <string name="internal_needs_foreground">On-device processing needs Murem to be open when it starts. Open Murem and try again.</string>
     <string name="internal_waiting_foreground">Open Murem to continue on-device processing</string>
-    <string name="internal_device_unsupported">This phone does not have enough memory for on-device processing. Use Termux or Server mode.</string>
+    <string name="internal_device_unsupported">This device does not have enough memory for on-device processing. Use Termux or Server mode.</string>
 
     <!-- Links (yt-dlp) -->
     <string name="internal_url_invalid">This is not a valid link</string>

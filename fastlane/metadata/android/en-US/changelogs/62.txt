@@ -1,0 +1,6 @@
+Murem 4.1.0
+• Two-pane layouts on tablets and other large screens
+• Report a problem: opens a pre-filled GitHub issue that you review before sending, also offered after a crash
+• If a result cannot play, the player shows why, with Retry
+• Shows when a job started, while processing and in Recent
+• Open-source licenses screen in About

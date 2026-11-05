@@ -39,6 +39,7 @@ History:
 Design:
 • Redesigned Home screen with one input card for links and files
 • Settings split into clear sections
+• Two-pane layouts on tablets and other large screens
 • Light, Dark, Black (OLED) and System themes
 • Material You colors on Android 12+, or one of 8 color palettes
 • Home screen widget with 4 themes
