@@ -1,3 +1,7 @@
+AntiFeatures:
+  NonFreeNet:
+    en-US: Downloads AI models and yt-dlp updates from GitHub and Hugging Face, and processes
+      links from sites such as YouTube.
 Categories:
   - Multimedia
 License: MIT
@@ -12,26 +16,51 @@ AutoName: Murem
 RepoType: git
 Repo: https://github.com/Ignema/youtube-music-remover.git
 
-# Releases after v3.0.0 build one APK per ABI (versionCode = base * 10 + abiCode)
-# and need one Builds entry per ABI with a prebuild step that removes the
-# debug signingConfig, plus a License review (bundled GPL-3.0 components).
-# See fdroid/README.md before adding the next Builds entries.
+# Since v4.0.0 the build makes one APK per ABI, with
+# versionCode = defaultConfig.versionCode * 10 + abiCode (armeabi-v7a 1, arm64-v8a 2, x86_64 3).
+# Each ABI is its own Builds entry that picks its APK with `output`. See fdroid/README.md.
 Builds:
-  - versionName: 2.1.0
-    versionCode: 3
-    commit: v2.1.0
+  - versionName: 3.0.0
+    versionCode: 4
+    commit: f7db7c065da80f52ac4d6301ab867865b4da8741
     subdir: android/app
     gradle:
       - yes
 
-  - versionName: 3.0.0
-    versionCode: 4
-    commit: v3.0.0
+  - versionName: 4.0.0
+    versionCode: 51
+    commit: 3dc74ddac830d24a6bddcfe17051623d2b129dc6
     subdir: android/app
     gradle:
       - yes
+    prebuild: sed -i -e '/signingConfig/d' build.gradle.kts
+    output: build/outputs/apk/release/murem-armeabi-v7a-release-unsigned.apk
+
+  - versionName: 4.0.0
+    versionCode: 52
+    commit: 3dc74ddac830d24a6bddcfe17051623d2b129dc6
+    subdir: android/app
+    gradle:
+      - yes
+    prebuild: sed -i -e '/signingConfig/d' build.gradle.kts
+    output: build/outputs/apk/release/murem-arm64-v8a-release-unsigned.apk
+
+  - versionName: 4.0.0
+    versionCode: 53
+    commit: 3dc74ddac830d24a6bddcfe17051623d2b129dc6
+    subdir: android/app
+    gradle:
+      - yes
+    prebuild: sed -i -e '/signingConfig/d' build.gradle.kts
+    output: build/outputs/apk/release/murem-x86_64-release-unsigned.apk
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: 3.0.0
-CurrentVersionCode: 4
+# The base versionCode in build.gradle.kts becomes one code per ABI
+VercodeOperation:
+  - 10*%c+1
+  - 10*%c+2
+  - 10*%c+3
+UpdateCheckData: android/app/build.gradle.kts|versionCode\s=\s(\d+)|android/app/build.gradle.kts|versionName\s=\s"(.*)"
+CurrentVersion: 4.0.0
+CurrentVersionCode: 53
