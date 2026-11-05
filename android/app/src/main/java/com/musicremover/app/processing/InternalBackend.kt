@@ -188,6 +188,7 @@ class InternalBackend(context: Context, private val cache: ResultCache) : Proces
         return putInt(KEY_THREADS, settings.perfThreads)
             .putString(KEY_QUALITY, settings.perfQuality)
             .putInt(KEY_BATCH, settings.perfBatch)
+            .putString(KEY_ACCELERATOR, settings.perfAccelerator)
     }
 
     override fun events(jobId: String): Flow<JobEvent> {
@@ -260,6 +261,7 @@ class InternalBackend(context: Context, private val cache: ResultCache) : Proces
         const val KEY_THREADS = "perfThreads"
         const val KEY_QUALITY = "perfQuality"
         const val KEY_BATCH = "perfBatch"
+        const val KEY_ACCELERATOR = "perfAccelerator"
         /** "m4a" or "mp3"; MP3 applies only to results without video and falls back to M4A in the worker. */
         const val KEY_OUTPUT_FORMAT = "outputFormat"
 

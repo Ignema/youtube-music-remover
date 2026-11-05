@@ -30,6 +30,7 @@ import com.musicremover.app.processing.ProcessOptions
 import com.musicremover.app.processing.ProcessingBackend
 import com.musicremover.app.processing.RemoteServerBackend
 import com.musicremover.app.processing.internal.CookieStore
+import com.musicremover.app.processing.internal.Accelerator
 import com.musicremover.app.processing.internal.CookiesTxt
 import com.musicremover.app.processing.internal.LoginSites
 import com.musicremover.app.processing.internal.ModelCatalog
@@ -157,7 +158,12 @@ fun onNoticeResult(req: NoticeRequest, accepted: Boolean): NoticeAction = when {
 }
 
 /** Performance prefs as shown in Settings (0 threads = Auto). */
-data class PerformancePrefs(val threads: Int = 0, val quality: String = "balanced", val batch: Int = 1)
+data class PerformancePrefs(
+    val threads: Int = 0,
+    val quality: String = "balanced",
+    val batch: Int = 1,
+    val accelerator: String = "cpu",
+)
 
 /**
  * "Process another": a fresh state that keeps the live fields of [prev] and the persisted Output and
@@ -342,7 +348,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             internalModels = ModelCatalog.get(application),
             internalModel = settingsStore.internalModel,
             modelStates = modelManager.state.value,
-            performance = PerformancePrefs(settingsStore.perfThreads, settingsStore.perfQuality, settingsStore.perfBatch),
+            performance = PerformancePrefs(
+                settingsStore.perfThreads, settingsStore.perfQuality, settingsStore.perfBatch, settingsStore.perfAccelerator,
+            ),
         )
         loadModelSpeed()
         applyModelsForMode()
@@ -535,8 +543,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun loadModelSpeed() {
         val perf = _ui.value.performance
         val threads = PerformanceSettings.threads(perf.threads, Runtime.getRuntime().availableProcessors())
+        val accelerator = Accelerator.resolve(perf.accelerator, Build.VERSION.SDK_INT)
         val speed = _ui.value.internalModels.associate { spec ->
-            spec.name to prefs.getLong(PerformanceSettings.speedKey(spec.name, threads, perf.batch), -1L).takeIf { it > 0 }
+            val key = PerformanceSettings.speedKey(spec.name, threads, perf.batch, accelerator)
+            spec.name to prefs.getLong(key, -1L).takeIf { it > 0 }
         }
         _ui.value = _ui.value.copy(modelSpeed = speed)
     }
@@ -556,6 +566,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setPerfBatch(value: Int) {
         settingsStore.perfBatch = value
         _ui.value = _ui.value.copy(performance = _ui.value.performance.copy(batch = settingsStore.perfBatch))
+        loadModelSpeed()
+    }
+
+    fun setPerfAccelerator(value: String) {
+        settingsStore.perfAccelerator = value
+        _ui.value = _ui.value.copy(performance = _ui.value.performance.copy(accelerator = settingsStore.perfAccelerator))
         loadModelSpeed()
     }
 

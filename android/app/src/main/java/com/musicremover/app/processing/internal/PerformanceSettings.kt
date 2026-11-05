@@ -11,6 +11,30 @@ data class RunConfig(
     val batchReduced: Boolean,
 )
 
+/** ONNX Runtime execution provider for on-device separation. */
+enum class Accelerator(val pref: String) {
+    /** ORT's default CPU kernels; works everywhere. */
+    CPU("cpu"),
+    /** XNNPACK CPU kernels, often faster on ARM. */
+    XNNPACK("xnnpack"),
+    /** Android NNAPI: GPU, DSP or NPU when the phone's driver supports the model's operators (Android 8.1+). */
+    NNAPI("nnapi"),
+    /** ORT WebGPU (Vulkan on Android): the GPU without NNAPI drivers. */
+    WEBGPU("webgpu");
+
+    companion object {
+        /** First API level with NNAPI. */
+        const val NNAPI_MIN_SDK = 27
+
+        /** Unknown values are CPU. */
+        fun fromPref(value: String?): Accelerator = entries.firstOrNull { it.pref == value } ?: CPU
+
+        /** NNAPI is refused below Android 8.1 (it does not exist there). */
+        fun resolve(pref: String?, sdk: Int): Accelerator =
+            fromPref(pref).let { if (it == NNAPI && sdk < NNAPI_MIN_SDK) CPU else it }
+    }
+}
+
 /** Pure mapping of the Performance prefs (design §1d). */
 object PerformanceSettings {
     const val QUALITY_FAST = "fast"
@@ -89,8 +113,12 @@ object PerformanceSettings {
         return ((padded + step - 1) / step).toInt()
     }
 
-    /** Prefs `app` key of the measured ms per chunk. */
-    fun speedKey(model: String, threads: Int, batch: Int): String = "perf_ms:$model:$threads:$batch"
+    /**
+     * Prefs `app` key of the measured ms per chunk. CPU keeps the pre-accelerator key so earlier
+     * measurements stay valid; other accelerators get their own suffix.
+     */
+    fun speedKey(model: String, threads: Int, batch: Int, accelerator: Accelerator = Accelerator.CPU): String =
+        "perf_ms:$model:$threads:$batch" + if (accelerator == Accelerator.CPU) "" else ":${accelerator.pref}"
 
     /** Exponential moving average; the first measurement is taken as is. */
     fun ema(previous: Long?, sample: Long): Long =

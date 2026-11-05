@@ -2,6 +2,7 @@ package com.musicremover.app.ui.settings
 
 import android.app.ActivityManager
 import android.content.Context
+import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.musicremover.app.MainViewModel
 import com.musicremover.app.R
 import com.musicremover.app.processing.BackendProvider
+import com.musicremover.app.processing.internal.Accelerator
 import com.musicremover.app.processing.internal.PerformanceSettings
 
 /** Performance (Internal mode): ORT threads, overlap preset and batch size. */
@@ -128,6 +130,32 @@ fun PerformanceSettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
             enabled = batch2Ok,
             onClick = { vm.setPerfBatch(2) },
         )
+
+        Spacer(Modifier.height(16.dp))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        Spacer(Modifier.height(16.dp))
+
+        SectionLabel(stringResource(R.string.perf_accelerator))
+        Spacer(Modifier.height(4.dp))
+        SettingsNote(stringResource(R.string.perf_accelerator_desc))
+        Spacer(Modifier.height(8.dp))
+        val nnapiOk = Build.VERSION.SDK_INT >= Accelerator.NNAPI_MIN_SDK
+        val shownAcc = Accelerator.resolve(perf.accelerator, Build.VERSION.SDK_INT)
+        listOf(
+            Triple(Accelerator.CPU, R.string.perf_acc_cpu, R.string.perf_acc_cpu_desc),
+            Triple(Accelerator.WEBGPU, R.string.perf_acc_webgpu, R.string.perf_acc_webgpu_desc),
+            Triple(Accelerator.NNAPI, R.string.perf_acc_nnapi, R.string.perf_acc_nnapi_desc),
+            Triple(Accelerator.XNNPACK, R.string.perf_acc_xnnpack, R.string.perf_acc_xnnpack_desc),
+        ).forEach { (acc, label, desc) ->
+            val enabled = acc != Accelerator.NNAPI || nnapiOk
+            ChoiceRow(
+                label = stringResource(label),
+                note = stringResource(if (enabled) desc else R.string.perf_acc_nnapi_needs_android),
+                selected = shownAcc == acc,
+                enabled = enabled,
+                onClick = { vm.setPerfAccelerator(acc.pref) },
+            )
+        }
     }
 }
 

@@ -200,6 +200,21 @@
     <string name="perf_batch_2">2</string>
     <string name="perf_batch_2_desc">Experimental. Uses about 1 GB more memory; may not be faster.</string>
     <string name="perf_batch_2_needs_ram">Needs a phone with 6 GB of RAM</string>
+    <string name="perf_accelerator">Acceleration</string>
+    <string name="perf_accelerator_desc">Which one is fastest depends on the phone. Try one on a short clip and compare the time in Recent. If an option does not work on this phone, Murem uses CPU instead.</string>
+    <string name="perf_acc_cpu">CPU (recommended)</string>
+    <string name="perf_acc_cpu_desc">Works on every phone</string>
+    <string name="internal_accelerator_failed">Acceleration failed on this phone. Set Settings → Performance → Acceleration to CPU and try again.</string>
+    <string name="perf_acc_webgpu">GPU (WebGPU)</string>
+    <string name="perf_acc_webgpu_desc">Experimental. Runs the model on the GPU through Vulkan. Often the fastest, but not tested on every phone</string>
+    <string name="perf_acc_nnapi">AI chip (NNAPI)</string>
+    <string name="perf_acc_nnapi_desc">Experimental. Uses the phone\'s NPU, DSP or GPU driver in half precision. Can be faster or much slower, depending on the phone</string>
+    <string name="perf_acc_nnapi_needs_android">Needs Android 8.1 or newer</string>
+    <string name="perf_acc_xnnpack">Optimized CPU (XNNPACK)</string>
+    <string name="perf_acc_xnnpack_desc">Experimental. Different CPU code that is quicker on some ARM phones</string>
+    <string name="perf_acc_webgpu_short">GPU</string>
+    <string name="perf_acc_xnnpack_short">XNNPACK</string>
+    <string name="perf_acc_nnapi_short">NNAPI</string>
 
     <!-- Settings: history & storage, server discovery, Termux -->
     <string name="clear_history_title">Clear history?</string>

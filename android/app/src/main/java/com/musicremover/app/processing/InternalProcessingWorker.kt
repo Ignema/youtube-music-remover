@@ -18,6 +18,7 @@ import com.musicremover.app.data.HistoryStore
 import com.musicremover.app.data.NotificationHelper
 import com.musicremover.app.data.ResultCache
 import com.musicremover.app.data.VideoInfo
+import com.musicremover.app.processing.internal.Accelerator
 import com.musicremover.app.processing.internal.AudioDecoder
 import com.musicremover.app.processing.internal.EtaEstimator
 import com.musicremover.app.processing.internal.InternalCapability
@@ -155,6 +156,8 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
                 1
             }
         }
+        // Missing (work from an older version) or unknown values run on CPU
+        val acceleratorPref = Accelerator.resolve(inputData.getString(InternalBackend.KEY_ACCELERATOR), Build.VERSION.SDK_INT)
         val outputFormat = when (val f = inputData.getString(InternalBackend.KEY_OUTPUT_FORMAT)) {
             null, Mp3Support.M4A -> Mp3Support.M4A
             Mp3Support.MP3 -> Mp3Support.MP3
@@ -280,7 +283,7 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
             // 5. Separate (20-90)
             report("separating", 20)
             val ort = try {
-                OrtSpectrogramModel(modelFile, spec.dimF, spec.dimT, cfg.threads, cfg.batch)
+                OrtSpectrogramModel(modelFile, spec.dimF, spec.dimT, cfg.threads, cfg.batch, acceleratorPref)
             } catch (e: OrtException) {
                 Log.e(TAG, "$jobId: cannot load model", e)
                 if (!models.delete(modelName)) modelFile.delete()
@@ -290,10 +293,11 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
                 throw jobError(R.string.internal_model_mismatch, e)
             }
             model = ort
+            Log.i(TAG, "$jobId: accelerator ${ort.usedAccelerator.pref} (asked ${acceleratorPref.pref})")
             val params = MdxParams(spec.nFft, spec.dimF, spec.dimT, spec.hop, spec.compensate.toFloat(), cfg.overlap)
             val inputScale = if (decoded.peak > 0.9f) 0.9f / decoded.peak else 1f
             val vocalsFile = File(workDir, "vocals.f32")
-            val speedKey = PerformanceSettings.speedKey(modelName, cfg.threads, cfg.batch)
+            val speedKey = PerformanceSettings.speedKey(modelName, cfg.threads, cfg.batch, ort.usedAccelerator)
             val appPrefs = ctx.getSharedPreferences(APP_PREFS, Context.MODE_PRIVATE)
             val priorMs = appPrefs.getLong(speedKey, -1L).takeIf { it > 0 }
             var chunks = 0
@@ -325,9 +329,16 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
             } catch (e: CancellationException) {
                 throw e
             } catch (e: OrtException) {
-                Log.e(TAG, "$jobId: ORT run failed", e)
+                Log.e(TAG, "$jobId: ORT run failed (${ort.usedAccelerator.pref})", e)
                 val oom = e.message?.contains("alloc", ignoreCase = true) == true
-                throw jobError(if (oom) R.string.internal_out_of_memory else R.string.internal_processing_failed, e)
+                throw jobError(
+                    when {
+                        ort.usedAccelerator != Accelerator.CPU -> R.string.internal_accelerator_failed
+                        oom -> R.string.internal_out_of_memory
+                        else -> R.string.internal_processing_failed
+                    },
+                    e,
+                )
             } catch (e: IOException) {
                 Log.w(TAG, "$jobId: write failed during separation", e)
                 throw InternalJobException(ctx.getString(R.string.internal_no_space, neededMb(decoded.durationUs, bitrate)), e)

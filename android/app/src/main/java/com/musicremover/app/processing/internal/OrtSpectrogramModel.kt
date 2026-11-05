@@ -3,17 +3,24 @@ package com.musicremover.app.processing.internal
 import ai.onnxruntime.OnnxJavaType
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
+import ai.onnxruntime.OrtException
 import ai.onnxruntime.OrtSession
 import ai.onnxruntime.TensorInfo
+import ai.onnxruntime.providers.NNAPIFlags
+import android.util.Log
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
+import java.util.EnumSet
 
 /**
- * ONNX Runtime (CPU) model with input `"input"` and output `"output"`, both `[batch, 4, dimF, dimT]`
+ * ONNX Runtime model with input `"input"` and output `"output"`, both `[batch, 4, dimF, dimT]`
  * float32. Both tensors wrap direct native-order buffers owned by this class and are created once;
  * the output is a pinned output, so a run allocates no tensor memory of its own.
+ *
+ * [accelerator] picks the execution provider; if it cannot create a session, CPU is used and
+ * [usedAccelerator] says so.
  */
 class OrtSpectrogramModel(
     modelFile: File,
@@ -21,9 +28,13 @@ class OrtSpectrogramModel(
     private val dimT: Int,
     threads: Int = minOf(4, Runtime.getRuntime().availableProcessors()),
     override val batch: Int = 1,
+    accelerator: Accelerator = Accelerator.CPU,
 ) : SpectrogramModel {
     private val env: OrtEnvironment = OrtEnvironment.getEnvironment()
     private val session: OrtSession
+
+    /** The execution provider the session was created with (CPU after a fallback). */
+    val usedAccelerator: Accelerator
     private val runOptions: OrtSession.RunOptions
     private val inputTensor: OnnxTensor
     private val outTensor: OnnxTensor
@@ -41,16 +52,18 @@ class OrtSpectrogramModel(
         requireTensorBuffer(input)
         requireTensorBuffer(output)
 
-        val opts = OrtSession.SessionOptions()
+        // An accelerator that cannot take this model falls back to CPU here, so the caller never
+        // mistakes it for a damaged model file. A CPU failure is still thrown.
+        var used = accelerator
         val s = try {
-            opts.setIntraOpNumThreads(threads)
-            opts.setCPUArenaAllocator(false)
-            opts.setMemoryPatternOptimization(false)
-            opts.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.EXTENDED_OPT)
-            env.createSession(modelFile.absolutePath, opts)
-        } finally {
-            opts.close()
+            createSession(modelFile, threads, accelerator)
+        } catch (e: OrtException) {
+            if (accelerator == Accelerator.CPU) throw e
+            Log.w(TAG, "${accelerator.pref} unavailable for ${modelFile.name}, using CPU", e)
+            used = Accelerator.CPU
+            createSession(modelFile, threads, Accelerator.CPU)
         }
+        usedAccelerator = used
         var ro: OrtSession.RunOptions? = null
         var inT: OnnxTensor? = null
         var outT: OnnxTensor? = null
@@ -75,6 +88,38 @@ class OrtSpectrogramModel(
         outTensor = outT
         inputs = mapOf("input" to inT)
         pinnedOutputs = mapOf("output" to outT)
+    }
+
+    private fun createSession(modelFile: File, threads: Int, acc: Accelerator): OrtSession {
+        val opts = OrtSession.SessionOptions()
+        try {
+            opts.setCPUArenaAllocator(false)
+            opts.setMemoryPatternOptimization(false)
+            opts.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.EXTENDED_OPT)
+            // A fixed batch lets the accelerators (NNAPI needs static shapes) take the whole graph
+            opts.setSymbolicDimensionValue(BATCH_DIM, batch.toLong())
+            when (acc) {
+                Accelerator.CPU -> opts.setIntraOpNumThreads(threads)
+                Accelerator.XNNPACK -> {
+                    // XNNPACK runs its own pool; ORT's pool stays at 1 and does not spin (ORT docs)
+                    opts.setIntraOpNumThreads(1)
+                    opts.addConfigEntry("session.intra_op.allow_spinning", "0")
+                    opts.addXnnpack(mapOf("intra_op_num_threads" to threads.toString()))
+                }
+                Accelerator.NNAPI -> {
+                    // Nodes NNAPI cannot run go to ORT's CPU kernels instead of the slow NNAPI CPU reference
+                    opts.setIntraOpNumThreads(threads)
+                    opts.addNnapi(EnumSet.of(NNAPIFlags.USE_FP16, NNAPIFlags.CPU_DISABLED))
+                }
+                Accelerator.WEBGPU -> {
+                    opts.setIntraOpNumThreads(threads)
+                    opts.addWebGPU(emptyMap())
+                }
+            }
+            return env.createSession(modelFile.absolutePath, opts)
+        } finally {
+            opts.close()
+        }
     }
 
     private fun checkShape(info: Any?) {
@@ -104,6 +149,11 @@ class OrtSpectrogramModel(
     }
 
     companion object {
+        private const val TAG = "MuremInternal"
+
+        /** Symbolic batch dimension name of the UVR MDX-Net exports. */
+        private const val BATCH_DIM = "batch_size"
+
         fun allocTensorBuffer(n: Int): FloatBuffer =
             ByteBuffer.allocateDirect(4 * n).order(ByteOrder.nativeOrder()).asFloatBuffer()
 

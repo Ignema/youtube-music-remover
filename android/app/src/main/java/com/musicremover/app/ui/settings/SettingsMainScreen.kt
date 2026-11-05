@@ -30,6 +30,7 @@ import com.musicremover.app.MainUiState
 import com.musicremover.app.MainViewModel
 import com.musicremover.app.R
 import com.musicremover.app.processing.BackendProvider
+import com.musicremover.app.processing.internal.Accelerator
 import com.musicremover.app.processing.internal.ModelState
 import com.musicremover.app.processing.internal.PerformanceSettings
 import com.musicremover.app.ui.theme.ColorPalettes
@@ -194,7 +195,13 @@ private fun performanceSummary(ui: MainUiState): String {
             else -> R.string.settings_quality_balanced
         },
     )
-    return "$threads · $quality"
+    val acc = when (Accelerator.resolve(p.accelerator, Build.VERSION.SDK_INT)) {
+        Accelerator.CPU -> null
+        Accelerator.XNNPACK -> stringResource(R.string.perf_acc_xnnpack_short)
+        Accelerator.NNAPI -> stringResource(R.string.perf_acc_nnapi_short)
+        Accelerator.WEBGPU -> stringResource(R.string.perf_acc_webgpu_short)
+    }
+    return listOfNotNull(threads, quality, acc).joinToString(" · ")
 }
 
 @Composable

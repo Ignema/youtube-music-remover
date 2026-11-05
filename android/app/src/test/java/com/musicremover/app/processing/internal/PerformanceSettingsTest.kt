@@ -118,6 +118,20 @@ class PerformanceSettingsTest {
         assertEquals(1000L, PerformanceSettings.ema(null, 1000L))
         assertEquals(1300L, PerformanceSettings.ema(1000L, 2000L))
         assertEquals("perf_ms:UVR-MDX-NET-Inst_HQ_3.onnx:4:2", PerformanceSettings.speedKey("UVR-MDX-NET-Inst_HQ_3.onnx", 4, 2))
+        // CPU keeps the old key so measurements from before 4.2 stay valid
+        assertEquals("perf_ms:m.onnx:4:1", PerformanceSettings.speedKey("m.onnx", 4, 1, Accelerator.CPU))
+        assertEquals("perf_ms:m.onnx:4:1:nnapi", PerformanceSettings.speedKey("m.onnx", 4, 1, Accelerator.NNAPI))
+        assertEquals("perf_ms:m.onnx:4:1:xnnpack", PerformanceSettings.speedKey("m.onnx", 4, 1, Accelerator.XNNPACK))
+    }
+
+    @Test
+    fun acceleratorPrefs() {
+        assertEquals(Accelerator.CPU, Accelerator.resolve(null, 35))
+        assertEquals(Accelerator.CPU, Accelerator.resolve("gpu", 35))
+        assertEquals(Accelerator.XNNPACK, Accelerator.resolve("xnnpack", 26))
+        assertEquals(Accelerator.NNAPI, Accelerator.resolve("nnapi", 27))
+        assertEquals(Accelerator.CPU, Accelerator.resolve("nnapi", 26))
+        assertEquals(Accelerator.WEBGPU, Accelerator.resolve("webgpu", 26))
     }
 
     /** Only its geometry matters for chunkCount. */
