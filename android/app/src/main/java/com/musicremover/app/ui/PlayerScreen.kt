@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -87,6 +89,7 @@ import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -355,6 +358,10 @@ fun PlayerScreen(
             // Bottom panel hidden
             PlayerMode.FULLSCREEN -> video(Modifier.fillMaxSize(), mode)
             PlayerMode.SIDE_BY_SIDE -> Row(modifier = Modifier.fillMaxSize()) {
+                // The panel pads its End for a cutout or side navigation bar; add that inset to its width
+                // so the controls keep the full panel width instead of being clipped
+                val endInset = WindowInsets.safeDrawing.only(WindowInsetsSides.End).asPaddingValues()
+                    .calculateEndPadding(LocalLayoutDirection.current)
                 Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
                     video(Modifier.fillMaxSize(), mode)
                 }
@@ -364,7 +371,7 @@ fun PlayerScreen(
                         containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     ),
                     modifier = Modifier
-                        .width(panelWidthDp.dp)
+                        .width(panelWidthDp.dp + endInset)
                         .fillMaxHeight(),
                 ) {
                     Column(
