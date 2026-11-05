@@ -2,7 +2,7 @@
   <img src="fastlane/metadata/android/en-US/images/icon.png" width="100" alt="Murem icon" />
 </p>
 
-# Murem — Video Music Remover
+# Murem: Video Music Remover
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ignema/youtube-music-remover/blob/master/vocals.ipynb)
 [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/melnema/youtube-music-remover)
@@ -21,12 +21,12 @@ Download the latest APK from [Releases](https://github.com/Ignema/youtube-music-
 - Share links, videos or audio files directly from any app
 
 **AI Models:**
-- Kim Vocal 2 (default) — best MDX-Net quality
-- UVR-MDX-NET HQ3 — fast and lightweight
-- UVR Karaoke — keeps backing vocals
-- Mel-Band RoFormer — state-of-the-art (GPU recommended)
-- BS-RoFormer — premium quality
-- Custom model support — use any audio-separator model
+- Kim Vocal 2 (default): best MDX-Net quality
+- UVR-MDX-NET HQ3: fast and lightweight
+- UVR Karaoke: keeps backing vocals
+- Mel-Band RoFormer: state-of-the-art (GPU recommended)
+- BS-RoFormer: premium quality
+- Custom model support: use any audio-separator model
 
 **Player:**
 - Built-in waveform player with streaming visualization
@@ -38,7 +38,7 @@ Download the latest APK from [Releases](https://github.com/Ignema/youtube-music-
 **Features:**
 - Processing queue with persistence across crashes
 - Server-side job cancellation
-- History with search, metadata preview, and expiry indicators
+- History with search and metadata preview
 - Export all results at once
 - Home screen widget (4 themes)
 - mDNS server auto-discovery
@@ -48,27 +48,22 @@ Download the latest APK from [Releases](https://github.com/Ignema/youtube-music-
 ### Screenshots
 
 <p align="center">
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg" width="180" />
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg" width="180" />
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.jpg" width="180" />
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4.jpg" width="180" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg" width="180" alt="Home with recent results" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg" width="180" alt="Several links at once" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.jpg" width="180" alt="Pick a video or audio file" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4.jpg" width="180" alt="On-device processing" />
 </p>
 <p align="center">
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5.jpg" width="180" />
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6.jpg" width="180" />
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/7.jpg" width="180" />
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/8.jpg" width="180" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5.jpg" width="180" alt="Vocals extracted" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6.jpg" width="180" alt="Waveform player" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/7.jpg" width="180" alt="Settings" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/8.jpg" width="180" alt="Processing mode" />
 </p>
 <p align="center">
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/9.jpg" width="180" />
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/10.jpg" width="180" />
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/11.jpg" width="180" />
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/12.jpg" width="180" />
-</p>
-<p align="center">
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/13.jpg" width="180" />
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/14.jpg" width="180" />
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/15.jpg" width="180" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/9.jpg" width="180" alt="On-device models" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/10.jpg" width="180" alt="Accounts and cookies" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/11.jpg" width="180" alt="Appearance and color palettes" />
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/12.jpg" width="180" alt="Dark theme with Teal palette" />
 </p>
 
 ### Quick Start (Remote Server)
