@@ -1,0 +1,7 @@
+Murem 4.0.0
+• New Internal mode: remove music on the phone itself, with no server and no Termux
+• Works with links (YouTube, Instagram and other yt-dlp sites) and local video or audio files
+• On-device models download on first use; output as MP4, MP3 or M4A
+• Log in to sites with the built-in browser or import cookies.txt
+• Redesigned Home and Settings, color palettes
+• Fixes crashes after the first result and with large videos

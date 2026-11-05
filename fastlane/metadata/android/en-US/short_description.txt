@@ -1,1 +1,1 @@
-Strip background music from YouTube videos using AI vocal separation.
+Remove background music from videos and keep the voices, right on your phone.

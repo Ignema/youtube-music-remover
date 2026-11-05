@@ -1,48 +1,53 @@
-Murem removes background music from any video while keeping vocals and dialogue intact, using AI-powered audio separation.
+Murem removes the background music from videos and audio and keeps the voices and dialogue, using AI vocal separation. It can now do this on your phone, with no server.
 
-Features:
-• Paste a URL from YouTube, TikTok, Instagram, Twitter, Vimeo & 1000+ sites
-• Pick a local video file or import a batch of URLs from a text file
-• Share directly from any app to start processing
-• 5 AI models: Kim Vocal 2, MDX-NET HQ3, Karaoke, Mel-Band RoFormer, BS-RoFormer
-• Custom model support — use any audio-separator model
-• Audio-only mode: export just the vocals as MP3
-• Adjustable audio bitrate (128k / 192k / 320k)
-• Processing queue with skip, cancel, and persistence across crashes
-• Server-side job cancellation stops processing immediately
+Processing modes:
+• Internal (on-device): the separation model runs on the phone with ONNX Runtime. No server and no Termux needed
+• Local (Termux): run the Murem server in Termux on the same phone, with one-tap Install / Start / Stop
+• Server: connect to your own server on a PC for faster GPU processing (Docker supported, found on the local network with mDNS)
 
-Waveform Player:
-• Built-in video player with audio waveform visualization
-• Tap to play/pause, drag waveform to scrub
-• Rewind/forward 10s, loop, volume control
-• Fullscreen with landscape rotation for wide videos
-• Open in external player (VLC, MX Player, etc.)
+Input:
+• Links from YouTube, Instagram, TikTok, Vimeo and other sites supported by yt-dlp
+• Several links at once: paste, add, or import a .txt file
+• Local video and audio files (MP4, MKV, WebM, MP3, M4A and more)
+• Share from any app to start; the right mode opens automatically
+• Built-in yt-dlp, updated from Settings when links stop working
 
-History & Discovery:
-• Processing history with search/filter
-• Long-press for video metadata (thumbnail, title, channel, views)
-• Expiry indicators — save results before they're cleaned up
-• Export all results at once
-• mDNS auto-discovery — finds your server on the local network
+Models:
+• On-device: MDX-NET HQ3, MDX-NET Voc FT, a small 30 MB model for low-end phones (MDX-NET 3_9662), UVR KARA 2 for the lead vocal only, and Kim Vocal 2 (optional, with a license notice)
+• Models download on first use and can be deleted to free space
+• Server and Termux: Kim Vocal 2, MDX-NET HQ3, Karaoke, Mel-Band RoFormer, BS-RoFormer, or any custom audio-separator model
 
-Home Screen Widget:
-• 4x1 widget with URL paste, file upload, batch, and settings buttons
-• 4 widget themes: Orange, Light, Dark, Transparent
+Output:
+• MP4 with the original video, or audio only as MP3 or M4A
+• Bitrate 128k / 192k / 320k
+• Performance settings for on-device jobs: threads, quality or speed, batch size, and a time estimate while processing
 
-On-Device Processing:
-• Run the entire AI pipeline locally on your phone via Termux
-• One-tap Install / Start / Stop from the app
-• No external server required — fully offline capable
+Sites that need a login:
+• Log in inside Murem with the built-in browser, or import a cookies.txt file
+• Cookies are kept per site, can be switched on or off per site, and are excluded from backups
 
-Remote Server:
-• Connect to a self-hosted server on your PC for GPU-accelerated processing
-• Docker support for easy setup
-• Custom server URL configuration
-• Auto-discovery via mDNS (Zeroconf)
+Player:
+• Built-in player with an audio waveform: tap to play or pause, drag to seek
+• Rewind / forward 10 s, loop, volume, fullscreen with landscape rotation
+• Open in an external player (VLC, MX Player and others)
 
-Appearance:
-• Light, Dark, Black (OLED), and System themes
-• Material You dynamic colors (Android 12+)
-• 16 languages: English, Arabic, French, Spanish, German, Turkish, Indonesian, Malay, Portuguese, Italian, Russian, Japanese, Korean, Chinese, Hindi, Urdu
+History:
+• Recent results show where each one was made: On device, Termux or Server
+• Search, long-press for video details, save and share results, export all at once
+• Processing queue that survives app restarts
 
-Murem is fully open source and self-hosted. No data is sent to third parties. All processing happens on your own server or device.
+Design:
+• Redesigned Home screen with one input card for links and files
+• Settings split into clear sections
+• Light, Dark, Black (OLED) and System themes
+• Material You colors on Android 12+, or one of 8 color palettes
+• Home screen widget with 4 themes
+• 16 languages
+
+Privacy:
+• In Internal mode, processing stays on your device. Files are not uploaded anywhere
+• Login cookies are stored only on the device and are only sent to the sites you switch on
+• In Server or Termux mode, files go only to the server you run yourself
+• Network access is used to download links, models (from GitHub and Hugging Face) and yt-dlp updates
+
+Murem is open source (MIT). On-device processing is slow on most phones and uses a lot of battery, so keep the phone charging for long videos.
