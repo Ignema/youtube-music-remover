@@ -131,6 +131,7 @@ class InternalBackend(context: Context, private val cache: ResultCache) : Proces
                 .putString(KEY_BITRATE, options.bitrate)
                 .putString(KEY_OUTPUT_FORMAT, options.outputFormat)
                 .putPerformance()
+                .putLong(KEY_STARTED_AT, System.currentTimeMillis())
                 .build()
             OneTimeWorkRequestBuilder<InternalProcessingWorker>()
                 .setInputData(input)
@@ -158,6 +159,7 @@ class InternalBackend(context: Context, private val cache: ResultCache) : Proces
             .putLong(KEY_SOURCE_SIZE, options.sourceFileSize ?: -1L)
             .apply { options.sourceFilePath?.let { putString(KEY_SOURCE_PATH, it) } }
             .putPerformance()
+            .putLong(KEY_STARTED_AT, System.currentTimeMillis())
             .build()
         val req = OneTimeWorkRequestBuilder<InternalProcessingWorker>()
             .setInputData(input)
@@ -260,6 +262,9 @@ class InternalBackend(context: Context, private val cache: ResultCache) : Proces
         const val KEY_BATCH = "perfBatch"
         /** "m4a" or "mp3"; MP3 applies only to results without video and falls back to M4A in the worker. */
         const val KEY_OUTPUT_FORMAT = "outputFormat"
+
+        /** Wall-clock enqueue time (ms), recorded in the history entry as the job's start. */
+        const val KEY_STARTED_AT = "startedAt"
 
         private const val TAG = "MuremInternal"
 

@@ -405,6 +405,8 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
                 fileName = fileName,
                 sourceFileSize = sourceFileSize,
                 sourceFilePath = sourceFilePath,
+                // Enqueue time (kept across reschedules); 0 from work queued by an older app version
+                startedAt = inputData.getLong(InternalBackend.KEY_STARTED_AT, 0L).takeIf { it > 0 },
             )
         )
         notif.showDone(outName, jobId, cache.cachedUri(jobId)?.toString())

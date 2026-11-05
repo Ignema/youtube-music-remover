@@ -26,6 +26,8 @@ data class HistoryItem(
     val ytDescription: String? = null,
     /** Processing mode that made the result (BackendProvider.MODE_*); null for items saved before it was recorded */
     val processedBy: String? = null,
+    /** When the job was started (ms); null for items saved before it was recorded. [timestamp] is when it finished. */
+    val startedAt: Long? = null,
 )
 
 /**

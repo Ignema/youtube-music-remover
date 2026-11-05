@@ -22,6 +22,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -99,6 +101,36 @@ class MainActivity : AppCompatActivity() {
             ) {
                 val navController = rememberNavController()
 
+                // A crash recorded by ErrorReport.install: offer a pre-filled issue once, then forget it
+                var lastCrash by androidx.compose.runtime.saveable.rememberSaveable {
+                    androidx.compose.runtime.mutableStateOf(com.musicremover.app.data.ErrorReport.pendingCrash(this@MainActivity))
+                }
+                lastCrash?.let { trace ->
+                    val close = {
+                        com.musicremover.app.data.ErrorReport.clearCrash(this@MainActivity)
+                        lastCrash = null
+                    }
+                    androidx.compose.material3.AlertDialog(
+                        onDismissRequest = close,
+                        title = { androidx.compose.material3.Text(stringResource(R.string.crash_title)) },
+                        text = { androidx.compose.material3.Text(stringResource(R.string.crash_text)) },
+                        confirmButton = {
+                            androidx.compose.material3.TextButton(onClick = {
+                                com.musicremover.app.data.ErrorReport.open(
+                                    this@MainActivity, com.musicremover.app.data.ErrorReport.Kind.Crash, trace,
+                                    ui.processingMode, ui.selectedModel,
+                                )
+                                close()
+                            }) { androidx.compose.material3.Text(stringResource(R.string.report_problem_short)) }
+                        },
+                        dismissButton = {
+                            androidx.compose.material3.TextButton(onClick = close) {
+                                androidx.compose.material3.Text(stringResource(R.string.not_now))
+                            }
+                        },
+                    )
+                }
+
                 // First run → show permissions screen
                 val prefs = getSharedPreferences("app", MODE_PRIVATE)
                 val isFirstRun = !prefs.getBoolean("setup_done", false)
@@ -144,7 +176,11 @@ class MainActivity : AppCompatActivity() {
                             SettingsRoutes.APPEARANCE -> AppearanceSettingsScreen(vm, back)
                             SettingsRoutes.STORAGE -> StorageSettingsScreen(vm, back)
                             SettingsRoutes.ABOUT ->
-                                AboutSettingsScreen(vm, back, onHelp = { navController.navigate(SettingsRoutes.HELP) })
+                                AboutSettingsScreen(
+                                    vm, back,
+                                    onHelp = { navController.navigate(SettingsRoutes.HELP) },
+                                    onLicenses = { navController.navigate(SettingsRoutes.LICENSES) },
+                                )
                             else -> {} // MAIN is never a detail (SettingsNav.detailFor)
                         }
                     }
@@ -230,6 +266,9 @@ class MainActivity : AppCompatActivity() {
                         }
                         composable("help") {
                             HelpScreen(onBack = { navController.popBackStack() })
+                        }
+                        composable(SettingsRoutes.LICENSES) {
+                            com.musicremover.app.ui.LicensesScreen(onBack = { navController.popBackStack() })
                         }
                         composable(
                             "player/{url}/{title}?jobId={jobId}",

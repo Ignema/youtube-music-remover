@@ -249,6 +249,10 @@ data class MainUiState(
     val snackError: String? = null,
     /** [snackError] is informational (neutral style), not an error */
     val snackIsInfo: Boolean = false,
+    /** Set when [snackError] is a failed job: the banner offers Report (pre-filled GitHub issue) */
+    val snackReport: String? = null,
+    /** When the job being processed was started (ms), for "Started 3:42 PM · 4 min ago" */
+    val jobStartedAt: Long? = null,
     // Appearance
     val themeMode: String = "system",
     val dynamicColor: Boolean = true,
@@ -373,6 +377,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 state = UiState.Processing, jobId = savedJobId,
                 statusText = application.getString(R.string.resuming),
                 queue = savedQueue,
+                jobStartedAt = prefs.getLong(ACTIVE_JOB_STARTED, 0L).takeIf { it > 0 },
             )
             val resumed = backends.forJob(savedJobId)
             tracker.resume(
@@ -1653,9 +1658,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun showTransientError(msg: String) = showTransient(msg, isInfo = false)
 
-    private fun showTransient(msg: String, isInfo: Boolean) {
+    /** A failed job: the banner stays longer and offers Report, which opens a pre-filled GitHub issue. */
+    fun showJobFailure(msg: String) = showTransient(msg, isInfo = false, report = msg)
+
+    /** Opens the pre-filled GitHub issue for the failure shown in the banner. */
+    fun reportSnackFailure(context: Context) {
+        val detail = _ui.value.snackReport ?: return
+        com.musicremover.app.data.ErrorReport.open(
+            context, com.musicremover.app.data.ErrorReport.Kind.JobFailed, detail,
+            _ui.value.processingMode, _ui.value.selectedModel,
+        )
+        dismissSnackError()
+    }
+
+    private fun showTransient(msg: String, isInfo: Boolean, report: String? = null) {
         snackJob?.cancel()
-        _ui.value = _ui.value.copy(snackError = msg, snackIsInfo = isInfo)
+        _ui.value = _ui.value.copy(snackError = msg, snackIsInfo = isInfo, snackReport = report)
         // Also show a Toast so it's visible even when scrolled (Home); Settings screens use their Snackbar
         if (SnackPolicy.showToast(settingsVisible)) try {
             val app = getApplication<Application>()
@@ -1664,14 +1682,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         } catch (_: Exception) {}
         snackJob = bgScope.launch {
-            delay(4000)
-            _ui.value = _ui.value.copy(snackError = null)
+            // Long enough to reach the Report button
+            delay(if (report != null) 15_000 else 4000)
+            _ui.value = _ui.value.copy(snackError = null, snackReport = null)
         }
     }
 
     fun dismissSnackError() {
         snackJob?.cancel()
-        _ui.value = _ui.value.copy(snackError = null)
+        _ui.value = _ui.value.copy(snackError = null, snackReport = null)
     }
 
     /** Metadata captured at job start — used when saving to history */
@@ -1693,6 +1712,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val outputFormat: String = "m4a",
         /** Processing mode at job start (Termux and Server share the remote backend) */
         val mode: String? = null,
+        /** When the user started the job (ms) */
+        val startedAt: Long = System.currentTimeMillis(),
     )
     private var activeJobMeta: JobMeta? = null
 
@@ -1709,6 +1730,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val managed = backend.managesNotifications
         // On-device jobs do not upload anything
         val text = if (managed) str(R.string.starting) else str(R.string.uploading)
+        markJobStarted()
         _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = text, jobId = null)
         if (!managed) ProcessingService.start(getApplication(), text, 0)
         val fileName = _ui.value.selectedFileName ?: "video.mp4"
@@ -1731,6 +1753,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
         val backend = backend()
         val managed = backend.managesNotifications
+        markJobStarted()
         _ui.value = _ui.value.copy(state = UiState.Processing, progress = 0, statusText = str(R.string.starting), jobId = null)
         if (!managed) ProcessingService.start(getApplication(), str(R.string.starting), 0)
         val options = options(backend, item)
@@ -1741,6 +1764,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             run = { runStartedJob(it) },
             onError = { onStartError(backend, it, "Connection failed") },
         )
+    }
+
+    /** Shows "Started …" while processing; persisted so a resumed job keeps its original start. */
+    private fun markJobStarted() {
+        val at = activeJobMeta?.startedAt ?: System.currentTimeMillis()
+        prefs.edit().putLong(ACTIVE_JOB_STARTED, at).apply()
+        _ui.value = _ui.value.copy(jobStartedAt = at)
     }
 
     /** A started job: remember it for resume, then follow its events. */
@@ -1754,7 +1784,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun onStartError(backend: ProcessingBackend, e: Exception, fallback: String) {
         withContext(Dispatchers.Main) {
             if (!backend.managesNotifications) ProcessingService.stop(getApplication())
-            showTransientError(e.message ?: fallback)
+            showJobFailure(e.message ?: fallback)
             if (_ui.value.queue.isNotEmpty()) {
                 processNextInQueue()
             } else {
@@ -1823,6 +1853,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             ytUploadDate = ytMeta?.upload_date ?: meta?.ytUploadDate,
                             ytDescription = ytMeta?.description ?: meta?.ytDescription,
                             processedBy = meta?.mode ?: _ui.value.processingMode,
+                            startedAt = meta?.startedAt ?: _ui.value.jobStartedAt,
                         ))
                         _ui.value = _ui.value.copy(history = historyStore.getAll())
                     }
@@ -1859,7 +1890,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         ProcessingService.stop(getApplication())
                         notif.showError(text)
                     }
-                    showTransientError(text)
+                    // A cancel (e.g. from the server) is not a bug, so only errors offer Report
+                    if (e.status == "cancelled") showTransientError(text) else showJobFailure(text)
                     if (_ui.value.queue.isNotEmpty()) {
                         processNextInQueue()
                     } else {
@@ -2104,6 +2136,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         const val MODEL_SPACE_MARGIN = 50L * 1024 * 1024
         /** Pref: a queued on-device item is waiting for the app to come to the foreground */
         const val PENDING_INTERNAL_START = "pending_internal_start"
+        /** Pref: start time (ms) of the active job, so a resumed job still shows when it started */
+        const val ACTIVE_JOB_STARTED = "active_job_started"
         /** The site of [LoginSites.INSTAGRAM]: "Log in again" opens the preset when it has no custom URL */
         const val INSTAGRAM_SITE = "instagram.com"
     }

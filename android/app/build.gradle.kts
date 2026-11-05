@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("com.mikepenz.aboutlibraries.plugin")
 }
 
 // APK file names start with "murem" instead of the module name: murem-<abi>-<buildType>.apk
@@ -152,6 +153,8 @@ dependencies {
     // On-device links: yt-dlp (Python) and ffmpeg runtimes
     implementation("io.github.junkfood02.youtubedl-android:library:0.18.1")
     implementation("io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1")
+    // Open-source licenses (Settings → About); the plugin collects them at build time, offline
+    implementation("com.mikepenz:aboutlibraries-compose-m3:11.6.3")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 

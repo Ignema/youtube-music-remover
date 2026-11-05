@@ -123,6 +123,12 @@ fun SettingsScaffold(
         SettingsPane.DETAIL -> AdaptiveLayout.SETTINGS_DETAIL_MAX_DP
         SettingsPane.LIST -> null
     }
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+    // Two-pane detail: the content column is capped and centered, so start the title where the cards
+    // start instead of at the pane edge (the bar's own 16dp start + this = content's 24dp + centering gap)
+    val titleIndent = if (pane == SettingsPane.DETAIL && max != null) {
+        ((maxWidth - 48.dp - max.dp) / 2).coerceAtLeast(0.dp) + 8.dp
+    } else 0.dp
     Scaffold(
         modifier = Modifier.nestedScroll(active.nestedScrollConnection),
         contentWindowInsets = contentInsets,
@@ -130,7 +136,7 @@ fun SettingsScaffold(
         topBar = {
             if (bar == TopBarStyle.LARGE) {
                 LargeTopAppBar(
-                    title = { Text(title) },
+                    title = { Text(title, Modifier.padding(start = titleIndent)) },
                     navigationIcon = navigationIcon,
                     actions = actions,
                     windowInsets = barInsets,
@@ -143,7 +149,7 @@ fun SettingsScaffold(
             } else {
                 // Short window that isn't compact-width (landscape phone): a 64dp pinned bar
                 TopAppBar(
-                    title = { Text(title) },
+                    title = { Text(title, Modifier.padding(start = titleIndent)) },
                     navigationIcon = navigationIcon,
                     actions = actions,
                     windowInsets = barInsets,
@@ -174,6 +180,7 @@ fun SettingsScaffold(
             }
             Spacer(Modifier.height(32.dp))
         }
+    }
     }
 }
 

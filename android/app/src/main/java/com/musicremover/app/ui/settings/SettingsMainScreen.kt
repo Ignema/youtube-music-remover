@@ -124,7 +124,8 @@ fun SettingsMainScreen(
             Icons.Outlined.Security,
             stringResource(R.string.permissions),
             stringResource(R.string.permissions_desc),
-            selected = selectedRoute?.let { SettingsRoutes.PERMISSIONS == it },
+            // Permissions opens full screen (outside the list-detail), so it is a plain link, never a tab
+            selected = null,
         ) { onNavigate(SettingsRoutes.PERMISSIONS) }
         NavRow(
             Icons.Outlined.Info,

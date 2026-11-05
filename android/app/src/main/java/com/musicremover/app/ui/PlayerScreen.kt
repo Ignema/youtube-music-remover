@@ -49,6 +49,8 @@ import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Replay10
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.VolumeUp
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -122,12 +124,25 @@ fun PlayerScreen(
         }
     }
 
+    // A playback failure (missing or unreadable file, unsupported format): shown over the video with Retry
+    var playbackError by remember { mutableStateOf<androidx.media3.common.PlaybackException?>(null) }
+    val retryPlayback: () -> Unit = {
+        playbackError = null
+        player.prepare()
+        player.play()
+    }
+
     // Keep the screen on only while the video is actually playing (paused/ended lets it sleep again)
     val hostView = androidx.compose.ui.platform.LocalView.current
     DisposableEffect(player, hostView) {
         val listener = object : Player.Listener {
             override fun onIsPlayingChanged(playing: Boolean) {
                 hostView.keepScreenOn = playing
+            }
+
+            override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                android.util.Log.w("MuremPlayer", "Playback failed: ${error.errorCodeName}", error)
+                playbackError = error
             }
         }
         player.addListener(listener)
@@ -175,9 +190,11 @@ fun PlayerScreen(
         videoAspectRatio,
     )
     LaunchedEffect(isFullscreen, videoAspectRatio, lock) {
-        if (!isFullscreen) {
+        // Release the lock whenever it no longer applies (fullscreen off, or e.g. entering multi-window
+        // mid-fullscreen), otherwise SENSOR_LANDSCAPE from before would stay requested
+        if (!isFullscreen || !lock) {
             activity?.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        } else if (lock) {
+        } else {
             activity?.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         }
     }
@@ -252,6 +269,8 @@ fun PlayerScreen(
                 isFullscreen = isFullscreen,
                 seekPreviewTime = if (isSeeking) seekPreviewTime else "",
                 url = urlState,
+                playbackError = playbackError,
+                onRetry = retryPlayback,
                 onTap = {
                     if (showOverlay) {
                         if (player.isPlaying) player.pause() else player.play()
@@ -432,6 +451,8 @@ private fun VideoArea(
     isFullscreen: Boolean,
     seekPreviewTime: String,
     url: String,
+    playbackError: androidx.media3.common.PlaybackException?,
+    onRetry: () -> Unit,
     onTap: () -> Unit,
     onBack: () -> Unit,
     onToggleFullscreen: () -> Unit,
@@ -466,8 +487,13 @@ private fun VideoArea(
             modifier = Modifier.fillMaxSize(),
         )
 
+        // Playback failed: what happened and what to do, instead of a black box
+        if (playbackError != null) {
+            PlaybackErrorOverlay(playbackError, url, onRetry)
+        }
+
         // Buffering spinner
-        if (isBuffering) {
+        if (isBuffering && playbackError == null) {
             androidx.compose.material3.CircularProgressIndicator(
                 modifier = Modifier.size(40.dp),
                 color = Color.White.copy(alpha = 0.8f),
@@ -776,5 +802,87 @@ internal fun openInExternalPlayer(context: android.content.Context, uri: Uri) {
         context.startActivity(chooser)
     } catch (e: android.content.ActivityNotFoundException) {
         android.widget.Toast.makeText(context, context.getString(com.musicremover.app.R.string.no_external_player), android.widget.Toast.LENGTH_SHORT).show()
+    }
+}
+
+/** Shown over the video when ExoPlayer fails: a short reason, Retry, another app, and Report. */
+@Composable
+private fun PlaybackErrorOverlay(error: androidx.media3.common.PlaybackException, url: String, onRetry: () -> Unit) {
+    val context = LocalContext.current
+    val reason = when (error.errorCode) {
+        androidx.media3.common.PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND,
+        androidx.media3.common.PlaybackException.ERROR_CODE_IO_NO_PERMISSION,
+        androidx.media3.common.PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS,
+        -> com.musicremover.app.R.string.playback_error_missing
+        androidx.media3.common.PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+        androidx.media3.common.PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT,
+        -> com.musicremover.app.R.string.playback_error_network
+        androidx.media3.common.PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED,
+        androidx.media3.common.PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED,
+        androidx.media3.common.PlaybackException.ERROR_CODE_DECODER_INIT_FAILED,
+        androidx.media3.common.PlaybackException.ERROR_CODE_DECODING_FORMAT_UNSUPPORTED,
+        androidx.media3.common.PlaybackException.ERROR_CODE_DECODING_FAILED,
+        -> com.musicremover.app.R.string.playback_error_format
+        else -> com.musicremover.app.R.string.playback_error_generic
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.85f))
+            // Taps on the overlay must not toggle play/pause behind it
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+    ) {
+        Icon(
+            Icons.Outlined.ErrorOutline, null,
+            tint = Color.White,
+            modifier = Modifier.size(40.dp),
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            androidx.compose.ui.res.stringResource(com.musicremover.app.R.string.playback_error_title),
+            color = Color.White,
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            androidx.compose.ui.res.stringResource(reason),
+            color = Color.White.copy(alpha = 0.8f),
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        )
+        Spacer(Modifier.height(16.dp))
+        androidx.compose.foundation.layout.Row(
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+        ) {
+            androidx.compose.material3.Button(onClick = onRetry) {
+                Icon(Icons.Outlined.Refresh, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(androidx.compose.ui.res.stringResource(com.musicremover.app.R.string.retry))
+            }
+            androidx.compose.material3.OutlinedButton(
+                onClick = { openInExternalPlayer(context, Uri.parse(url)) },
+                colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+            ) {
+                Text(androidx.compose.ui.res.stringResource(com.musicremover.app.R.string.open_in_other_app))
+            }
+        }
+        androidx.compose.material3.TextButton(
+            onClick = {
+                com.musicremover.app.data.ErrorReport.open(
+                    context, com.musicremover.app.data.ErrorReport.Kind.Playback,
+                    "${error.errorCodeName}: ${error.message ?: ""}" +
+                        (error.cause?.let { "\nCause: ${it.javaClass.name}: ${it.message ?: ""}" } ?: ""),
+                    null, null,
+                )
+            },
+        ) {
+            Text(
+                androidx.compose.ui.res.stringResource(com.musicremover.app.R.string.report_problem_short),
+                color = Color.White.copy(alpha = 0.8f),
+            )
+        }
     }
 }

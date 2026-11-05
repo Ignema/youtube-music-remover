@@ -774,6 +774,13 @@ private fun IdleContent(
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.weight(1f),
                         )
+                        // A failed job: open a pre-filled GitHub issue (the user reviews and submits it)
+                        if (ui.snackReport != null) {
+                            val ctx = LocalContext.current
+                            androidx.compose.material3.TextButton(onClick = { vm.reportSnackFailure(ctx) }) {
+                                Text(stringResource(R.string.report_problem_short), color = bannerFg)
+                            }
+                        }
                         IconButton(onClick = vm::dismissSnackError) {
                             Icon(Icons.Outlined.Close, "Dismiss", Modifier.size(16.dp), tint = bannerFg)
                         }
@@ -1106,6 +1113,16 @@ private fun ProcessingContent(ui: MainUiState, vm: MainViewModel, maxWidth: Dp?)
                 text = text,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        // When the job started, e.g. "Started 3:42 PM · 4 min ago" (kept across a resume)
+        ui.jobStartedAt?.let { started ->
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = startedLabel(started),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.outline,
             )
         }
 
@@ -1514,7 +1531,10 @@ private fun HistorySection(
 @Composable
 private fun HistoryCard(item: HistoryItem, vm: MainViewModel, onPlay: (String, String, String?) -> Unit, showReprocess: Boolean) {
     val dateFormat = SimpleDateFormat("MMM d, h:mm a", Locale.getDefault())
-    val dateStr = dateFormat.format(Date(item.timestamp))
+    // When the job started (finish time for items saved before the start was recorded), plus how long it took
+    val started = item.startedAt?.takeIf { it in 1..item.timestamp }
+    val dateStr = dateFormat.format(Date(started ?: item.timestamp)) +
+        (started?.let { " · " + durationText(JobTimes.minutesBetween(it, item.timestamp), short = true) } ?: "")
     val hasUrl = item.url.isNotEmpty()
     // The right-click handler restarts only on a new jobId, so it reads the latest item copy
     val currentItem by rememberUpdatedState(item)
@@ -1862,8 +1882,7 @@ private fun ItemInfoSheet(item: HistoryItem, ui: MainUiState) {
         Spacer(Modifier.height(8.dp))
         InfoRow("Model", item.model.removeSuffix(".onnx"))
         Spacer(Modifier.height(8.dp))
-        val dateFormat = SimpleDateFormat("MMM d, yyyy · h:mm a", Locale.getDefault())
-        InfoRow("Processed", dateFormat.format(Date(item.timestamp)))
+        JobTimeRows(item)
 
         if (item.sourceFileName != null) {
             Spacer(Modifier.height(8.dp))
@@ -1943,7 +1962,22 @@ private fun FileInfoSheet(item: HistoryItem) {
 
         // Processed date
         Spacer(Modifier.height(8.dp))
-        val dateFormat = SimpleDateFormat("MMM d, yyyy · h:mm a", Locale.getDefault())
+        JobTimeRows(item)
+    }
+}
+
+/** Started / Finished / Took rows of the info sheets; items saved before 4.1 only have the finish time. */
+@Composable
+private fun JobTimeRows(item: HistoryItem) {
+    val dateFormat = SimpleDateFormat("MMM d, yyyy · h:mm a", Locale.getDefault())
+    val started = item.startedAt?.takeIf { it in 1..item.timestamp }
+    if (started != null) {
+        InfoRow(stringResource(R.string.info_started), dateFormat.format(Date(started)))
+        Spacer(Modifier.height(8.dp))
+        InfoRow(stringResource(R.string.info_finished), dateFormat.format(Date(item.timestamp)))
+        Spacer(Modifier.height(8.dp))
+        InfoRow(stringResource(R.string.info_took), durationText(JobTimes.minutesBetween(started, item.timestamp)))
+    } else {
         InfoRow("Processed", dateFormat.format(Date(item.timestamp)))
     }
 }
@@ -1985,6 +2019,8 @@ private fun modelShortName(model: String): String = when (model) {
     "Kim_Vocal_2.onnx" -> "Kim Vocal 2"
     "UVR-MDX-NET-Inst_HQ_3.onnx" -> "MDX-NET HQ3"
     "UVR_MDXNET_KARA_2.onnx" -> "Karaoke"
+    "UVR-MDX-NET-Voc_FT.onnx" -> "MDX-NET Voc FT"
+    "UVR_MDXNET_3_9662.onnx" -> "MDX-NET 3_9662"
     "vocals_mel_band_roformer.ckpt" -> "Mel-Band"
     "model_bs_roformer_ep_317_sdr_12.9755.ckpt" -> "BS-Roformer"
     else -> model.removeSuffix(".onnx").removeSuffix(".ckpt").take(15)

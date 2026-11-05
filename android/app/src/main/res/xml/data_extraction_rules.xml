@@ -9,10 +9,12 @@
         <exclude domain="file" path="cookies/" />
         <exclude domain="file" path="work/" />
         <exclude domain="root" path="app_webview/" />
+        <exclude domain="file" path="last_crash.txt" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="file" path="cookies/" />
         <exclude domain="file" path="work/" />
         <exclude domain="root" path="app_webview/" />
+        <exclude domain="file" path="last_crash.txt" />
     </device-transfer>
 </data-extraction-rules>

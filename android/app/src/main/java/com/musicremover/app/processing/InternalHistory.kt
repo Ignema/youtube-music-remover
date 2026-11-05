@@ -25,6 +25,7 @@ object InternalHistory {
         fileName: String,
         sourceFileSize: Long?,
         sourceFilePath: String?,
+        startedAt: Long? = null,
     ): HistoryItem = when {
         url == null -> HistoryItem(
             filename = outName,
@@ -63,7 +64,7 @@ object InternalHistory {
             ytUploadDate = info.upload_date,
             ytDescription = info.description,
         )
-    }.copy(processedBy = BackendProvider.MODE_INTERNAL)
+    }.copy(processedBy = BackendProvider.MODE_INTERNAL, startedAt = startedAt)
 
     private fun titleFromOutName(outName: String): String =
         RESULT_SUFFIXES.fold(outName) { name, suffix -> name.removeSuffix(suffix) }

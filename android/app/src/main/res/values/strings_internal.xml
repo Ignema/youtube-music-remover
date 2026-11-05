@@ -264,6 +264,41 @@
     <string name="cookies_login_none">No cookies found. Log in first, then tap Save.</string>
     <string name="paste">Paste</string>
     <string name="no_external_player">No app found to open this file</string>
+
+    <!-- 4.1: licenses, problem reports, playback errors, job times -->
+    <string name="back">Back</string>
+    <string name="licenses_title">Open-source licenses</string>
+    <string name="licenses_desc">Libraries used by Murem and their licenses</string>
+    <string name="report_problem">Report a problem</string>
+    <string name="report_problem_desc">Opens a pre-filled GitHub issue. You review it before sending.</string>
+    <string name="report_problem_short">Report</string>
+    <string name="report_no_browser">No browser found to open GitHub</string>
+    <string name="crash_title">Murem closed unexpectedly</string>
+    <string name="crash_text">Report it on GitHub so it can be fixed? The report includes the app version, your phone model, Android version and the error. No links or file names are included, and you review it before sending.</string>
+    <string name="not_now">Not now</string>
+    <string name="playback_error_title">Can\'t play this result</string>
+    <string name="playback_error_missing">The file is missing or can\'t be read. It may have been deleted, or the server no longer has it.</string>
+    <string name="playback_error_network">The server could not be reached. Check the connection and try again.</string>
+    <string name="playback_error_format">This file uses a format this phone can\'t play. Try opening it in another app.</string>
+    <string name="playback_error_generic">Something went wrong while playing this file.</string>
+    <string name="open_in_other_app">Open in other app</string>
+    <string name="started_at">Started %1$s · %2$s</string>
+    <string name="started_ago">%1$s ago</string>
+    <string name="started_just_now">just now</string>
+    <string name="duration_under_minute">less than a minute</string>
+    <string name="duration_under_minute_short">&lt;1 min</string>
+    <plurals name="duration_minutes">
+        <item quantity="one">%d min</item>
+        <item quantity="other">%d min</item>
+    </plurals>
+    <plurals name="duration_hours">
+        <item quantity="one">%d h</item>
+        <item quantity="other">%d h</item>
+    </plurals>
+    <string name="duration_hours_minutes">%1$s %2$s</string>
+    <string name="info_started">Started</string>
+    <string name="info_finished">Finished</string>
+    <string name="info_took">Took</string>
     <string name="server_job_gone">The server no longer has this job. Results are kept for 7 days.</string>
     <plurals name="links_queued">
         <item quantity="one">%1$d link queued</item>

@@ -8,4 +8,6 @@
     <exclude domain="file" path="cookies/" />
     <exclude domain="file" path="work/" />
     <exclude domain="root" path="app_webview/" />
+    <!-- A crash report is about this install; restoring it would show a stale "crashed last time" prompt -->
+    <exclude domain="file" path="last_crash.txt" />
 </full-backup-content>

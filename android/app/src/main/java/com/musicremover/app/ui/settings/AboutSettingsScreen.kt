@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.BugReport
+import androidx.compose.material.icons.outlined.Gavel
+import com.musicremover.app.data.ErrorReport
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -24,7 +27,7 @@ import com.musicremover.app.R
 
 /** About & help: version (5 taps open the easter egg), description, Help and open-source components. */
 @Composable
-fun AboutSettingsScreen(vm: MainViewModel, onBack: () -> Unit, onHelp: () -> Unit) {
+fun AboutSettingsScreen(vm: MainViewModel, onBack: () -> Unit, onHelp: () -> Unit, onLicenses: () -> Unit) {
     val ui by vm.ui.collectAsState()
     val context = LocalContext.current
     var tapCount by remember { mutableStateOf(0) }
@@ -53,6 +56,18 @@ fun AboutSettingsScreen(vm: MainViewModel, onBack: () -> Unit, onHelp: () -> Uni
         SettingsNote(stringResource(R.string.about_desc))
         Spacer(Modifier.height(8.dp))
         NavRow(Icons.AutoMirrored.Outlined.HelpOutline, stringResource(R.string.about_help), null, onClick = onHelp)
+        NavRow(
+            Icons.Outlined.BugReport,
+            stringResource(R.string.report_problem),
+            stringResource(R.string.report_problem_desc),
+            onClick = { ErrorReport.open(context, ErrorReport.Kind.Manual, null, ui.processingMode, ui.selectedModel) },
+        )
+        NavRow(
+            Icons.Outlined.Gavel,
+            stringResource(R.string.licenses_title),
+            stringResource(R.string.licenses_desc),
+            onClick = onLicenses,
+        )
         Spacer(Modifier.height(8.dp))
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         Spacer(Modifier.height(16.dp))

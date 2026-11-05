@@ -18,11 +18,12 @@ object SettingsRoutes {
     const val ABOUT = "settings/about"
     const val PERMISSIONS = "permissions"
     const val HELP = "help"
+    const val LICENSES = "licenses"
 
     /** The Settings sub-screens (the routes registered inside [GRAPH]). */
     val SCREENS = listOf(MAIN, PROCESSING, MODELS, OUTPUT, PERFORMANCE, ACCOUNTS, YTDLP, APPEARANCE, STORAGE, ABOUT)
 
-    val ALL: Set<String> = (SCREENS + PERMISSIONS + HELP).toSet()
+    val ALL: Set<String> = (SCREENS + PERMISSIONS + HELP + LICENSES).toSet()
 }
 
 /** Where every setting and Settings action lives; SettingsMapTest checks that nothing is lost. */
@@ -68,5 +69,7 @@ object SettingsMap {
         "permissions" to SettingsRoutes.PERMISSIONS,
         "about" to SettingsRoutes.ABOUT,
         "help" to SettingsRoutes.HELP,
+        "licenses" to SettingsRoutes.LICENSES,
+        "report_problem" to SettingsRoutes.ABOUT,
     )
 }
