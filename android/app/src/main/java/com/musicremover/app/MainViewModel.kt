@@ -33,6 +33,7 @@ import com.musicremover.app.processing.internal.CookieStore
 import com.musicremover.app.processing.internal.Accelerator
 import com.musicremover.app.processing.internal.AcceleratorHealth
 import com.musicremover.app.processing.internal.CookiesTxt
+import com.musicremover.app.processing.internal.JobEstimate
 import com.musicremover.app.processing.internal.LoginSites
 import com.musicremover.app.processing.internal.ModelCatalog
 import com.musicremover.app.processing.internal.ModelFailure
@@ -158,6 +159,24 @@ fun onNoticeResult(req: NoticeRequest, accepted: Boolean): NoticeAction = when {
     else -> NoticeAction.RunDownload(req.model)
 }
 
+/**
+ * Shown under the start button: [totalMs] when the length is known, else [factor] (minutes per
+ * minute of audio); [lighter] when the chosen model is slow on this phone.
+ */
+data class StartEstimate(val totalMs: Long?, val factor: Double, val lighter: JobEstimate.Suggestion?)
+
+/** Time estimate and lighter-model tip for what is selected; null outside on-device mode or before any timing. */
+internal fun startEstimate(ui: MainUiState): StartEstimate? {
+    if (ui.processingMode != BackendProvider.MODE_INTERNAL) return null
+    val spec = ui.internalModels.firstOrNull { it.name == ui.selectedModel } ?: return null
+    val overlap = { s: ModelSpec -> PerformanceSettings.overlap(ui.performance.quality, s.overlap) }
+    val durationMs = ui.selectedFileDurationMs.takeIf { ui.inputTab == HomeInput.TAB_FILE }
+        ?: ui.urlPreview?.duration?.takeIf { it > 0 && ui.inputTab == HomeInput.TAB_LINK && ui.links.size <= 1 }?.let { it * 1000L }
+    val factor = JobEstimate.factor(spec, ui.internalModels, ui.modelSpeed, overlap(spec)) ?: return null
+    val totalMs = durationMs?.let { JobEstimate.totalMs(spec, ui.internalModels, ui.modelSpeed, overlap(spec), it) }
+    return StartEstimate(totalMs, factor, JobEstimate.lighter(spec, ui.internalModels, ui.modelSpeed, overlap))
+}
+
 /** Performance prefs as shown in Settings (0 threads = Auto). */
 data class PerformancePrefs(
     val threads: Int = 0,
@@ -231,6 +250,8 @@ data class MainUiState(
     val processingMinimized: Boolean = false,
     val selectedFileName: String? = null,
     val selectedFileSize: Long? = null,
+    /** Length of the picked file (ms), read in the background for the time estimate; null until known. */
+    val selectedFileDurationMs: Long? = null,
     val originalFileUri: String? = null,
     val videoInfo: VideoInfo? = null,
     val showInfoSheet: Boolean = false,
@@ -1033,8 +1054,36 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onFileSelected(uri: android.net.Uri?, name: String?, size: Long? = null, originalUri: String? = null) {
-        _ui.value = _ui.value.copy(selectedFileUri = uri, selectedFileName = name, selectedFileSize = size, originalFileUri = originalUri)
+        _ui.value = _ui.value.copy(
+            selectedFileUri = uri, selectedFileName = name, selectedFileSize = size, originalFileUri = originalUri,
+            selectedFileDurationMs = null,
+        )
+        loadFileDuration(uri)
     }
+
+    /** Reads the picked file's length in the background, for the time estimate under the start button. */
+    private fun loadFileDuration(uri: android.net.Uri?) {
+        if (uri == null) return
+        bgScope.launch {
+            // Not closeable before Android 10, so released by hand
+            val r = android.media.MediaMetadataRetriever()
+            val ms = try {
+                r.setDataSource(getApplication(), uri)
+                r.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull()
+            } catch (_: Exception) {
+                null
+            } finally {
+                try { r.release() } catch (_: Exception) {}
+            }
+            // Only if the same file is still selected
+            if (ms != null && ms > 0 && _ui.value.selectedFileUri == uri) {
+                _ui.value = _ui.value.copy(selectedFileDurationMs = ms)
+            }
+        }
+    }
+
+    /** Uses the lighter model the start-button tip suggests (saved as the on-device model). */
+    fun useLighterModel(name: String) = onModelSelect(name)
 
     fun reprocessFromHistory(item: HistoryItem) {
         val uriStr = item.sourceFilePath
@@ -1054,9 +1103,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     selectedFileName = item.sourceFileName,
                     selectedFileSize = item.sourceFileSize,
                     originalFileUri = uriStr,
+                    selectedFileDurationMs = item.ytDuration.takeIf { it > 0 }?.let { it * 1000L },
                     url = "",
                     urlPreview = null,
                 )
+                loadFileDuration(cachedUri)
             } catch (_: Exception) {
                 showTransientError("Original file no longer available")
             }
@@ -1066,7 +1117,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun clearFile() {
-        _ui.value = _ui.value.copy(selectedFileUri = null, selectedFileName = null, selectedFileSize = null, originalFileUri = null)
+        _ui.value = _ui.value.copy(
+            selectedFileUri = null, selectedFileName = null, selectedFileSize = null, originalFileUri = null,
+            selectedFileDurationMs = null,
+        )
     }
 
     // --- URL preview ---

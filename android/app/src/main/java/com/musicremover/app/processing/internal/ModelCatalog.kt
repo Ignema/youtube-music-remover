@@ -29,6 +29,7 @@ data class ModelSpecJson(
     @SerializedName("overlap") val overlap: Double?,
     @SerializedName("label") val label: String?,
     @SerializedName("license_notice") val licenseNotice: Boolean?,
+    @SerializedName("relative_cost") val relativeCost: Double? = null,
 )
 
 /** Validated model metadata (never touched by reflection). [dimT] is the real frame count. */
@@ -49,6 +50,11 @@ data class ModelSpec(
     val label: String,
     /** True when a one-time notice must be accepted before the first download. */
     val licenseNotice: Boolean,
+    /**
+     * Work per chunk compared with HQ3 (1.0), measured on CPU. Lets the app estimate a model it has
+     * not timed yet from one it has. Optional in the JSON; absent = 1.0.
+     */
+    val relativeCost: Double = 1.0,
 )
 
 object ModelCatalog {
@@ -110,7 +116,9 @@ object ModelCatalog {
             val overlap = m.overlap?.takeIf { it >= 0.0 && it < 1.0 } ?: fail("overlap")
             val compensate = m.compensate?.takeIf { it > 0.0 && it <= 2.0 } ?: fail("compensate")
             val stem = m.primaryStem?.takeIf { it == "Instrumental" || it == "Vocals" } ?: fail("primary_stem")
-            ModelSpec(name, url, size, sha, nFft, dimF, dimT, hop, compensate, stem, segmentSize, overlap, label, licenseNotice)
+            val cost = m.relativeCost ?: 1.0
+            if (cost <= 0.0 || cost > 10.0) fail("relative_cost")
+            ModelSpec(name, url, size, sha, nFft, dimF, dimT, hop, compensate, stem, segmentSize, overlap, label, licenseNotice, cost)
         }
     }
 

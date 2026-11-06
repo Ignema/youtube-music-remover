@@ -153,6 +153,8 @@ import androidx.compose.ui.res.stringResource
 import com.musicremover.app.HomeInput
 import com.musicremover.app.MainUiState
 import com.musicremover.app.MainViewModel
+import com.musicremover.app.StartEstimate
+import com.musicremover.app.startEstimate
 import com.musicremover.app.R
 import com.musicremover.app.UiState
 import com.musicremover.app.data.HistoryItem
@@ -814,10 +816,13 @@ private fun IdleContent(
                 style = MaterialTheme.typography.titleMedium,
             )
         }
-        // The hint line is always laid out (hidden when there is a source), so Recent doesn't move
+        // The hint line is always laid out (hidden when there is a source), so Recent doesn't move.
+        // With a source it shows the time estimate instead, when this phone has timed a model.
+        val estimate = if (hasSource && !isQueueMode) startEstimate(ui) else null
         Spacer(Modifier.height(8.dp))
         Text(
-            stringResource(
+            if (estimate != null) estimateText(estimate)
+            else stringResource(
                 if (HomeInput.normalizeInputTab(ui.inputTab) == HomeInput.TAB_FILE) R.string.home_cta_hint_file
                 else R.string.home_cta_hint_link,
             ),
@@ -825,10 +830,38 @@ private fun IdleContent(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             modifier = Modifier
-                .alpha(if (hasSource) 0f else 1f)
-                .then(if (hasSource) Modifier.clearAndSetSemantics {} else Modifier),
+                .alpha(if (hasSource && estimate == null) 0f else 1f)
+                .then(if (hasSource && estimate == null) Modifier.clearAndSetSemantics {} else Modifier),
         )
+        // Slow here: offer a lighter model (about N× faster)
+        estimate?.lighter?.let { tip ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(R.string.home_lighter_tip, String.format(java.util.Locale.getDefault(), "%.0f", tip.speedup)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                androidx.compose.material3.TextButton(onClick = { vm.useLighterModel(tip.spec.name) }) {
+                    Text(stringResource(R.string.home_lighter_use), style = MaterialTheme.typography.labelMedium)
+                }
+            }
+        }
     }
+}
+
+/** "About 18 min on this phone", or "About 5 min per minute of audio" when the length is unknown. */
+@Composable
+private fun estimateText(e: StartEstimate): String {
+    e.totalMs?.let { ms ->
+        return stringResource(R.string.home_estimate_total, durationText(Math.round(ms / 60_000.0), short = true))
+    }
+    val perMinute = if (e.factor < 1.0) {
+        stringResource(R.string.duration_seconds, Math.round(e.factor * 60).toInt().coerceAtLeast(1))
+    } else {
+        durationText(Math.round(e.factor), short = true)
+    }
+    return stringResource(R.string.home_estimate_per_minute, perMinute)
 }
 
 /** Theme-derived colors for the Home input card (light, dark, black and dynamic schemes). */

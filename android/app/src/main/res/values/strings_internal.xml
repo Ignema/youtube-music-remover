@@ -356,6 +356,11 @@
     <string name="home_file_formats">MP4, MKV, WebM, MP3, M4A…</string>
     <string name="home_cta_hint_link">Paste a link to start</string>
     <string name="home_cta_hint_file">Pick a file to start</string>
+    <string name="home_estimate_total">About %1$s on this phone</string>
+    <string name="home_estimate_per_minute">About %1$s per minute of audio on this phone</string>
+    <string name="duration_seconds">%1$d s</string>
+    <string name="home_lighter_tip">Slow on this phone. A lighter model is about %1$s× faster.</string>
+    <string name="home_lighter_use">Use lighter model</string>
     <string name="history_source_device">On device</string>
     <string name="history_source_server">Server</string>
     <string name="history_source_termux">Termux</string>

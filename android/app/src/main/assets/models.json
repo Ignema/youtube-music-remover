@@ -3,6 +3,7 @@
   "models": [{
     "name": "UVR-MDX-NET-Inst_HQ_3.onnx",
     "label": "hq3",
+    "relative_cost": 1.0,
     "url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/UVR-MDX-NET-Inst_HQ_3.onnx",
     "size": 66759214,
     "sha256": "317554b07fe1ea5279a77f2b1520a41ea4b93432560c4ffd08792c30fddf9adc",
@@ -12,6 +13,7 @@
   }, {
     "name": "UVR-MDX-NET-Voc_FT.onnx",
     "label": "voc_ft",
+    "relative_cost": 0.99,
     "url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/UVR-MDX-NET-Voc_FT.onnx",
     "size": 66762490,
     "sha256": "534b2070fcc7df514b13ef660dc8cbb328679c2374d04354a5c42bb14ecce111",
@@ -21,6 +23,7 @@
   }, {
     "name": "UVR_MDXNET_3_9662.onnx",
     "label": "mdx3",
+    "relative_cost": 0.34,
     "url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/UVR_MDXNET_3_9662.onnx",
     "size": 29704436,
     "sha256": "e02220e80d8253f4c2209f8924298b2b686bbdf2868b788ff5500fb9bd94aadc",
@@ -30,6 +33,7 @@
   }, {
     "name": "UVR_MDXNET_KARA_2.onnx",
     "label": "kara2",
+    "relative_cost": 0.64,
     "url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/UVR_MDXNET_KARA_2.onnx",
     "size": 52786726,
     "sha256": "bf32e15105a09c0f7dddd2b67346146334d6f3ecb399ed7638eba2ab07cbf5f4",
@@ -39,6 +43,7 @@
   }, {
     "name": "Kim_Vocal_2.onnx",
     "label": "kim2",
+    "relative_cost": 0.99,
     "license_notice": true,
     "url": "https://github.com/TRvlvr/model_repo/releases/download/all_public_uvr_models/Kim_Vocal_2.onnx",
     "size": 66759214,
