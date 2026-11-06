@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings: appearance, color palette -->
+    <string name="palette_title">Renk paleti</string>
+    <string name="palette_material_you_hint">Material You duvar kağıdınızın renklerini kullanır. Palet seçmek için kapatın.</string>
+    <string name="palette_peach">Şeftali</string>
+    <string name="palette_indigo">Çivit</string>
+    <string name="palette_teal">Camgöbeği</string>
+    <string name="palette_green">Yeşil</string>
+    <string name="palette_amber">Kehribar</string>
+    <string name="palette_rose">Gül</string>
+    <string name="palette_purple">Mor</string>
+    <string name="palette_slate">Arduvaz</string>
+
+    <!-- Settings: processing mode -->
+    <string name="processing_mode">İşleme modu</string>
+    <string name="mode_internal">Dahili (cihazda)</string>
+    <string name="mode_server">Sunucu</string>
+    <string name="internal_warning">Cihazda işleme yavaştır (parçanın kendisinden uzun sürebilir), çok pil ve yaklaşık 1,5 GB RAM kullanır. Telefonu şarjda tutun.</string>
+    <string name="internal_model_name">MDX-NET HQ3</string>
+    <string name="internal_model_downloaded">İndirildi · %1$s</string>
+    <string name="internal_model_not_downloaded">İndirilmedi (%1$s, ilk kullanımda iner)</string>
+    <string name="internal_model_downloading">İndiriliyor %1$s / %2$s</string>
+    <string name="download_model">İndir</string>
+    <string name="delete_model">Sil</string>
+    <string name="internal_model_in_use">Model kullanımda. İndirme veya işleme bitince tekrar deneyin.</string>
+    <string name="model_notice_required">Önce Ayarlar → Cihaz içi modeller\'i açın ve bu modelin bildirimini kabul edin</string>
+    <string name="model_notice_needed">İndirmeden önce onayınız gerekiyor</string>
+    <string name="model_notice_title">Bu model hakkında</string>
+    <string name="model_notice_kim">Kim Vocal 2, yazarı tarafından UVR\'nin herkese açık model deposunda yayımlanmıştır. Bir lisans belirtilmediği için kullanım koşulları bilinmiyor. Murem onu yalnızca siz istediğinizde oradan indirir ve yeniden dağıtmaz.</string>
+    <string name="model_notice_download">İndir</string>
+    <string name="model_notice_cancel">İptal</string>
+
+    <!-- Progress: separation ETA -->
+    <plurals name="about_n_min_left">
+        <item quantity="one">yaklaşık %d dk kaldı</item>
+        <item quantity="other">yaklaşık %d dk kaldı</item>
+    </plurals>
+    <string name="about_1_min_left">yaklaşık 1 dk kaldı</string>
+    <string name="less_than_minute_left">bir dakikadan az kaldı</string>
+
+    <!-- Output format (audio-only results) -->
+    <string name="output_format">Biçim</string>
+    <string name="output_mp3_checking">Kontrol ediliyor…</string>
+    <string name="output_mp3_unavailable">Bu telefonda MP3 kullanılamıyor, bu yüzden sonuçlar M4A olarak kaydedilir.</string>
+    <string name="output_server_mp3_note">Sunucu ve Termux yalnızca ses sonuçlarını her zaman MP3 olarak kaydeder</string>
+
+    <!-- Home / Help -->
+    <string name="status_ready_on_device">Cihazda işlemeye hazır</string>
+    <string name="status_model_unavailable">Model indirilmedi ve internet bağlantısı yok</string>
+    <string name="internal_models_note">Termux veya Sunucu modunda daha fazla model var</string>
+    <string name="help_on_device">Cihazda işleme</string>
+    <string name="help_on_device_desc">Dahili mod müziği sunucu olmadan telefonunuzda kaldırır. İlk kullanımda MDX-NET HQ3 modelini (64 MB) indirir. Yavaştır ve çok pil harcar, bu yüzden telefonu şarjda tutun.</string>
+
+    <!-- Errors -->
+    <string name="internal_bad_source">Dosya okunamıyor</string>
+    <string name="internal_no_space">Yeterli depolama alanı yok (%1$d MB gerekli)</string>
+    <string name="internal_model_download_failed">Model indirilemedi: %1$s</string>
+    <string name="internal_model_failed_network">Model indirilemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.</string>
+    <string name="internal_model_corrupt">Model dosyası bozuk. Bir dahaki sefere yeniden indirilecek.</string>
+    <string name="internal_model_mismatch">Model, meta verileriyle eşleşmiyor</string>
+    <string name="internal_out_of_memory">Yeterli boş bellek yok. Diğer uygulamaları kapatıp tekrar deneyin.</string>
+    <string name="internal_processing_failed">Cihazda işleme başarısız oldu</string>
+    <string name="internal_no_audio">Dosyada ses parçası yok</string>
+    <string name="internal_codec_unsupported">Bu ses biçimi bu telefonda desteklenmiyor</string>
+    <string name="internal_video_codec_unsupported">Bu video biçimi (%1$s) bu telefonda işlenemiyor. Yalnızca ses\'i açın veya Sunucu modunu kullanın.</string>
+    <string name="internal_video_convert_failed">Bu video (%1$s) cihazda kopyalanamadı veya dönüştürülemedi. Yalnızca ses\'i açın veya Sunucu modunu kullanın.</string>
+    <string name="internal_encode_failed">Sonuç kodlanamadı</string>
+    <string name="mp3_unavailable_fallback">Bu telefonda MP3 kullanılamıyor, bu yüzden sonuç M4A olarak kaydedildi</string>
+    <string name="internal_interrupted">İşleme defalarca kesintiye uğradı</string>
+    <string name="internal_job_not_found">Cihaz içi iş bulunamadı</string>
+    <string name="internal_needs_foreground">Cihazda işleme başlarken Murem\'in açık olması gerekir. Murem\'i açıp tekrar deneyin.</string>
+    <string name="internal_waiting_foreground">Cihazda işlemeye devam etmek için Murem\'i açın</string>
+    <string name="internal_device_unsupported">Bu cihazda, cihaz üzerinde işleme için yeterli bellek yok. Termux veya Sunucu modunu kullanın.</string>
+
+    <!-- Links (yt-dlp) -->
+    <string name="internal_url_invalid">Bu geçerli bir bağlantı değil</string>
+    <string name="internal_url_live">Canlı yayınlar işlenemez. Yayın bitince tekrar deneyin.</string>
+    <string name="internal_url_unsupported_site">Bu site cihazda desteklenmiyor. Sunucu modunu deneyin.</string>
+    <string name="internal_url_unavailable">Bu video kullanılamıyor veya gizli</string>
+    <string name="internal_url_blocked">Site indirmeyi reddetti. Ayarlar\'da yt-dlp\'yi güncelle\'yi deneyin veya Sunucu modunu kullanın.</string>
+    <string name="internal_url_network">Siteye ulaşılamadı. İnternet bağlantınızı kontrol edin.</string>
+    <string name="internal_url_download_failed">Bu bağlantı cihazda indirilemedi. Sunucu modunu deneyin.</string>
+    <string name="internal_url_download_failed_detail">Bu bağlantı cihazda indirilemedi (%1$s). Sunucu modunu deneyin.</string>
+    <string name="internal_url_login_required">Site bu gönderiyi giriş yapmadan paylaşmadı. Ayarlar → yt-dlp\'yi güncelle\'ye dokunup tekrar deneyin, Ayarlar\'da çerezleri içe aktarın veya Sunucu modunu kullanın.</string>
+    <string name="internal_url_login_cookies_failed">Bu gönderi giriş gerektiriyor ve içe aktarılan çerezler işe yaramadı. Süreleri dolmuş olabilir: yeniden dışa aktarıp Ayarlar\'da içe aktarın.</string>
+    <string name="internal_url_no_audio">Bu videoda ses parçası yok, yani kaldırılacak müzik yok.</string>
+    <string name="internal_ytdlp_outdated_hint">yt-dlp %1$s eski: Ayarlar → yt-dlp\'yi güncelle\'ye dokunup tekrar deneyin.</string>
+    <string name="internal_ytdlp_init_failed">Bağlantı indiricisi hazırlanamadı. Biraz depolama alanı açıp tekrar deneyin.</string>
+
+    <!-- Settings: yt-dlp -->
+    <string name="ytdlp_title">yt-dlp\'yi güncelle</string>
+    <string name="ytdlp_version">Sürüm %1$s</string>
+    <string name="ytdlp_version_loading">Sürüm yükleniyor…</string>
+    <string name="ytdlp_update">yt-dlp\'yi güncelle</string>
+    <string name="ytdlp_updating">Güncelleniyor…</string>
+    <string name="ytdlp_updated">%1$s sürümüne güncellendi</string>
+    <string name="ytdlp_up_to_date">Zaten güncel (%1$s)</string>
+    <string name="ytdlp_update_failed">Güncelleme başarısız. İnternet bağlantınızı kontrol edin.</string>
+    <string name="ytdlp_update_busy">Mevcut indirme bitene kadar bekleyin</string>
+
+    <plurals name="ytdlp_age_days">
+        <item quantity="one">%d günlük</item>
+        <item quantity="other">%d günlük</item>
+    </plurals>
+    <string name="ytdlp_released_today">bugün yayımlandı</string>
+    <string name="ytdlp_never_auto">Murem yt-dlp\'yi asla kendi kendine güncellemez. Bağlantılar çalışmayı bırakınca Güncelle\'ye dokunun.</string>
+    <string name="ytdlp_update_now">Şimdi güncelle</string>
+    <plurals name="ytdlp_banner_age">
+        <item quantity="one">Yerleşik yt-dlp %d günlük. Instagram gibi siteler daha yeni bir sürüm gerektirebilir.</item>
+        <item quantity="other">Yerleşik yt-dlp %d günlük. Instagram gibi siteler daha yeni bir sürüm gerektirebilir.</item>
+    </plurals>
+    <string name="banner_first_use_title">Cihazda işleme</string>
+    <string name="banner_first_use">Cihazda: ilk iş modeli (30–67 MB) indirir ve parçadan uzun sürebilir. Telefonu şarjda tutun.</string>
+    <string name="banner_outdated_title">yt-dlp eski olabilir</string>
+    <string name="banner_close">Kapat</string>
+
+    <!-- Settings navigation -->
+    <string name="settings_group_processing">İşleme</string>
+    <string name="settings_group_output">Çıktı</string>
+    <string name="settings_group_app">Uygulama</string>
+    <string name="settings_row_models">Cihaz içi modeller</string>
+    <string name="settings_row_performance">Performans</string>
+    <string name="settings_row_update_ytdlp">yt-dlp\'yi güncelle</string>
+    <string name="settings_row_output">Çıktı</string>
+    <string name="settings_row_storage">Geçmiş ve depolama</string>
+    <string name="settings_row_about">Hakkında ve yardım</string>
+    <string name="settings_internal_only">Dahili mod · %1$s</string>
+    <string name="settings_internal_only_note">Bu ayarlar yalnızca Dahili (cihazda) modda kullanılır.</string>
+    <string name="settings_mode_server">Sunucu · %1$s</string>
+    <plurals name="settings_models_summary">
+        <item quantity="one">%1$s seçili · %2$d indirildi</item>
+        <item quantity="other">%1$s seçili · %2$d indirildi</item>
+    </plurals>
+    <string name="settings_threads_auto">Otomatik iş parçacığı</string>
+    <plurals name="settings_threads_n">
+        <item quantity="one">%d iş parçacığı</item>
+        <item quantity="other">%d iş parçacığı</item>
+    </plurals>
+    <plurals name="settings_accounts_on">
+        <item quantity="one">%d site açık</item>
+        <item quantity="other">%d site açık</item>
+    </plurals>
+    <string name="settings_ytdlp_tap_to_check">Kontrol için dokunun</string>
+    <string name="settings_bitrate_kbps">%1$s kbps</string>
+    <string name="settings_audio_only_on">Yalnızca ses açık</string>
+    <string name="settings_audio_only_off">Yalnızca ses kapalı</string>
+    <plurals name="settings_storage_summary">
+        <item quantity="one">%1$d öğe · %2$s</item>
+        <item quantity="other">%1$d öğe · %2$s</item>
+    </plurals>
+    <string name="settings_about_summary">Murem %1$s</string>
+    <string name="dialog_cancel">İptal</string>
+    <string name="dialog_delete">Sil</string>
+    <string name="more_options">Diğer seçenekler</string>
+
+    <!-- Settings: on-device models -->
+    <string name="model_name_voc_ft">MDX-NET Voc FT</string>
+    <string name="model_name_mdx3">MDX-NET 3_9662</string>
+    <string name="tag_best_vocals">En iyi vokal</string>
+    <string name="tag_fastest">En hızlı</string>
+    <string name="tag_lead_vocal">Ana vokal</string>
+    <string name="tag_server_default">Sunucu varsayılanı</string>
+    <string name="model_best_hq3">Çoğu şarkıda müziği iyi kaldırır (vokal SDR 8,8 dB)</string>
+    <string name="model_best_voc_ft">Çoğu şarkıda daha temiz vokal (vokal SDR 10,2 dB)</string>
+    <string name="model_best_mdx3">Yarı boyutta indirme ve daha hızlı, vokaller neredeyse aynı temizlikte (9,7 dB)</string>
+    <string name="model_best_kara2">Yalnızca ana vokali tutar: arka vokaller müzikle birlikte kaldırılır</string>
+    <string name="model_best_kim2">Sunucunun varsayılan modeli, en temiz vokallerle (10,2 dB)</string>
+    <string name="model_state_downloaded">İndirildi</string>
+    <string name="model_state_first_use">İlk kullanımda iner</string>
+    <plurals name="model_speed_hint">
+        <item quantity="one">4 dakikalık parça için ≈ %d dk</item>
+        <item quantity="other">4 dakikalık parça için ≈ %d dk</item>
+    </plurals>
+    <string name="models_empty">İndirilmiş model yok. Seçili model ilk kullanımda iner.</string>
+    <string name="model_delete_title">%1$s silinsin mi?</string>
+    <string name="model_delete_text">Bir dahaki kullanımda yeniden iner.</string>
+
+    <!-- Settings: output -->
+    <string name="output_format_note">Yalnızca ses sonuçları için geçerlidir. Videolar her zaman MP4 olarak kaydedilir.</string>
+    <string name="output_m4a">M4A (AAC)</string>
+    <string name="output_mp3">MP3</string>
+    <string name="output_audio_only_desc">Videoyu değil, yalnızca vokal sesini kaydet</string>
+
+    <!-- Settings: performance -->
+    <string name="perf_threads">İş parçacıkları</string>
+    <string name="perf_threads_auto">Otomatik (%1$s)</string>
+    <string name="perf_threads_desc">Daha fazla iş parçacığı daha hızlı olabilir ama daha çok pil harcar ve telefonu daha çok ısıtır.</string>
+    <string name="perf_quality">Kalite</string>
+    <string name="settings_quality_fast">Hızlı</string>
+    <string name="settings_quality_balanced">Dengeli</string>
+    <string name="settings_quality_best">En iyi</string>
+    <string name="perf_fast_time">Sürenin yaklaşık 0,83 katı</string>
+    <string name="perf_balanced_time">Standart süre</string>
+    <string name="perf_best_time">Sürenin yaklaşık 1,5 katı</string>
+    <string name="perf_quality_help">Hızlı, parça kenarlarında biraz daha fazla müzik bırakabilir. En iyi daha pürüzsüzdür ama daha yavaştır.</string>
+    <string name="perf_batch">Toplu iş boyutu</string>
+    <string name="perf_batch_desc">Murem\'in şarkının kaç parçasını aynı anda ayırdığı. Aynı anda iki parça, hızlı bir telefonu daha iyi kullanabilir ama daha fazla bellek gerektirir.</string>
+    <string name="perf_batch_1">1 (önerilen)</string>
+    <string name="perf_batch_2">2</string>
+    <string name="perf_batch_2_desc">Deneysel. Yaklaşık 1 GB daha fazla bellek kullanır, daha hızlı olmayabilir.</string>
+    <string name="perf_batch_2_needs_ram">6 GB RAM\'li bir telefon gerekir</string>
+    <string name="perf_accelerator">Hızlandırma</string>
+    <string name="perf_accelerator_desc">Hangisinin en hızlı olduğu telefona bağlıdır. Kısa bir klipte deneyin ve Son\'daki süreyi karşılaştırın. Bir seçenek bu telefonda çalışmazsa Murem bunun yerine CPU kullanır.</string>
+    <string name="perf_acc_cpu">CPU (önerilen)</string>
+    <string name="perf_acc_cpu_desc">Her telefonda çalışır</string>
+    <!-- Processing screen: system stats -->
+    <string name="stats_title">Sistem</string>
+    <string name="stats_show">Sistem istatistiklerini göster</string>
+    <string name="stats_hide">Sistem istatistiklerini gizle</string>
+    <string name="stats_cpu">CPU</string>
+    <string name="stats_memory">Bellek</string>
+    <string name="stats_free">%1$s boş</string>
+    <string name="stats_temperature">Isı</string>
+    <string name="stats_headroom">Kısıtlamaya %1$s</string>
+    <string name="stats_thermal_normal">Normal</string>
+    <string name="stats_thermal_warm">Ilık</string>
+    <string name="stats_thermal_hot">Sıcak</string>
+    <string name="stats_thermal_throttling">Kısıtlanıyor</string>
+    <string name="stats_gpu">GPU</string>
+    <string name="perf_acc_webgpu">GPU (WebGPU)</string>
+    <string name="perf_acc_webgpu_desc">Deneysel. Modeli Vulkan üzerinden GPU\'da çalıştırır. Çoğu zaman en hızlısıdır ama çalışırken telefon takılabilir, bu yüzden telefonu aynı anda kullanmadığınızda en iyisidir</string>
+    <string name="perf_acc_nnapi">Yapay zeka çipi (NNAPI)</string>
+    <string name="perf_acc_nnapi_desc">Deneysel. Telefonun NPU, DSP veya GPU sürücüsünü yarım hassasiyette kullanır. Telefona bağlı olarak daha hızlı ya da çok daha yavaş olabilir</string>
+    <string name="perf_acc_nnapi_needs_android">Android 8.1 veya üstü gerekir</string>
+    <string name="perf_acc_failed_here">Geçen sefer bu telefonda çalışmadı, bu yüzden Murem işi CPU ile bitirdi</string>
+    <string name="perf_acc_xnnpack">Optimize CPU (XNNPACK)</string>
+    <string name="perf_acc_xnnpack_desc">Deneysel. Bazı ARM telefonlarda daha hızlı olan farklı bir CPU kodu</string>
+    <string name="perf_acc_webgpu_short">GPU</string>
+    <string name="perf_limit">Yük sınırı</string>
+    <string name="perf_limit_desc">Murem\'in tüm GPU\'yu kullanmasını engeller, böylece telefon daha akıcı ve serin kalır. GPU hızlandırmayla ekran da GPU adımları arasında sırasını alır. Daha da akıcı bir telefon için Cihaz içi modeller\'de daha hafif bir model kullanın.</string>
+    <string name="perf_limit_full">Tam hız</string>
+    <string name="perf_limit_full_desc">En hızlı. İşleme sırasında telefon takılabilir</string>
+    <string name="perf_limit_pct">%%%1$d</string>
+    <string name="perf_limit_75_desc">Sürenin en az 1,3 katı</string>
+    <string name="perf_limit_50_desc">Sürenin en az 2 katı, en akıcı</string>
+    <string name="perf_limit_short">%%%1$d sınır</string>
+    <string name="perf_acc_xnnpack_short">XNNPACK</string>
+    <string name="perf_acc_nnapi_short">NNAPI</string>
+
+    <!-- Settings: history & storage, server discovery, Termux -->
+    <string name="clear_history_title">Geçmiş temizlensin mi?</string>
+    <string name="clear_history_text">İşlenen videoların listesi Murem\'den kaldırılır.</string>
+    <plurals name="exporting_items">
+        <item quantity="one">%d öğe dışa aktarılıyor…</item>
+        <item quantity="other">%d öğe dışa aktarılıyor…</item>
+    </plurals>
+    <string name="export_failed">Dışa aktarma başarısız: %1$s</string>
+    <string name="export_none">Dışa aktarılacak dosya yok</string>
+    <string name="discover_searching">Sunucu aranıyor…</string>
+    <string name="discover_found">Sunucu bulundu: %1$s</string>
+    <string name="discover_failed">Keşif başarısız</string>
+    <string name="discover_error">Keşif hatası: %1$s</string>
+    <string name="termux_come_back">Termux bitince buraya geri dönün.</string>
+
+    <!-- Settings: about -->
+    <string name="about_help">Yardım</string>
+    <string name="about_components_title">Açık kaynak bileşenler</string>
+    <string name="about_components">MP3 kodlama, ikisi de youtubedl-android (GPL-3.0) ile gelen FFmpeg (GPL) üzerinden LAME (LGPL-2.0) kullanır. Ayrıştırma, ONNX Runtime (MIT) ve yazarlarından indirilen UVR MDX-Net modellerini kullanır.</string>
+
+    <!-- Settings: accounts & cookies for on-device links -->
+    <string name="cookies_title">Hesaplar ve çerezler</string>
+    <plurals name="cookies_site_summary">
+        <item quantity="one">%1$d çerez · %2$s kaydedildi</item>
+        <item quantity="other">%1$d çerez · %2$s kaydedildi</item>
+    </plurals>
+    <string name="cookies_from_login">girişten</string>
+    <string name="cookies_from_import">içe aktarıldı</string>
+    <string name="cookies_login_again">Yeniden giriş yap</string>
+    <string name="cookies_delete">Sil</string>
+    <string name="cookies_not_internal_note">Çerezler yalnızca Dahili moddaki bağlantılar için kullanılır.</string>
+    <string name="cookies_empty_title">Kayıtlı giriş yok</string>
+    <string name="cookies_empty_desc">Hesap gerektiren gönderileri indirmek için giriş yapın veya çerezleri içe aktarın.</string>
+    <string name="cookies_delete_site_title">%1$s için çerezler silinsin mi?</string>
+    <string name="cookies_delete_site_text">Bu hesabı gerektiren gönderileri yeniden indirmek için tekrar giriş yapın veya çerezlerini içe aktarın.</string>
+    <string name="cookies_delete_all_title">Tüm kayıtlı çerezler silinsin mi?</string>
+    <string name="cookies_delete_all_text">Kayıtlı tüm girişler bu cihazdan kaldırılır.</string>
+    <string name="cookies_import">cookies.txt içe aktar</string>
+    <string name="cookies_delete_all">Tümünü sil</string>
+    <string name="cookies_send_for">%1$s için çerez gönder</string>
+    <string name="cookies_change_failed">Kayıtlı çerezler değiştirilemedi. Tekrar deneyin.</string>
+    <string name="cookies_cannot_open_login">Bu site için giriş sayfası açılamıyor</string>
+    <string name="cookies_imported">Çerezler içe aktarıldı</string>
+    <string name="cookies_removed">Çerezler kaldırıldı</string>
+    <string name="cookies_help">Bazı gönderiler yalnızca giriş yapılmışken indirilebilir. Murem içinde giriş yapın veya bir bilgisayar tarayıcısından cookies.txt dosyası (Netscape biçimi) içe aktarın. Çerezler site bazında tutulur ve bu cihazda kalır. Yalnızca açık olan sitelerinkiler, yalnızca Dahili moddaki bağlantılarla gönderilir. YouTube çerezleri açıksa YouTube indirmeleri değişebilir. Bu çerezlere sahip olan herkes hesabınızı kullanabilir: asla paylaşmayın ve işiniz bitince siteyi silin.</string>
+    <string name="cookies_login">Tarayıcıyla giriş yap</string>
+    <string name="cookies_login_site_instagram">Instagram</string>
+    <string name="cookies_login_site_custom">Diğer site (https URL)</string>
+    <string name="cookies_login_url_hint">https://example.com/login</string>
+    <string name="cookies_login_notice_title">Tarayıcıyla giriş yap</string>
+    <string name="cookies_login_notice">Tarayıcı uygulamanızda değil, Murem içinde giriş yapıyorsunuz. Sitenin çerezleri yalnızca bu cihazda saklanır ve cihazdaki bağlantılar için kullanılır. Bunları Ayarlar → Hesaplar ve çerezler\'deki Sil ile kaldırabilirsiniz.</string>
+    <string name="cookies_login_continue">Devam</string>
+    <string name="cookies_login_cancel">İptal</string>
+    <string name="cookies_login_title">Giriş yapın, ardından Kaydet\'e dokunun</string>
+    <string name="cookies_login_save">Çerezleri kaydet</string>
+    <string name="cookies_login_oauth_hint">Google ve Facebook ile giriş, gömülü tarayıcılarda engellenebilir. Bunun yerine kullanıcı adınız ve şifrenizle giriş yapın.</string>
+    <plurals name="cookies_login_saved">
+        <item quantity="one">%2$s için %1$d çerez kaydedildi</item>
+        <item quantity="other">%2$s için %1$d çerez kaydedildi</item>
+    </plurals>
+    <string name="cookies_login_none">Çerez bulunamadı. Önce giriş yapın, ardından Kaydet\'e dokunun.</string>
+    <string name="paste">Yapıştır</string>
+    <string name="no_external_player">Bu dosyayı açacak uygulama bulunamadı</string>
+
+    <!-- 4.1: licenses, problem reports, playback errors, job times -->
+    <string name="back">Geri</string>
+    <string name="licenses_title">Açık kaynak lisansları</string>
+    <string name="licenses_desc">Murem\'in kullandığı kütüphaneler ve lisansları</string>
+    <string name="report_problem">Sorun bildir</string>
+    <string name="report_problem_desc">Önceden doldurulmuş bir GitHub sorunu açar. Göndermeden önce gözden geçirirsiniz.</string>
+    <string name="report_problem_short">Bildir</string>
+    <string name="report_no_browser">GitHub\'ı açacak tarayıcı bulunamadı</string>
+    <string name="crash_title">Murem beklenmedik şekilde kapandı</string>
+    <string name="crash_text">Düzeltilebilmesi için GitHub\'da bildirilsin mi? Rapor uygulama sürümünü, telefon modelinizi, Android sürümünü ve hatayı içerir. Bağlantılar veya dosya adları eklenmez ve göndermeden önce gözden geçirirsiniz.</string>
+    <string name="not_now">Şimdi değil</string>
+    <string name="playback_error_title">Bu sonuç oynatılamıyor</string>
+    <string name="playback_error_missing">Dosya eksik veya okunamıyor. Silinmiş olabilir ya da sunucuda artık yok.</string>
+    <string name="playback_error_network">Sunucuya ulaşılamadı. Bağlantıyı kontrol edip tekrar deneyin.</string>
+    <string name="playback_error_format">Bu dosya, bu telefonun oynatamadığı bir biçimde. Başka bir uygulamada açmayı deneyin.</string>
+    <string name="playback_error_generic">Bu dosya oynatılırken bir sorun oluştu.</string>
+    <string name="open_in_other_app">Başka uygulamada aç</string>
+    <string name="started_at">Başladı %1$s · %2$s</string>
+    <string name="started_ago">%1$s önce</string>
+    <string name="started_just_now">az önce</string>
+    <string name="duration_under_minute">bir dakikadan az</string>
+    <string name="duration_under_minute_short">&lt;1 dk</string>
+    <plurals name="duration_minutes">
+        <item quantity="one">%d dk</item>
+        <item quantity="other">%d dk</item>
+    </plurals>
+    <plurals name="duration_hours">
+        <item quantity="one">%d sa</item>
+        <item quantity="other">%d sa</item>
+    </plurals>
+    <string name="duration_hours_minutes">%1$s %2$s</string>
+    <string name="info_started">Başladı</string>
+    <string name="info_finished">Bitti</string>
+    <string name="info_took">Süre</string>
+    <string name="server_job_gone">Sunucuda artık bu iş yok. Sonuçlar 7 gün saklanır.</string>
+    <plurals name="links_queued">
+        <item quantity="one">%1$d bağlantı sıraya eklendi</item>
+        <item quantity="other">%1$d bağlantı sıraya eklendi</item>
+    </plurals>
+    <string name="cookies_login_not_logged_in">Henüz giriş yapmamış görünüyorsunuz, bu yüzden hiçbir şey kaydedilmedi. Önce giriş yapın, ardından Kaydet\'e dokunun.</string>
+    <string name="cookies_login_save_failed">Çerezler kaydedilemedi. Biraz depolama alanı açıp tekrar deneyin.</string>
+    <string name="cookies_invalid_too_large">Bu dosya bir cookies.txt için çok büyük (1 MB üstü)</string>
+    <string name="cookies_invalid_empty">Bu cookies.txt hiç çerez içermiyor</string>
+    <string name="cookies_invalid_format">Bu bir cookies.txt dosyası değil. Çerezleri Netscape biçiminde dışa aktarın.</string>
+    <string name="cookies_invalid_line">Bu geçerli bir cookies.txt dosyası değil (%1$d. satır Netscape biçiminde değil)</string>
+    <string name="cookies_unreadable">Seçilen dosya okunamadı</string>
+
+    <!-- Home input card -->
+    <string name="home_link_placeholder">Bir video bağlantısı yapıştırın…</string>
+    <string name="home_file_title">Bir video veya ses dosyası seçin</string>
+    <string name="home_file_formats">MP4, MKV, WebM, MP3, M4A…</string>
+    <string name="home_cta_hint_link">Başlamak için bir bağlantı yapıştırın</string>
+    <string name="home_cta_hint_file">Başlamak için bir dosya seçin</string>
+    <string name="home_estimate_total">Bu telefonda yaklaşık %1$s</string>
+    <string name="home_estimate_per_minute">Bu telefonda ses dakikası başına yaklaşık %1$s</string>
+    <string name="duration_seconds">%1$d sn</string>
+    <string name="home_lighter_tip">Bu telefonda yavaş. Daha hafif bir model yaklaşık %1$s kat daha hızlı.</string>
+    <string name="home_lighter_use">Daha hafif model kullan</string>
+    <string name="history_source_device">Cihazda</string>
+    <string name="history_source_server">Sunucu</string>
+    <string name="history_source_termux">Termux</string>
+</resources>

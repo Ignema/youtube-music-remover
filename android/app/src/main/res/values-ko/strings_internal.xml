@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings: appearance, color palette -->
+    <string name="palette_title">색상 팔레트</string>
+    <string name="palette_material_you_hint">Material You는 배경화면의 색상을 사용합니다. 팔레트를 선택하려면 끄세요.</string>
+    <string name="palette_peach">피치</string>
+    <string name="palette_indigo">인디고</string>
+    <string name="palette_teal">틸</string>
+    <string name="palette_green">그린</string>
+    <string name="palette_amber">앰버</string>
+    <string name="palette_rose">로즈</string>
+    <string name="palette_purple">퍼플</string>
+    <string name="palette_slate">슬레이트</string>
+
+    <!-- Settings: processing mode -->
+    <string name="processing_mode">처리 모드</string>
+    <string name="mode_internal">내부 (기기에서)</string>
+    <string name="mode_server">서버</string>
+    <string name="internal_warning">기기에서 처리하면 느리고(곡 길이보다 오래 걸릴 수 있음), 배터리를 많이 사용하며 약 1.5 GB의 RAM을 사용합니다. 휴대폰을 충전 중인 상태로 두세요.</string>
+    <string name="internal_model_name">MDX-NET HQ3</string>
+    <string name="internal_model_downloaded">다운로드됨 · %1$s</string>
+    <string name="internal_model_not_downloaded">다운로드 안 됨 (%1$s, 처음 사용할 때 다운로드)</string>
+    <string name="internal_model_downloading">다운로드 중 %1$s / %2$s</string>
+    <string name="download_model">다운로드</string>
+    <string name="delete_model">삭제</string>
+    <string name="internal_model_in_use">모델이 사용 중입니다. 다운로드나 처리가 끝난 후 다시 시도하세요.</string>
+    <string name="model_notice_required">먼저 설정 → 기기 내 모델을 열고 이 모델의 안내에 동의하세요</string>
+    <string name="model_notice_needed">다운로드 전에 확인이 필요합니다</string>
+    <string name="model_notice_title">이 모델 정보</string>
+    <string name="model_notice_kim">Kim Vocal 2는 제작자가 UVR의 공개 모델 저장소를 통해 배포한 모델입니다. 명시된 라이선스가 없어 이용 조건을 알 수 없습니다. Murem은 요청할 때만 그곳에서 다운로드하며 재배포하지 않습니다.</string>
+    <string name="model_notice_download">다운로드</string>
+    <string name="model_notice_cancel">취소</string>
+
+    <!-- Progress: separation ETA -->
+    <plurals name="about_n_min_left">
+        <item quantity="other">약 %d분 남음</item>
+    </plurals>
+    <string name="about_1_min_left">약 1분 남음</string>
+    <string name="less_than_minute_left">1분 미만 남음</string>
+
+    <!-- Output format (audio-only results) -->
+    <string name="output_format">형식</string>
+    <string name="output_mp3_checking">확인 중…</string>
+    <string name="output_mp3_unavailable">이 휴대폰에서는 MP3를 사용할 수 없어 결과가 M4A로 저장됩니다.</string>
+    <string name="output_server_mp3_note">서버와 Termux는 오디오만 결과를 항상 MP3로 저장합니다</string>
+
+    <!-- Home / Help -->
+    <string name="status_ready_on_device">기기에서 처리할 준비가 되었습니다</string>
+    <string name="status_model_unavailable">모델이 다운로드되지 않았고 인터넷에 연결되어 있지 않습니다</string>
+    <string name="internal_models_note">Termux 또는 서버 모드에서 더 많은 모델을 사용할 수 있습니다</string>
+    <string name="help_on_device">기기에서 처리</string>
+    <string name="help_on_device_desc">내부 모드는 서버 없이 휴대폰에서 음악을 제거합니다. 처음 사용할 때 MDX-NET HQ3 모델(64 MB)을 다운로드하며, 느리고 배터리를 많이 사용하므로 휴대폰을 충전 중인 상태로 두세요.</string>
+
+    <!-- Errors -->
+    <string name="internal_bad_source">파일을 읽을 수 없습니다</string>
+    <string name="internal_no_space">저장 공간이 부족합니다 (%1$d MB 필요)</string>
+    <string name="internal_model_download_failed">모델 다운로드 실패: %1$s</string>
+    <string name="internal_model_failed_network">모델 다운로드에 실패했습니다. 인터넷 연결을 확인하고 다시 시도하세요.</string>
+    <string name="internal_model_corrupt">모델 파일이 손상되었습니다. 다음에 다시 다운로드됩니다.</string>
+    <string name="internal_model_mismatch">모델이 메타데이터와 일치하지 않습니다</string>
+    <string name="internal_out_of_memory">여유 메모리가 부족합니다. 다른 앱을 닫고 다시 시도하세요.</string>
+    <string name="internal_processing_failed">기기에서 처리하지 못했습니다</string>
+    <string name="internal_no_audio">파일에 오디오 트랙이 없습니다</string>
+    <string name="internal_codec_unsupported">이 휴대폰에서 지원되지 않는 오디오 형식입니다</string>
+    <string name="internal_video_codec_unsupported">이 동영상 형식(%1$s)은 이 휴대폰에서 처리할 수 없습니다. 오디오만을 켜거나 서버 모드를 사용하세요.</string>
+    <string name="internal_video_convert_failed">이 동영상(%1$s)을 기기에서 복사하거나 변환할 수 없습니다. 오디오만을 켜거나 서버 모드를 사용하세요.</string>
+    <string name="internal_encode_failed">결과를 인코딩할 수 없습니다</string>
+    <string name="mp3_unavailable_fallback">이 휴대폰에서는 MP3를 사용할 수 없어 결과가 M4A로 저장되었습니다</string>
+    <string name="internal_interrupted">처리가 반복해서 중단되었습니다</string>
+    <string name="internal_job_not_found">기기 작업을 찾을 수 없습니다</string>
+    <string name="internal_needs_foreground">기기에서 처리를 시작하려면 Murem이 열려 있어야 합니다. Murem을 열고 다시 시도하세요.</string>
+    <string name="internal_waiting_foreground">기기에서 처리를 계속하려면 Murem을 여세요</string>
+    <string name="internal_device_unsupported">이 기기는 기기에서 처리하기에 메모리가 부족합니다. Termux 또는 서버 모드를 사용하세요.</string>
+
+    <!-- Links (yt-dlp) -->
+    <string name="internal_url_invalid">올바른 링크가 아닙니다</string>
+    <string name="internal_url_live">라이브 스트림은 처리할 수 없습니다. 스트림이 끝난 후 다시 시도하세요.</string>
+    <string name="internal_url_unsupported_site">이 사이트는 기기에서 지원되지 않습니다. 서버 모드를 사용해 보세요.</string>
+    <string name="internal_url_unavailable">이 동영상은 사용할 수 없거나 비공개입니다</string>
+    <string name="internal_url_blocked">사이트가 다운로드를 거부했습니다. 설정에서 yt-dlp 업데이트를 시도하거나 서버 모드를 사용하세요.</string>
+    <string name="internal_url_network">사이트에 연결할 수 없습니다. 인터넷 연결을 확인하세요.</string>
+    <string name="internal_url_download_failed">이 링크를 기기에서 다운로드할 수 없습니다. 서버 모드를 사용해 보세요.</string>
+    <string name="internal_url_download_failed_detail">이 링크를 기기에서 다운로드할 수 없습니다 (%1$s). 서버 모드를 사용해 보세요.</string>
+    <string name="internal_url_login_required">사이트가 로그인 없이 이 게시물을 공유하지 않았습니다. 설정 → yt-dlp 업데이트를 탭하고 다시 시도하거나, 설정에서 쿠키를 가져오거나, 서버 모드를 사용하세요.</string>
+    <string name="internal_url_login_cookies_failed">이 게시물은 로그인이 필요한데 가져온 쿠키가 작동하지 않았습니다. 만료되었을 수 있습니다: 다시 내보낸 후 설정에서 가져오세요.</string>
+    <string name="internal_url_no_audio">이 동영상에는 오디오 트랙이 없어 제거할 음악이 없습니다.</string>
+    <string name="internal_ytdlp_outdated_hint">yt-dlp %1$s 버전이 오래되었습니다: 설정 → yt-dlp 업데이트를 탭하고 다시 시도하세요.</string>
+    <string name="internal_ytdlp_init_failed">링크 다운로더를 준비할 수 없습니다. 저장 공간을 확보한 후 다시 시도하세요.</string>
+
+    <!-- Settings: yt-dlp -->
+    <string name="ytdlp_title">yt-dlp 업데이트</string>
+    <string name="ytdlp_version">버전 %1$s</string>
+    <string name="ytdlp_version_loading">버전 불러오는 중…</string>
+    <string name="ytdlp_update">yt-dlp 업데이트</string>
+    <string name="ytdlp_updating">업데이트 중…</string>
+    <string name="ytdlp_updated">%1$s(으)로 업데이트됨</string>
+    <string name="ytdlp_up_to_date">이미 최신 버전입니다 (%1$s)</string>
+    <string name="ytdlp_update_failed">업데이트에 실패했습니다. 인터넷 연결을 확인하세요.</string>
+    <string name="ytdlp_update_busy">현재 다운로드가 끝날 때까지 기다리세요</string>
+
+    <plurals name="ytdlp_age_days">
+        <item quantity="other">%d일 전</item>
+    </plurals>
+    <string name="ytdlp_released_today">오늘 출시됨</string>
+    <string name="ytdlp_never_auto">Murem은 yt-dlp를 자동으로 업데이트하지 않습니다. 링크가 작동하지 않으면 업데이트를 탭하세요.</string>
+    <string name="ytdlp_update_now">지금 업데이트</string>
+    <plurals name="ytdlp_banner_age">
+        <item quantity="other">내장 yt-dlp가 %d일 전 버전입니다. Instagram 같은 사이트는 더 새로운 버전이 필요할 수 있습니다.</item>
+    </plurals>
+    <string name="banner_first_use_title">기기에서 처리</string>
+    <string name="banner_first_use">기기에서 처리: 첫 작업 시 모델(30–67 MB)을 다운로드하며 곡 길이보다 오래 걸릴 수 있습니다. 휴대폰을 충전 중인 상태로 두세요.</string>
+    <string name="banner_outdated_title">yt-dlp가 오래되었을 수 있습니다</string>
+    <string name="banner_close">닫기</string>
+
+    <!-- Settings navigation -->
+    <string name="settings_group_processing">처리</string>
+    <string name="settings_group_output">출력</string>
+    <string name="settings_group_app">앱</string>
+    <string name="settings_row_models">기기 내 모델</string>
+    <string name="settings_row_performance">성능</string>
+    <string name="settings_row_update_ytdlp">yt-dlp 업데이트</string>
+    <string name="settings_row_output">출력</string>
+    <string name="settings_row_storage">기록 및 저장 공간</string>
+    <string name="settings_row_about">정보 및 도움말</string>
+    <string name="settings_internal_only">내부 모드 · %1$s</string>
+    <string name="settings_internal_only_note">이 설정은 내부(기기에서) 모드에서만 사용됩니다.</string>
+    <string name="settings_mode_server">서버 · %1$s</string>
+    <plurals name="settings_models_summary">
+        <item quantity="other">%1$s 선택됨 · %2$d개 다운로드됨</item>
+    </plurals>
+    <string name="settings_threads_auto">자동 스레드</string>
+    <plurals name="settings_threads_n">
+        <item quantity="other">스레드 %d개</item>
+    </plurals>
+    <plurals name="settings_accounts_on">
+        <item quantity="other">사이트 %d개 켜짐</item>
+    </plurals>
+    <string name="settings_ytdlp_tap_to_check">탭하여 확인</string>
+    <string name="settings_bitrate_kbps">%1$s kbps</string>
+    <string name="settings_audio_only_on">오디오만 켜짐</string>
+    <string name="settings_audio_only_off">오디오만 꺼짐</string>
+    <plurals name="settings_storage_summary">
+        <item quantity="other">항목 %1$d개 · %2$s</item>
+    </plurals>
+    <string name="settings_about_summary">Murem %1$s</string>
+    <string name="dialog_cancel">취소</string>
+    <string name="dialog_delete">삭제</string>
+    <string name="more_options">추가 옵션</string>
+
+    <!-- Settings: on-device models -->
+    <string name="model_name_voc_ft">MDX-NET Voc FT</string>
+    <string name="model_name_mdx3">MDX-NET 3_9662</string>
+    <string name="tag_best_vocals">최고 보컬</string>
+    <string name="tag_fastest">가장 빠름</string>
+    <string name="tag_lead_vocal">리드 보컬</string>
+    <string name="tag_server_default">서버 기본값</string>
+    <string name="model_best_hq3">대부분의 곡에서 음악을 잘 제거합니다 (보컬 SDR 8.8 dB)</string>
+    <string name="model_best_voc_ft">대부분의 곡에서 더 깨끗한 보컬 (보컬 SDR 10.2 dB)</string>
+    <string name="model_best_mdx3">다운로드 용량이 절반이고 더 빠르며, 보컬도 거의 비슷하게 깨끗합니다 (9.7 dB)</string>
+    <string name="model_best_kara2">리드 보컬만 남깁니다: 백 보컬은 음악과 함께 제거됩니다</string>
+    <string name="model_best_kim2">서버의 기본 모델로, 가장 깨끗한 보컬을 제공합니다 (10.2 dB)</string>
+    <string name="model_state_downloaded">다운로드됨</string>
+    <string name="model_state_first_use">처음 사용할 때 다운로드</string>
+    <plurals name="model_speed_hint">
+        <item quantity="other">4분 곡 기준 약 %d분</item>
+    </plurals>
+    <string name="models_empty">다운로드된 모델이 없습니다. 선택한 모델은 처음 사용할 때 다운로드됩니다.</string>
+    <string name="model_delete_title">%1$s을(를) 삭제할까요?</string>
+    <string name="model_delete_text">다음에 사용할 때 다시 다운로드됩니다.</string>
+
+    <!-- Settings: output -->
+    <string name="output_format_note">오디오만 결과에 적용됩니다. 동영상은 항상 MP4로 저장됩니다.</string>
+    <string name="output_m4a">M4A (AAC)</string>
+    <string name="output_mp3">MP3</string>
+    <string name="output_audio_only_desc">동영상 없이 보컬 오디오만 저장</string>
+
+    <!-- Settings: performance -->
+    <string name="perf_threads">스레드</string>
+    <string name="perf_threads_auto">자동 (%1$s)</string>
+    <string name="perf_threads_desc">스레드가 많을수록 빨라질 수 있지만 배터리를 더 사용하고 휴대폰이 더 뜨거워집니다.</string>
+    <string name="perf_quality">품질</string>
+    <string name="settings_quality_fast">빠름</string>
+    <string name="settings_quality_balanced">균형</string>
+    <string name="settings_quality_best">최고</string>
+    <string name="perf_fast_time">약 0.83배 시간</string>
+    <string name="perf_balanced_time">표준 시간</string>
+    <string name="perf_best_time">약 1.5배 시간</string>
+    <string name="perf_quality_help">빠름은 구간 경계에 음악이 조금 더 남을 수 있습니다. 최고는 더 매끄럽지만 느립니다.</string>
+    <string name="perf_batch">배치 크기</string>
+    <string name="perf_batch_desc">Murem이 한 번에 분리하는 곡 조각의 수입니다. 두 개씩 처리하면 빠른 휴대폰을 더 잘 활용할 수 있지만 메모리가 더 필요합니다.</string>
+    <string name="perf_batch_1">1 (권장)</string>
+    <string name="perf_batch_2">2</string>
+    <string name="perf_batch_2_desc">실험적 기능. 메모리를 약 1 GB 더 사용하며, 더 빠르지 않을 수 있습니다.</string>
+    <string name="perf_batch_2_needs_ram">RAM 6 GB 휴대폰이 필요합니다</string>
+    <string name="perf_accelerator">가속</string>
+    <string name="perf_accelerator_desc">어떤 것이 가장 빠른지는 휴대폰에 따라 다릅니다. 짧은 클립으로 시도해 보고 최근에서 시간을 비교하세요. 이 휴대폰에서 작동하지 않는 옵션이면 Murem은 대신 CPU를 사용합니다.</string>
+    <string name="perf_acc_cpu">CPU (권장)</string>
+    <string name="perf_acc_cpu_desc">모든 휴대폰에서 작동합니다</string>
+    <!-- Processing screen: system stats -->
+    <string name="stats_title">시스템</string>
+    <string name="stats_show">시스템 정보 표시</string>
+    <string name="stats_hide">시스템 정보 숨기기</string>
+    <string name="stats_cpu">CPU</string>
+    <string name="stats_memory">메모리</string>
+    <string name="stats_free">%1$s 여유</string>
+    <string name="stats_temperature">발열</string>
+    <string name="stats_headroom">성능 제한까지 %1$s</string>
+    <string name="stats_thermal_normal">정상</string>
+    <string name="stats_thermal_warm">따뜻함</string>
+    <string name="stats_thermal_hot">뜨거움</string>
+    <string name="stats_thermal_throttling">성능 제한 중</string>
+    <string name="stats_gpu">GPU</string>
+    <string name="perf_acc_webgpu">GPU (WebGPU)</string>
+    <string name="perf_acc_webgpu_desc">실험적 기능. Vulkan을 통해 GPU에서 모델을 실행합니다. 가장 빠른 경우가 많지만 실행 중에 휴대폰이 버벅일 수 있으므로, 휴대폰을 동시에 사용하지 않을 때 가장 좋습니다</string>
+    <string name="perf_acc_nnapi">AI 칩 (NNAPI)</string>
+    <string name="perf_acc_nnapi_desc">실험적 기능. 휴대폰의 NPU, DSP 또는 GPU 드라이버를 반정밀도로 사용합니다. 휴대폰에 따라 더 빠르거나 훨씬 느릴 수 있습니다</string>
+    <string name="perf_acc_nnapi_needs_android">Android 8.1 이상이 필요합니다</string>
+    <string name="perf_acc_failed_here">지난번에 이 휴대폰에서 작동하지 않아 Murem이 CPU로 처리를 마쳤습니다</string>
+    <string name="perf_acc_xnnpack">최적화 CPU (XNNPACK)</string>
+    <string name="perf_acc_xnnpack_desc">실험적 기능. 일부 ARM 휴대폰에서 더 빠른 다른 CPU 코드입니다</string>
+    <string name="perf_acc_webgpu_short">GPU</string>
+    <string name="perf_limit">부하 제한</string>
+    <string name="perf_limit_desc">Murem이 GPU 전체를 사용하지 않도록 하여 휴대폰을 더 부드럽고 시원하게 유지합니다. GPU 가속을 사용할 때는 GPU 단계 사이에 화면도 차례를 얻습니다. 휴대폰을 더 부드럽게 하려면 기기 내 모델에서 더 가벼운 모델을 사용하세요.</string>
+    <string name="perf_limit_full">최대 속도</string>
+    <string name="perf_limit_full_desc">가장 빠름. 처리 중에 휴대폰이 버벅일 수 있습니다</string>
+    <string name="perf_limit_pct">%1$d%%</string>
+    <string name="perf_limit_75_desc">최소 1.3배 시간</string>
+    <string name="perf_limit_50_desc">최소 2배 시간. 가장 부드러움</string>
+    <string name="perf_limit_short">%1$d%% 제한</string>
+    <string name="perf_acc_xnnpack_short">XNNPACK</string>
+    <string name="perf_acc_nnapi_short">NNAPI</string>
+
+    <!-- Settings: history & storage, server discovery, Termux -->
+    <string name="clear_history_title">기록을 삭제할까요?</string>
+    <string name="clear_history_text">처리된 동영상 목록이 Murem에서 삭제됩니다.</string>
+    <plurals name="exporting_items">
+        <item quantity="other">항목 %d개 내보내는 중…</item>
+    </plurals>
+    <string name="export_failed">내보내기 실패: %1$s</string>
+    <string name="export_none">내보낼 파일이 없습니다</string>
+    <string name="discover_searching">서버 검색 중…</string>
+    <string name="discover_found">%1$s에서 서버를 찾았습니다</string>
+    <string name="discover_failed">검색 실패</string>
+    <string name="discover_error">검색 오류: %1$s</string>
+    <string name="termux_come_back">Termux가 끝나면 여기로 돌아오세요.</string>
+
+    <!-- Settings: about -->
+    <string name="about_help">도움말</string>
+    <string name="about_components_title">오픈소스 구성 요소</string>
+    <string name="about_components">MP3 인코딩은 FFmpeg(GPL)를 통해 LAME(LGPL-2.0)을 사용하며, 둘 다 youtubedl-android(GPL-3.0)에 포함되어 있습니다. 분리에는 ONNX Runtime(MIT)과 제작자에게서 다운로드한 UVR MDX-Net 모델을 사용합니다.</string>
+
+    <!-- Settings: accounts & cookies for on-device links -->
+    <string name="cookies_title">계정 및 쿠키</string>
+    <plurals name="cookies_site_summary">
+        <item quantity="other">쿠키 %1$d개 · %2$s 저장됨</item>
+    </plurals>
+    <string name="cookies_from_login">로그인에서</string>
+    <string name="cookies_from_import">가져옴</string>
+    <string name="cookies_login_again">다시 로그인</string>
+    <string name="cookies_delete">삭제</string>
+    <string name="cookies_not_internal_note">쿠키는 내부 모드의 링크에만 사용됩니다.</string>
+    <string name="cookies_empty_title">저장된 로그인 없음</string>
+    <string name="cookies_empty_desc">계정이 필요한 게시물을 다운로드하려면 로그인하거나 쿠키를 가져오세요.</string>
+    <string name="cookies_delete_site_title">%1$s의 쿠키를 삭제할까요?</string>
+    <string name="cookies_delete_site_text">이 계정이 필요한 게시물을 다시 다운로드하려면 다시 로그인하거나 쿠키를 가져오세요.</string>
+    <string name="cookies_delete_all_title">저장된 쿠키를 모두 삭제할까요?</string>
+    <string name="cookies_delete_all_text">저장된 모든 로그인이 이 기기에서 삭제됩니다.</string>
+    <string name="cookies_import">cookies.txt 가져오기</string>
+    <string name="cookies_delete_all">모두 삭제</string>
+    <string name="cookies_send_for">%1$s 쿠키 보내기</string>
+    <string name="cookies_change_failed">저장된 쿠키를 변경할 수 없습니다. 다시 시도하세요.</string>
+    <string name="cookies_cannot_open_login">이 사이트의 로그인 페이지를 열 수 없습니다</string>
+    <string name="cookies_imported">쿠키를 가져왔습니다</string>
+    <string name="cookies_removed">쿠키를 삭제했습니다</string>
+    <string name="cookies_help">일부 게시물은 로그인한 상태에서만 다운로드할 수 있습니다. Murem 안에서 로그인하거나 컴퓨터 브라우저에서 cookies.txt 파일(Netscape 형식)을 가져오세요. 쿠키는 사이트별로 보관되며 이 기기에만 저장됩니다. 켜져 있는 사이트의 쿠키만 전송되며, 내부 모드의 링크에서만 사용됩니다. YouTube 쿠키를 켜면 YouTube 다운로드 결과가 달라질 수 있습니다. 이 쿠키를 가진 사람은 누구나 내 계정을 사용할 수 있습니다: 절대 공유하지 말고, 사용이 끝나면 사이트를 삭제하세요.</string>
+    <string name="cookies_login">브라우저로 로그인</string>
+    <string name="cookies_login_site_instagram">Instagram</string>
+    <string name="cookies_login_site_custom">다른 사이트 (https URL)</string>
+    <string name="cookies_login_url_hint">https://example.com/login</string>
+    <string name="cookies_login_notice_title">브라우저로 로그인</string>
+    <string name="cookies_login_notice">브라우저 앱이 아닌 Murem 안에서 로그인합니다. 사이트의 쿠키는 이 기기에만 저장되며 기기에서 처리하는 링크에 사용됩니다. 설정 → 계정 및 쿠키에서 삭제를 탭하면 지워집니다.</string>
+    <string name="cookies_login_continue">계속</string>
+    <string name="cookies_login_cancel">취소</string>
+    <string name="cookies_login_title">로그인한 후 저장을 탭하세요</string>
+    <string name="cookies_login_save">쿠키 저장</string>
+    <string name="cookies_login_oauth_hint">내장 브라우저에서는 Google 및 Facebook 로그인이 차단될 수 있습니다. 대신 사용자 이름과 비밀번호로 로그인하세요.</string>
+    <plurals name="cookies_login_saved">
+        <item quantity="other">%2$s의 쿠키 %1$d개를 저장했습니다</item>
+    </plurals>
+    <string name="cookies_login_none">쿠키를 찾을 수 없습니다. 먼저 로그인한 후 저장을 탭하세요.</string>
+    <string name="paste">붙여넣기</string>
+    <string name="no_external_player">이 파일을 열 수 있는 앱이 없습니다</string>
+
+    <!-- 4.1: licenses, problem reports, playback errors, job times -->
+    <string name="back">뒤로</string>
+    <string name="licenses_title">오픈소스 라이선스</string>
+    <string name="licenses_desc">Murem이 사용하는 라이브러리와 라이선스</string>
+    <string name="report_problem">문제 신고</string>
+    <string name="report_problem_desc">미리 작성된 GitHub 이슈를 엽니다. 보내기 전에 내용을 확인할 수 있습니다.</string>
+    <string name="report_problem_short">신고</string>
+    <string name="report_no_browser">GitHub를 열 브라우저가 없습니다</string>
+    <string name="crash_title">Murem이 예기치 않게 종료되었습니다</string>
+    <string name="crash_text">수정될 수 있도록 GitHub에 신고할까요? 신고에는 앱 버전, 휴대폰 모델, Android 버전, 오류가 포함됩니다. 링크나 파일 이름은 포함되지 않으며, 보내기 전에 내용을 확인할 수 있습니다.</string>
+    <string name="not_now">나중에</string>
+    <string name="playback_error_title">이 결과를 재생할 수 없습니다</string>
+    <string name="playback_error_missing">파일이 없거나 읽을 수 없습니다. 삭제되었거나 서버에 더 이상 없을 수 있습니다.</string>
+    <string name="playback_error_network">서버에 연결할 수 없습니다. 연결을 확인하고 다시 시도하세요.</string>
+    <string name="playback_error_format">이 휴대폰에서 재생할 수 없는 형식의 파일입니다. 다른 앱에서 열어 보세요.</string>
+    <string name="playback_error_generic">이 파일을 재생하는 중에 문제가 발생했습니다.</string>
+    <string name="open_in_other_app">다른 앱에서 열기</string>
+    <string name="started_at">시작 %1$s · %2$s</string>
+    <string name="started_ago">%1$s 전</string>
+    <string name="started_just_now">방금</string>
+    <string name="duration_under_minute">1분 미만</string>
+    <string name="duration_under_minute_short">&lt;1분</string>
+    <plurals name="duration_minutes">
+        <item quantity="other">%d분</item>
+    </plurals>
+    <plurals name="duration_hours">
+        <item quantity="other">%d시간</item>
+    </plurals>
+    <string name="duration_hours_minutes">%1$s %2$s</string>
+    <string name="info_started">시작</string>
+    <string name="info_finished">완료</string>
+    <string name="info_took">소요 시간</string>
+    <string name="server_job_gone">서버에 더 이상 이 작업이 없습니다. 결과는 7일 동안 보관됩니다.</string>
+    <plurals name="links_queued">
+        <item quantity="other">링크 %1$d개가 대기열에 추가됨</item>
+    </plurals>
+    <string name="cookies_login_not_logged_in">아직 로그인하지 않은 것 같아 아무것도 저장되지 않았습니다. 먼저 로그인한 후 저장을 탭하세요.</string>
+    <string name="cookies_login_save_failed">쿠키를 저장할 수 없습니다. 저장 공간을 확보한 후 다시 시도하세요.</string>
+    <string name="cookies_invalid_too_large">cookies.txt로 사용하기에 파일이 너무 큽니다 (1 MB 초과)</string>
+    <string name="cookies_invalid_empty">이 cookies.txt에는 쿠키가 없습니다</string>
+    <string name="cookies_invalid_format">cookies.txt 파일이 아닙니다. 쿠키를 Netscape 형식으로 내보내세요.</string>
+    <string name="cookies_invalid_line">올바른 cookies.txt 파일이 아닙니다 (%1$d번째 줄이 Netscape 형식이 아님)</string>
+    <string name="cookies_unreadable">선택한 파일을 읽을 수 없습니다</string>
+
+    <!-- Home input card -->
+    <string name="home_link_placeholder">동영상 링크 붙여넣기…</string>
+    <string name="home_file_title">동영상 또는 오디오 파일 선택</string>
+    <string name="home_file_formats">MP4, MKV, WebM, MP3, M4A…</string>
+    <string name="home_cta_hint_link">시작하려면 링크를 붙여넣으세요</string>
+    <string name="home_cta_hint_file">시작하려면 파일을 선택하세요</string>
+    <string name="home_estimate_total">이 휴대폰에서 약 %1$s</string>
+    <string name="home_estimate_per_minute">이 휴대폰에서 오디오 1분당 약 %1$s</string>
+    <string name="duration_seconds">%1$d초</string>
+    <string name="home_lighter_tip">이 휴대폰에서는 느립니다. 더 가벼운 모델이 약 %1$s배 빠릅니다.</string>
+    <string name="home_lighter_use">더 가벼운 모델 사용</string>
+    <string name="history_source_device">기기에서</string>
+    <string name="history_source_server">서버</string>
+    <string name="history_source_termux">Termux</string>
+</resources>

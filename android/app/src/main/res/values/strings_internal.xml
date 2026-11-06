@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- On-device (internal) processing strings. English only for now; other locales fall back to these. -->
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+<resources>
     <!-- Settings: appearance, color palette -->
     <string name="palette_title">Color palette</string>
     <string name="palette_material_you_hint">Material You uses your wallpaper colors. Turn it off to choose a palette.</string>

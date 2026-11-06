@@ -1,0 +1,380 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings: appearance, color palette -->
+    <string name="palette_title">Palette de couleurs</string>
+    <string name="palette_material_you_hint">Material You utilise les couleurs de votre fond d\'écran. Désactivez-le pour choisir une palette.</string>
+    <string name="palette_peach">Pêche</string>
+    <string name="palette_indigo">Indigo</string>
+    <string name="palette_teal">Sarcelle</string>
+    <string name="palette_green">Vert</string>
+    <string name="palette_amber">Ambre</string>
+    <string name="palette_rose">Rose</string>
+    <string name="palette_purple">Violet</string>
+    <string name="palette_slate">Ardoise</string>
+
+    <!-- Settings: processing mode -->
+    <string name="processing_mode">Mode de traitement</string>
+    <string name="mode_internal">Interne (sur l\'appareil)</string>
+    <string name="mode_server">Serveur</string>
+    <string name="internal_warning">Le traitement sur l\'appareil est lent (il peut durer plus longtemps que le morceau lui-même), consomme beaucoup de batterie et environ 1,5 GB de RAM. Laissez le téléphone en charge.</string>
+    <string name="internal_model_name">MDX-NET HQ3</string>
+    <string name="internal_model_downloaded">Téléchargé · %1$s</string>
+    <string name="internal_model_not_downloaded">Non téléchargé (%1$s, téléchargé à la première utilisation)</string>
+    <string name="internal_model_downloading">Téléchargement %1$s / %2$s</string>
+    <string name="download_model">Télécharger</string>
+    <string name="delete_model">Supprimer</string>
+    <string name="internal_model_in_use">Le modèle est en cours d\'utilisation. Réessayez une fois le téléchargement ou le traitement terminé.</string>
+    <string name="model_notice_required">Ouvrez d\'abord Paramètres → Modèles sur l\'appareil et acceptez l\'avis pour ce modèle</string>
+    <string name="model_notice_needed">Votre accord est requis avant le téléchargement</string>
+    <string name="model_notice_title">À propos de ce modèle</string>
+    <string name="model_notice_kim">Kim Vocal 2 est publié par son auteur via le dépôt public de modèles d\'UVR. Aucune licence n\'est indiquée, ses conditions d\'utilisation sont donc inconnues. Murem le télécharge depuis ce dépôt uniquement à votre demande et ne le redistribue pas.</string>
+    <string name="model_notice_download">Télécharger</string>
+    <string name="model_notice_cancel">Annuler</string>
+
+    <!-- Progress: separation ETA -->
+    <plurals name="about_n_min_left">
+        <item quantity="one">environ %d min restante</item>
+        <item quantity="many">environ %d min restantes</item>
+        <item quantity="other">environ %d min restantes</item>
+    </plurals>
+    <string name="about_1_min_left">environ 1 min restante</string>
+    <string name="less_than_minute_left">moins d\'une minute restante</string>
+
+    <!-- Output format (audio-only results) -->
+    <string name="output_format">Format</string>
+    <string name="output_mp3_checking">Vérification…</string>
+    <string name="output_mp3_unavailable">Le MP3 n\'est pas disponible sur ce téléphone, les résultats sont donc enregistrés en M4A.</string>
+    <string name="output_server_mp3_note">Le serveur et Termux enregistrent toujours les résultats audio uniquement en MP3</string>
+
+    <!-- Home / Help -->
+    <string name="status_ready_on_device">Prêt pour le traitement sur l\'appareil</string>
+    <string name="status_model_unavailable">Modèle non téléchargé et aucune connexion Internet</string>
+    <string name="internal_models_note">D\'autres modèles sont disponibles en mode Termux ou Serveur</string>
+    <string name="help_on_device">Traitement sur l\'appareil</string>
+    <string name="help_on_device_desc">Le mode Interne supprime la musique sur votre téléphone, sans serveur. Il télécharge le modèle MDX-NET HQ3 (64 MB) à la première utilisation. Il est lent et consomme beaucoup de batterie, laissez donc le téléphone en charge.</string>
+
+    <!-- Errors -->
+    <string name="internal_bad_source">Impossible de lire le fichier</string>
+    <string name="internal_no_space">Espace de stockage insuffisant (%1$d MB nécessaires)</string>
+    <string name="internal_model_download_failed">Échec du téléchargement du modèle : %1$s</string>
+    <string name="internal_model_failed_network">Échec du téléchargement du modèle. Vérifiez votre connexion Internet et réessayez.</string>
+    <string name="internal_model_corrupt">Le fichier du modèle est endommagé. Il sera téléchargé à nouveau la prochaine fois.</string>
+    <string name="internal_model_mismatch">Le modèle ne correspond pas à ses métadonnées</string>
+    <string name="internal_out_of_memory">Mémoire libre insuffisante. Fermez d\'autres applis et réessayez.</string>
+    <string name="internal_processing_failed">Échec du traitement sur l\'appareil</string>
+    <string name="internal_no_audio">Le fichier n\'a pas de piste audio</string>
+    <string name="internal_codec_unsupported">Ce format audio n\'est pas pris en charge sur ce téléphone</string>
+    <string name="internal_video_codec_unsupported">Ce format vidéo (%1$s) ne peut pas être traité sur ce téléphone. Activez Audio uniquement ou utilisez le mode Serveur.</string>
+    <string name="internal_video_convert_failed">Impossible de copier ou de convertir cette vidéo (%1$s) sur l\'appareil. Activez Audio uniquement ou utilisez le mode Serveur.</string>
+    <string name="internal_encode_failed">Impossible d\'encoder le résultat</string>
+    <string name="mp3_unavailable_fallback">Le MP3 n\'est pas disponible sur ce téléphone, le résultat a donc été enregistré en M4A</string>
+    <string name="internal_interrupted">Le traitement a été interrompu à plusieurs reprises</string>
+    <string name="internal_job_not_found">Tâche sur l\'appareil introuvable</string>
+    <string name="internal_needs_foreground">Le traitement sur l\'appareil nécessite que Murem soit ouvert au démarrage. Ouvrez Murem et réessayez.</string>
+    <string name="internal_waiting_foreground">Ouvrez Murem pour poursuivre le traitement sur l\'appareil</string>
+    <string name="internal_device_unsupported">Cet appareil n\'a pas assez de mémoire pour le traitement sur l\'appareil. Utilisez le mode Termux ou Serveur.</string>
+
+    <!-- Links (yt-dlp) -->
+    <string name="internal_url_invalid">Ce lien n\'est pas valide</string>
+    <string name="internal_url_live">Les diffusions en direct ne peuvent pas être traitées. Réessayez une fois la diffusion terminée.</string>
+    <string name="internal_url_unsupported_site">Ce site n\'est pas pris en charge sur l\'appareil. Essayez le mode Serveur.</string>
+    <string name="internal_url_unavailable">Cette vidéo est indisponible ou privée</string>
+    <string name="internal_url_blocked">Le site a refusé le téléchargement. Essayez Mettre à jour yt-dlp dans Paramètres, ou utilisez le mode Serveur.</string>
+    <string name="internal_url_network">Impossible de joindre le site. Vérifiez votre connexion Internet.</string>
+    <string name="internal_url_download_failed">Impossible de télécharger ce lien sur l\'appareil. Essayez le mode Serveur.</string>
+    <string name="internal_url_download_failed_detail">Impossible de télécharger ce lien sur l\'appareil (%1$s). Essayez le mode Serveur.</string>
+    <string name="internal_url_login_required">Le site n\'a pas partagé cette publication sans connexion. Appuyez sur Paramètres → Mettre à jour yt-dlp et réessayez, importez des cookies dans Paramètres, ou utilisez le mode Serveur.</string>
+    <string name="internal_url_login_cookies_failed">Cette publication nécessite une connexion et les cookies importés n\'ont pas fonctionné. Ils ont peut-être expiré : exportez-les à nouveau et importez-les dans Paramètres.</string>
+    <string name="internal_url_no_audio">Cette vidéo n\'a pas de piste audio, il n\'y a donc pas de musique à supprimer.</string>
+    <string name="internal_ytdlp_outdated_hint">yt-dlp %1$s n\'est plus à jour : appuyez sur Paramètres → Mettre à jour yt-dlp et réessayez.</string>
+    <string name="internal_ytdlp_init_failed">Impossible de préparer le téléchargeur de liens. Libérez de l\'espace de stockage et réessayez.</string>
+
+    <!-- Settings: yt-dlp -->
+    <string name="ytdlp_title">Mettre à jour yt-dlp</string>
+    <string name="ytdlp_version">Version %1$s</string>
+    <string name="ytdlp_version_loading">Chargement de la version…</string>
+    <string name="ytdlp_update">Mettre à jour yt-dlp</string>
+    <string name="ytdlp_updating">Mise à jour…</string>
+    <string name="ytdlp_updated">Mis à jour vers %1$s</string>
+    <string name="ytdlp_up_to_date">Déjà à jour (%1$s)</string>
+    <string name="ytdlp_update_failed">Échec de la mise à jour. Vérifiez votre connexion Internet.</string>
+    <string name="ytdlp_update_busy">Attendez la fin du téléchargement en cours</string>
+
+    <plurals name="ytdlp_age_days">
+        <item quantity="one">publié il y a %d jour</item>
+        <item quantity="many">publié il y a %d jours</item>
+        <item quantity="other">publié il y a %d jours</item>
+    </plurals>
+    <string name="ytdlp_released_today">publié aujourd\'hui</string>
+    <string name="ytdlp_never_auto">Murem ne met jamais yt-dlp à jour de lui-même. Appuyez sur Mettre à jour quand les liens ne fonctionnent plus.</string>
+    <string name="ytdlp_update_now">Mettre à jour</string>
+    <plurals name="ytdlp_banner_age">
+        <item quantity="one">Le yt-dlp intégré date de %d jour. Des sites comme Instagram peuvent nécessiter une version plus récente.</item>
+        <item quantity="many">Le yt-dlp intégré date de %d jours. Des sites comme Instagram peuvent nécessiter une version plus récente.</item>
+        <item quantity="other">Le yt-dlp intégré date de %d jours. Des sites comme Instagram peuvent nécessiter une version plus récente.</item>
+    </plurals>
+    <string name="banner_first_use_title">Traitement sur l\'appareil</string>
+    <string name="banner_first_use">Sur l\'appareil : la première tâche télécharge le modèle (30–67 MB) et peut durer plus longtemps que le morceau. Laissez le téléphone en charge.</string>
+    <string name="banner_outdated_title">yt-dlp n\'est peut-être plus à jour</string>
+    <string name="banner_close">Fermer</string>
+
+    <!-- Settings navigation -->
+    <string name="settings_group_processing">Traitement</string>
+    <string name="settings_group_output">Sortie</string>
+    <string name="settings_group_app">Appli</string>
+    <string name="settings_row_models">Modèles sur l\'appareil</string>
+    <string name="settings_row_performance">Performances</string>
+    <string name="settings_row_update_ytdlp">Mettre à jour yt-dlp</string>
+    <string name="settings_row_output">Sortie</string>
+    <string name="settings_row_storage">Historique et stockage</string>
+    <string name="settings_row_about">À propos et aide</string>
+    <string name="settings_internal_only">Mode Interne · %1$s</string>
+    <string name="settings_internal_only_note">Ces paramètres ne sont utilisés qu\'en mode Interne (sur l\'appareil).</string>
+    <string name="settings_mode_server">Serveur · %1$s</string>
+    <plurals name="settings_models_summary">
+        <item quantity="one">%1$s sélectionné · %2$d téléchargé</item>
+        <item quantity="many">%1$s sélectionné · %2$d téléchargés</item>
+        <item quantity="other">%1$s sélectionné · %2$d téléchargés</item>
+    </plurals>
+    <string name="settings_threads_auto">Threads auto</string>
+    <plurals name="settings_threads_n">
+        <item quantity="one">%d thread</item>
+        <item quantity="many">%d threads</item>
+        <item quantity="other">%d threads</item>
+    </plurals>
+    <plurals name="settings_accounts_on">
+        <item quantity="one">%d site activé</item>
+        <item quantity="many">%d sites activés</item>
+        <item quantity="other">%d sites activés</item>
+    </plurals>
+    <string name="settings_ytdlp_tap_to_check">Appuyez pour vérifier</string>
+    <string name="settings_bitrate_kbps">%1$s kbps</string>
+    <string name="settings_audio_only_on">Audio uniquement activé</string>
+    <string name="settings_audio_only_off">Audio uniquement désactivé</string>
+    <plurals name="settings_storage_summary">
+        <item quantity="one">%1$d élément · %2$s</item>
+        <item quantity="many">%1$d éléments · %2$s</item>
+        <item quantity="other">%1$d éléments · %2$s</item>
+    </plurals>
+    <string name="settings_about_summary">Murem %1$s</string>
+    <string name="dialog_cancel">Annuler</string>
+    <string name="dialog_delete">Supprimer</string>
+    <string name="more_options">Plus d\'options</string>
+
+    <!-- Settings: on-device models -->
+    <string name="model_name_voc_ft">MDX-NET Voc FT</string>
+    <string name="model_name_mdx3">MDX-NET 3_9662</string>
+    <string name="tag_best_vocals">Meilleures voix</string>
+    <string name="tag_fastest">Le plus rapide</string>
+    <string name="tag_lead_vocal">Voix principale</string>
+    <string name="tag_server_default">Par défaut du serveur</string>
+    <string name="model_best_hq3">Supprime bien la musique sur la plupart des morceaux (voix SDR 8,8 dB)</string>
+    <string name="model_best_voc_ft">Voix plus nettes sur la plupart des morceaux (voix SDR 10,2 dB)</string>
+    <string name="model_best_mdx3">Téléchargement deux fois plus léger et plus rapide, voix presque aussi nettes (9,7 dB)</string>
+    <string name="model_best_kara2">Garde uniquement la voix principale : les chœurs sont supprimés avec la musique</string>
+    <string name="model_best_kim2">Le modèle par défaut du serveur, avec les voix les plus nettes (10,2 dB)</string>
+    <string name="model_state_downloaded">Téléchargé</string>
+    <string name="model_state_first_use">Téléchargé à la première utilisation</string>
+    <plurals name="model_speed_hint">
+        <item quantity="one">≈ %d min pour un morceau de 4 min</item>
+        <item quantity="many">≈ %d min pour un morceau de 4 min</item>
+        <item quantity="other">≈ %d min pour un morceau de 4 min</item>
+    </plurals>
+    <string name="models_empty">Aucun modèle téléchargé. Le modèle sélectionné est téléchargé à la première utilisation.</string>
+    <string name="model_delete_title">Supprimer %1$s ?</string>
+    <string name="model_delete_text">Il sera téléchargé à nouveau la prochaine fois que vous l\'utiliserez.</string>
+
+    <!-- Settings: output -->
+    <string name="output_format_note">S\'applique aux résultats Audio uniquement. Les vidéos sont toujours enregistrées en MP4.</string>
+    <string name="output_m4a">M4A (AAC)</string>
+    <string name="output_mp3">MP3</string>
+    <string name="output_audio_only_desc">Enregistrer uniquement l\'audio des voix, sans la vidéo</string>
+
+    <!-- Settings: performance -->
+    <string name="perf_threads">Threads</string>
+    <string name="perf_threads_auto">Auto (%1$s)</string>
+    <string name="perf_threads_desc">Plus de threads peut être plus rapide, mais consomme plus de batterie et fait chauffer le téléphone.</string>
+    <string name="perf_quality">Qualité</string>
+    <string name="settings_quality_fast">Rapide</string>
+    <string name="settings_quality_balanced">Équilibrée</string>
+    <string name="settings_quality_best">Optimale</string>
+    <string name="perf_fast_time">Environ 0,83× le temps</string>
+    <string name="perf_balanced_time">Temps standard</string>
+    <string name="perf_best_time">Environ 1,5× le temps</string>
+    <string name="perf_quality_help">Rapide peut laisser un peu plus de musique aux bords des segments. Optimale est plus fluide mais plus lente.</string>
+    <string name="perf_batch">Taille de lot</string>
+    <string name="perf_batch_desc">Nombre de morceaux de la chanson que Murem sépare en même temps. Deux à la fois peuvent mieux exploiter un téléphone rapide, mais demandent plus de mémoire.</string>
+    <string name="perf_batch_1">1 (recommandé)</string>
+    <string name="perf_batch_2">2</string>
+    <string name="perf_batch_2_desc">Expérimental. Utilise environ 1 GB de mémoire en plus et n\'est pas forcément plus rapide.</string>
+    <string name="perf_batch_2_needs_ram">Nécessite un téléphone avec 6 GB de RAM</string>
+    <string name="perf_accelerator">Accélération</string>
+    <string name="perf_accelerator_desc">L\'option la plus rapide dépend du téléphone. Essayez-en une sur un court extrait et comparez le temps dans Récents. Si une option ne fonctionne pas sur ce téléphone, Murem utilise le CPU à la place.</string>
+    <string name="perf_acc_cpu">CPU (recommandé)</string>
+    <string name="perf_acc_cpu_desc">Fonctionne sur tous les téléphones</string>
+    <!-- Processing screen: system stats -->
+    <string name="stats_title">Système</string>
+    <string name="stats_show">Afficher les stats système</string>
+    <string name="stats_hide">Masquer les stats système</string>
+    <string name="stats_cpu">CPU</string>
+    <string name="stats_memory">Mémoire</string>
+    <string name="stats_free">%1$s libre</string>
+    <string name="stats_temperature">Chaleur</string>
+    <string name="stats_headroom">%1$s avant bridage</string>
+    <string name="stats_thermal_normal">Normale</string>
+    <string name="stats_thermal_warm">Tiède</string>
+    <string name="stats_thermal_hot">Chaude</string>
+    <string name="stats_thermal_throttling">Bridage</string>
+    <string name="stats_gpu">GPU</string>
+    <string name="perf_acc_webgpu">GPU (WebGPU)</string>
+    <string name="perf_acc_webgpu_desc">Expérimental. Exécute le modèle sur le GPU via Vulkan. Souvent le plus rapide, mais le téléphone peut ralentir pendant le traitement. Idéal quand vous n\'utilisez pas le téléphone en même temps</string>
+    <string name="perf_acc_nnapi">Puce IA (NNAPI)</string>
+    <string name="perf_acc_nnapi_desc">Expérimental. Utilise le pilote NPU, DSP ou GPU du téléphone en demi-précision. Peut être plus rapide ou beaucoup plus lent, selon le téléphone</string>
+    <string name="perf_acc_nnapi_needs_android">Nécessite Android 8.1 ou version ultérieure</string>
+    <string name="perf_acc_failed_here">N\'a pas fonctionné sur ce téléphone la dernière fois, Murem a donc terminé sur le CPU</string>
+    <string name="perf_acc_xnnpack">CPU optimisé (XNNPACK)</string>
+    <string name="perf_acc_xnnpack_desc">Expérimental. Un autre code CPU, plus rapide sur certains téléphones ARM</string>
+    <string name="perf_acc_webgpu_short">GPU</string>
+    <string name="perf_limit">Limite de charge</string>
+    <string name="perf_limit_desc">Empêche Murem d\'utiliser tout le GPU pour que le téléphone reste plus fluide et plus frais. Avec l\'accélération GPU, l\'écran a aussi son tour entre les étapes GPU. Pour un téléphone encore plus fluide, utilisez un modèle plus léger dans Modèles sur l\'appareil.</string>
+    <string name="perf_limit_full">Pleine vitesse</string>
+    <string name="perf_limit_full_desc">Le plus rapide. Le téléphone peut ralentir pendant le traitement</string>
+    <string name="perf_limit_pct">%1$d%%</string>
+    <string name="perf_limit_75_desc">Au moins 1,3× le temps</string>
+    <string name="perf_limit_50_desc">Au moins 2× le temps. Le plus fluide</string>
+    <string name="perf_limit_short">Limite %1$d%%</string>
+    <string name="perf_acc_xnnpack_short">XNNPACK</string>
+    <string name="perf_acc_nnapi_short">NNAPI</string>
+
+    <!-- Settings: history & storage, server discovery, Termux -->
+    <string name="clear_history_title">Effacer l\'historique ?</string>
+    <string name="clear_history_text">La liste des vidéos traitées est supprimée de Murem.</string>
+    <plurals name="exporting_items">
+        <item quantity="one">Exportation de %d élément…</item>
+        <item quantity="many">Exportation de %d éléments…</item>
+        <item quantity="other">Exportation de %d éléments…</item>
+    </plurals>
+    <string name="export_failed">Échec de l\'exportation : %1$s</string>
+    <string name="export_none">Aucun fichier à exporter</string>
+    <string name="discover_searching">Recherche du serveur…</string>
+    <string name="discover_found">Serveur trouvé à %1$s</string>
+    <string name="discover_failed">Échec de la découverte</string>
+    <string name="discover_error">Erreur de découverte : %1$s</string>
+    <string name="termux_come_back">Revenez ici quand Termux a terminé.</string>
+
+    <!-- Settings: about -->
+    <string name="about_help">Aide</string>
+    <string name="about_components_title">Composants open source</string>
+    <string name="about_components">L\'encodage MP3 utilise LAME (LGPL-2.0) via FFmpeg (GPL), tous deux fournis par youtubedl-android (GPL-3.0). La séparation utilise ONNX Runtime (MIT) et des modèles UVR MDX-Net téléchargés depuis leurs auteurs.</string>
+
+    <!-- Settings: accounts & cookies for on-device links -->
+    <string name="cookies_title">Comptes et cookies</string>
+    <plurals name="cookies_site_summary">
+        <item quantity="one">%1$d cookie · enregistré %2$s</item>
+        <item quantity="many">%1$d cookies · enregistrés %2$s</item>
+        <item quantity="other">%1$d cookies · enregistrés %2$s</item>
+    </plurals>
+    <string name="cookies_from_login">par connexion</string>
+    <string name="cookies_from_import">importés</string>
+    <string name="cookies_login_again">Se reconnecter</string>
+    <string name="cookies_delete">Supprimer</string>
+    <string name="cookies_not_internal_note">Les cookies ne sont utilisés que pour les liens en mode Interne.</string>
+    <string name="cookies_empty_title">Aucune connexion enregistrée</string>
+    <string name="cookies_empty_desc">Connectez-vous ou importez des cookies pour télécharger les publications qui nécessitent un compte.</string>
+    <string name="cookies_delete_site_title">Supprimer les cookies de %1$s ?</string>
+    <string name="cookies_delete_site_text">Pour télécharger à nouveau les publications qui nécessitent ce compte, reconnectez-vous ou importez ses cookies.</string>
+    <string name="cookies_delete_all_title">Supprimer tous les cookies enregistrés ?</string>
+    <string name="cookies_delete_all_text">Toutes les connexions enregistrées sont supprimées de cet appareil.</string>
+    <string name="cookies_import">Importer cookies.txt</string>
+    <string name="cookies_delete_all">Tout supprimer</string>
+    <string name="cookies_send_for">Envoyer les cookies pour %1$s</string>
+    <string name="cookies_change_failed">Impossible de modifier les cookies enregistrés. Réessayez.</string>
+    <string name="cookies_cannot_open_login">Impossible d\'ouvrir une page de connexion pour ce site</string>
+    <string name="cookies_imported">Cookies importés</string>
+    <string name="cookies_removed">Cookies supprimés</string>
+    <string name="cookies_help">Certaines publications ne peuvent être téléchargées qu\'en étant connecté. Connectez-vous dans Murem ou importez un fichier cookies.txt (format Netscape) depuis le navigateur d\'un ordinateur. Les cookies sont conservés par site et restent sur cet appareil. Seuls les sites activés sont envoyés, et uniquement avec les liens en mode Interne. Les téléchargements YouTube peuvent changer si les cookies YouTube sont activés. Toute personne disposant de ces cookies peut utiliser votre compte : ne les partagez jamais et supprimez un site quand vous avez terminé.</string>
+    <string name="cookies_login">Se connecter avec le navigateur</string>
+    <string name="cookies_login_site_instagram">Instagram</string>
+    <string name="cookies_login_site_custom">Autre site (URL https)</string>
+    <string name="cookies_login_url_hint">https://example.com/login</string>
+    <string name="cookies_login_notice_title">Se connecter avec le navigateur</string>
+    <string name="cookies_login_notice">Vous vous connectez dans Murem, pas dans votre appli de navigateur. Les cookies du site sont stockés uniquement sur cet appareil et utilisés pour les liens sur l\'appareil. Vous pouvez les supprimer dans Paramètres → Comptes et cookies.</string>
+    <string name="cookies_login_continue">Continuer</string>
+    <string name="cookies_login_cancel">Annuler</string>
+    <string name="cookies_login_title">Connectez-vous, puis appuyez sur Enregistrer</string>
+    <string name="cookies_login_save">Enregistrer les cookies</string>
+    <string name="cookies_login_oauth_hint">La connexion avec Google et Facebook peut être bloquée dans les navigateurs intégrés. Connectez-vous plutôt avec votre nom d\'utilisateur et votre mot de passe.</string>
+    <plurals name="cookies_login_saved">
+        <item quantity="one">%1$d cookie enregistré pour %2$s</item>
+        <item quantity="many">%1$d cookies enregistrés pour %2$s</item>
+        <item quantity="other">%1$d cookies enregistrés pour %2$s</item>
+    </plurals>
+    <string name="cookies_login_none">Aucun cookie trouvé. Connectez-vous d\'abord, puis appuyez sur Enregistrer.</string>
+    <string name="paste">Coller</string>
+    <string name="no_external_player">Aucune appli trouvée pour ouvrir ce fichier</string>
+
+    <!-- 4.1: licenses, problem reports, playback errors, job times -->
+    <string name="back">Retour</string>
+    <string name="licenses_title">Licences open source</string>
+    <string name="licenses_desc">Bibliothèques utilisées par Murem et leurs licences</string>
+    <string name="report_problem">Signaler un problème</string>
+    <string name="report_problem_desc">Ouvre un ticket GitHub prérempli. Vous le relisez avant de l\'envoyer.</string>
+    <string name="report_problem_short">Signaler</string>
+    <string name="report_no_browser">Aucun navigateur trouvé pour ouvrir GitHub</string>
+    <string name="crash_title">Murem s\'est fermé de manière inattendue</string>
+    <string name="crash_text">Le signaler sur GitHub pour qu\'il soit corrigé ? Le rapport contient la version de l\'appli, le modèle de votre téléphone, la version d\'Android et l\'erreur. Aucun lien ni nom de fichier n\'est inclus, et vous le relisez avant de l\'envoyer.</string>
+    <string name="not_now">Pas maintenant</string>
+    <string name="playback_error_title">Impossible de lire ce résultat</string>
+    <string name="playback_error_missing">Le fichier est introuvable ou illisible. Il a peut-être été supprimé, ou le serveur ne l\'a plus.</string>
+    <string name="playback_error_network">Impossible de joindre le serveur. Vérifiez la connexion et réessayez.</string>
+    <string name="playback_error_format">Ce fichier utilise un format que ce téléphone ne peut pas lire. Essayez de l\'ouvrir dans une autre appli.</string>
+    <string name="playback_error_generic">Un problème est survenu pendant la lecture de ce fichier.</string>
+    <string name="open_in_other_app">Ouvrir dans une autre appli</string>
+    <string name="started_at">Démarré %1$s · %2$s</string>
+    <string name="started_ago">il y a %1$s</string>
+    <string name="started_just_now">à l\'instant</string>
+    <string name="duration_under_minute">moins d\'une minute</string>
+    <string name="duration_under_minute_short">&lt;1 min</string>
+    <plurals name="duration_minutes">
+        <item quantity="one">%d min</item>
+        <item quantity="many">%d min</item>
+        <item quantity="other">%d min</item>
+    </plurals>
+    <plurals name="duration_hours">
+        <item quantity="one">%d h</item>
+        <item quantity="many">%d h</item>
+        <item quantity="other">%d h</item>
+    </plurals>
+    <string name="duration_hours_minutes">%1$s %2$s</string>
+    <string name="info_started">Démarré</string>
+    <string name="info_finished">Terminé</string>
+    <string name="info_took">Durée</string>
+    <string name="server_job_gone">Le serveur n\'a plus cette tâche. Les résultats sont conservés 7 jours.</string>
+    <plurals name="links_queued">
+        <item quantity="one">%1$d lien en file d\'attente</item>
+        <item quantity="many">%1$d liens en file d\'attente</item>
+        <item quantity="other">%1$d liens en file d\'attente</item>
+    </plurals>
+    <string name="cookies_login_not_logged_in">Vous ne semblez pas encore connecté, rien n\'a donc été enregistré. Connectez-vous d\'abord, puis appuyez sur Enregistrer.</string>
+    <string name="cookies_login_save_failed">Impossible d\'enregistrer les cookies. Libérez de l\'espace de stockage et réessayez.</string>
+    <string name="cookies_invalid_too_large">Ce fichier est trop volumineux pour un cookies.txt (plus de 1 MB)</string>
+    <string name="cookies_invalid_empty">Ce cookies.txt ne contient aucun cookie</string>
+    <string name="cookies_invalid_format">Ce n\'est pas un fichier cookies.txt. Exportez les cookies au format Netscape.</string>
+    <string name="cookies_invalid_line">Ce n\'est pas un fichier cookies.txt valide (la ligne %1$d n\'est pas au format Netscape)</string>
+    <string name="cookies_unreadable">Impossible de lire le fichier sélectionné</string>
+
+    <!-- Home input card -->
+    <string name="home_link_placeholder">Collez un lien vidéo…</string>
+    <string name="home_file_title">Choisir un fichier vidéo ou audio</string>
+    <string name="home_file_formats">MP4, MKV, WebM, MP3, M4A…</string>
+    <string name="home_cta_hint_link">Collez un lien pour commencer</string>
+    <string name="home_cta_hint_file">Choisissez un fichier pour commencer</string>
+    <string name="home_estimate_total">Environ %1$s sur ce téléphone</string>
+    <string name="home_estimate_per_minute">Environ %1$s par minute d\'audio sur ce téléphone</string>
+    <string name="duration_seconds">%1$d s</string>
+    <string name="home_lighter_tip">Lent sur ce téléphone. Un modèle plus léger est environ %1$s× plus rapide.</string>
+    <string name="home_lighter_use">Utiliser un modèle plus léger</string>
+    <string name="history_source_device">Sur l\'appareil</string>
+    <string name="history_source_server">Serveur</string>
+    <string name="history_source_termux">Termux</string>
+</resources>

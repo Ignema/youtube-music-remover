@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings: appearance, color palette -->
+    <string name="palette_title">Palet warna</string>
+    <string name="palette_material_you_hint">Material You memakai warna wallpaper-mu. Matikan untuk memilih palet.</string>
+    <string name="palette_peach">Persik</string>
+    <string name="palette_indigo">Nila</string>
+    <string name="palette_teal">Hijau toska</string>
+    <string name="palette_green">Hijau</string>
+    <string name="palette_amber">Kuning amber</string>
+    <string name="palette_rose">Mawar</string>
+    <string name="palette_purple">Ungu</string>
+    <string name="palette_slate">Abu batu</string>
+
+    <!-- Settings: processing mode -->
+    <string name="processing_mode">Mode pemrosesan</string>
+    <string name="mode_internal">Internal (di perangkat)</string>
+    <string name="mode_server">Server</string>
+    <string name="internal_warning">Pemrosesan di perangkat lambat (bisa lebih lama dari durasi lagunya), boros baterai, dan memakai sekitar 1,5 GB RAM. Biarkan ponsel tetap diisi daya.</string>
+    <string name="internal_model_name">MDX-NET HQ3</string>
+    <string name="internal_model_downloaded">Sudah diunduh · %1$s</string>
+    <string name="internal_model_not_downloaded">Belum diunduh (%1$s, diunduh saat pertama dipakai)</string>
+    <string name="internal_model_downloading">Mengunduh %1$s / %2$s</string>
+    <string name="download_model">Unduh</string>
+    <string name="delete_model">Hapus</string>
+    <string name="internal_model_in_use">Model sedang dipakai. Coba lagi setelah unduhan atau pemrosesan selesai.</string>
+    <string name="model_notice_required">Buka Pengaturan → Model di perangkat dan setujui pemberitahuan untuk model ini terlebih dahulu</string>
+    <string name="model_notice_needed">Perlu persetujuanmu sebelum diunduh</string>
+    <string name="model_notice_title">Tentang model ini</string>
+    <string name="model_notice_kim">Kim Vocal 2 diterbitkan oleh pembuatnya melalui repositori model publik UVR. Tidak ada lisensi yang dicantumkan, jadi ketentuan penggunaannya tidak diketahui. Murem mengunduhnya dari sana hanya saat kamu memintanya dan tidak mendistribusikannya ulang.</string>
+    <string name="model_notice_download">Unduh</string>
+    <string name="model_notice_cancel">Batal</string>
+
+    <!-- Progress: separation ETA -->
+    <plurals name="about_n_min_left">
+        <item quantity="other">sekitar %d mnt lagi</item>
+    </plurals>
+    <string name="about_1_min_left">sekitar 1 mnt lagi</string>
+    <string name="less_than_minute_left">kurang dari satu menit lagi</string>
+
+    <!-- Output format (audio-only results) -->
+    <string name="output_format">Format</string>
+    <string name="output_mp3_checking">Memeriksa…</string>
+    <string name="output_mp3_unavailable">MP3 tidak tersedia di ponsel ini, jadi hasil disimpan sebagai M4A.</string>
+    <string name="output_server_mp3_note">Server dan Termux selalu menyimpan hasil audio saja sebagai MP3</string>
+
+    <!-- Home / Help -->
+    <string name="status_ready_on_device">Siap untuk pemrosesan di perangkat</string>
+    <string name="status_model_unavailable">Model belum diunduh dan tidak ada koneksi internet</string>
+    <string name="internal_models_note">Model lainnya tersedia di mode Termux atau Server</string>
+    <string name="help_on_device">Pemrosesan di perangkat</string>
+    <string name="help_on_device_desc">Mode Internal menghapus musik di ponselmu tanpa server. Mode ini mengunduh model MDX-NET HQ3 (64 MB) saat pertama dipakai, serta lambat dan boros baterai, jadi biarkan ponsel tetap diisi daya.</string>
+
+    <!-- Errors -->
+    <string name="internal_bad_source">Tidak dapat membaca file</string>
+    <string name="internal_no_space">Ruang penyimpanan tidak cukup (perlu %1$d MB)</string>
+    <string name="internal_model_download_failed">Gagal mengunduh model: %1$s</string>
+    <string name="internal_model_failed_network">Gagal mengunduh model. Periksa koneksi internetmu dan coba lagi.</string>
+    <string name="internal_model_corrupt">File model rusak. File akan diunduh ulang lain kali.</string>
+    <string name="internal_model_mismatch">Model tidak cocok dengan metadatanya</string>
+    <string name="internal_out_of_memory">Memori kosong tidak cukup. Tutup aplikasi lain dan coba lagi.</string>
+    <string name="internal_processing_failed">Pemrosesan di perangkat gagal</string>
+    <string name="internal_no_audio">File tidak memiliki trek audio</string>
+    <string name="internal_codec_unsupported">Format audio ini tidak didukung di ponsel ini</string>
+    <string name="internal_video_codec_unsupported">Format video ini (%1$s) tidak dapat diproses di ponsel ini. Aktifkan Audio saja atau gunakan mode Server.</string>
+    <string name="internal_video_convert_failed">Tidak dapat menyalin atau mengonversi video ini (%1$s) di perangkat. Aktifkan Audio saja atau gunakan mode Server.</string>
+    <string name="internal_encode_failed">Tidak dapat meng-encode hasil</string>
+    <string name="mp3_unavailable_fallback">MP3 tidak tersedia di ponsel ini, jadi hasil disimpan sebagai M4A</string>
+    <string name="internal_interrupted">Pemrosesan terhenti berulang kali</string>
+    <string name="internal_job_not_found">Tugas di perangkat tidak ditemukan</string>
+    <string name="internal_needs_foreground">Pemrosesan di perangkat membutuhkan Murem terbuka saat dimulai. Buka Murem dan coba lagi.</string>
+    <string name="internal_waiting_foreground">Buka Murem untuk melanjutkan pemrosesan di perangkat</string>
+    <string name="internal_device_unsupported">Perangkat ini tidak punya cukup memori untuk pemrosesan di perangkat. Gunakan mode Termux atau Server.</string>
+
+    <!-- Links (yt-dlp) -->
+    <string name="internal_url_invalid">Ini bukan tautan yang valid</string>
+    <string name="internal_url_live">Siaran langsung tidak dapat diproses. Coba lagi setelah siaran selesai.</string>
+    <string name="internal_url_unsupported_site">Situs ini tidak didukung di perangkat. Coba mode Server.</string>
+    <string name="internal_url_unavailable">Video ini tidak tersedia atau bersifat pribadi</string>
+    <string name="internal_url_blocked">Situs menolak unduhan. Coba Perbarui yt-dlp di Pengaturan, atau gunakan mode Server.</string>
+    <string name="internal_url_network">Tidak dapat menghubungi situs. Periksa koneksi internetmu.</string>
+    <string name="internal_url_download_failed">Tidak dapat mengunduh tautan ini di perangkat. Coba mode Server.</string>
+    <string name="internal_url_download_failed_detail">Tidak dapat mengunduh tautan ini di perangkat (%1$s). Coba mode Server.</string>
+    <string name="internal_url_login_required">Situs tidak membagikan postingan ini tanpa login. Ketuk Pengaturan → Perbarui yt-dlp lalu coba lagi, impor cookie di Pengaturan, atau gunakan mode Server.</string>
+    <string name="internal_url_login_cookies_failed">Postingan ini memerlukan login dan cookie yang diimpor tidak berhasil. Mungkin sudah kedaluwarsa: ekspor ulang lalu impor di Pengaturan.</string>
+    <string name="internal_url_no_audio">Video ini tidak memiliki trek audio, jadi tidak ada musik yang perlu dihapus.</string>
+    <string name="internal_ytdlp_outdated_hint">yt-dlp %1$s sudah usang: ketuk Pengaturan → Perbarui yt-dlp lalu coba lagi.</string>
+    <string name="internal_ytdlp_init_failed">Tidak dapat menyiapkan pengunduh tautan. Kosongkan sebagian ruang penyimpanan dan coba lagi.</string>
+
+    <!-- Settings: yt-dlp -->
+    <string name="ytdlp_title">Perbarui yt-dlp</string>
+    <string name="ytdlp_version">Versi %1$s</string>
+    <string name="ytdlp_version_loading">Memuat versi…</string>
+    <string name="ytdlp_update">Perbarui yt-dlp</string>
+    <string name="ytdlp_updating">Memperbarui…</string>
+    <string name="ytdlp_updated">Diperbarui ke %1$s</string>
+    <string name="ytdlp_up_to_date">Sudah versi terbaru (%1$s)</string>
+    <string name="ytdlp_update_failed">Pembaruan gagal. Periksa koneksi internetmu.</string>
+    <string name="ytdlp_update_busy">Tunggu hingga unduhan saat ini selesai</string>
+
+    <plurals name="ytdlp_age_days">
+        <item quantity="other">berumur %d hari</item>
+    </plurals>
+    <string name="ytdlp_released_today">dirilis hari ini</string>
+    <string name="ytdlp_never_auto">Murem tidak pernah memperbarui yt-dlp sendiri. Ketuk Perbarui saat tautan berhenti berfungsi.</string>
+    <string name="ytdlp_update_now">Perbarui sekarang</string>
+    <plurals name="ytdlp_banner_age">
+        <item quantity="other">yt-dlp bawaan sudah berumur %d hari. Situs seperti Instagram mungkin memerlukan versi yang lebih baru.</item>
+    </plurals>
+    <string name="banner_first_use_title">Pemrosesan di perangkat</string>
+    <string name="banner_first_use">Di perangkat: tugas pertama mengunduh model (30–67 MB) dan bisa lebih lama dari durasi lagunya. Biarkan ponsel tetap diisi daya.</string>
+    <string name="banner_outdated_title">yt-dlp mungkin sudah usang</string>
+    <string name="banner_close">Tutup</string>
+
+    <!-- Settings navigation -->
+    <string name="settings_group_processing">Pemrosesan</string>
+    <string name="settings_group_output">Output</string>
+    <string name="settings_group_app">Aplikasi</string>
+    <string name="settings_row_models">Model di perangkat</string>
+    <string name="settings_row_performance">Performa</string>
+    <string name="settings_row_update_ytdlp">Perbarui yt-dlp</string>
+    <string name="settings_row_output">Output</string>
+    <string name="settings_row_storage">Riwayat &amp; penyimpanan</string>
+    <string name="settings_row_about">Tentang &amp; bantuan</string>
+    <string name="settings_internal_only">Mode Internal · %1$s</string>
+    <string name="settings_internal_only_note">Pengaturan ini hanya dipakai di mode Internal (di perangkat).</string>
+    <string name="settings_mode_server">Server · %1$s</string>
+    <plurals name="settings_models_summary">
+        <item quantity="other">%1$s dipilih · %2$d diunduh</item>
+    </plurals>
+    <string name="settings_threads_auto">Thread otomatis</string>
+    <plurals name="settings_threads_n">
+        <item quantity="other">%d thread</item>
+    </plurals>
+    <plurals name="settings_accounts_on">
+        <item quantity="other">%d situs aktif</item>
+    </plurals>
+    <string name="settings_ytdlp_tap_to_check">Ketuk untuk memeriksa</string>
+    <string name="settings_bitrate_kbps">%1$s kbps</string>
+    <string name="settings_audio_only_on">Audio saja aktif</string>
+    <string name="settings_audio_only_off">Audio saja nonaktif</string>
+    <plurals name="settings_storage_summary">
+        <item quantity="other">%1$d item · %2$s</item>
+    </plurals>
+    <string name="settings_about_summary">Murem %1$s</string>
+    <string name="dialog_cancel">Batal</string>
+    <string name="dialog_delete">Hapus</string>
+    <string name="more_options">Opsi lainnya</string>
+
+    <!-- Settings: on-device models -->
+    <string name="model_name_voc_ft">MDX-NET Voc FT</string>
+    <string name="model_name_mdx3">MDX-NET 3_9662</string>
+    <string name="tag_best_vocals">Vokal terbaik</string>
+    <string name="tag_fastest">Tercepat</string>
+    <string name="tag_lead_vocal">Vokal utama</string>
+    <string name="tag_server_default">Default server</string>
+    <string name="model_best_hq3">Menghapus musik dengan baik di kebanyakan lagu (SDR vokal 8,8 dB)</string>
+    <string name="model_best_voc_ft">Vokal lebih bersih di kebanyakan lagu (SDR vokal 10,2 dB)</string>
+    <string name="model_best_mdx3">Unduhan setengahnya dan lebih cepat, vokal hampir sama bersihnya (9,7 dB)</string>
+    <string name="model_best_kara2">Hanya menyimpan vokal utama: vokal latar ikut terhapus bersama musik</string>
+    <string name="model_best_kim2">Model default server, dengan vokal paling bersih (10,2 dB)</string>
+    <string name="model_state_downloaded">Sudah diunduh</string>
+    <string name="model_state_first_use">Diunduh saat pertama dipakai</string>
+    <plurals name="model_speed_hint">
+        <item quantity="other">≈ %d mnt untuk lagu 4 mnt</item>
+    </plurals>
+    <string name="models_empty">Belum ada model yang diunduh. Model yang dipilih akan diunduh saat pertama dipakai.</string>
+    <string name="model_delete_title">Hapus %1$s?</string>
+    <string name="model_delete_text">Model akan diunduh lagi saat kamu memakainya nanti.</string>
+
+    <!-- Settings: output -->
+    <string name="output_format_note">Berlaku untuk hasil Audio saja. Video selalu disimpan sebagai MP4.</string>
+    <string name="output_m4a">M4A (AAC)</string>
+    <string name="output_mp3">MP3</string>
+    <string name="output_audio_only_desc">Simpan audio vokal saja, tanpa video</string>
+
+    <!-- Settings: performance -->
+    <string name="perf_threads">Thread</string>
+    <string name="perf_threads_auto">Otomatis (%1$s)</string>
+    <string name="perf_threads_desc">Lebih banyak thread bisa lebih cepat, tetapi lebih boros baterai dan membuat ponsel lebih panas.</string>
+    <string name="perf_quality">Kualitas</string>
+    <string name="settings_quality_fast">Cepat</string>
+    <string name="settings_quality_balanced">Seimbang</string>
+    <string name="settings_quality_best">Terbaik</string>
+    <string name="perf_fast_time">Sekitar 0,83× waktu</string>
+    <string name="perf_balanced_time">Waktu standar</string>
+    <string name="perf_best_time">Sekitar 1,5× waktu</string>
+    <string name="perf_quality_help">Cepat bisa menyisakan sedikit lebih banyak musik di tepi potongan. Terbaik lebih halus tetapi lebih lambat.</string>
+    <string name="perf_batch">Ukuran batch</string>
+    <string name="perf_batch_desc">Berapa potongan lagu yang dipisahkan Murem sekaligus. Dua sekaligus bisa memanfaatkan ponsel cepat dengan lebih baik, tetapi butuh lebih banyak memori.</string>
+    <string name="perf_batch_1">1 (disarankan)</string>
+    <string name="perf_batch_2">2</string>
+    <string name="perf_batch_2_desc">Eksperimental. Memakai sekitar 1 GB memori lebih banyak, belum tentu lebih cepat.</string>
+    <string name="perf_batch_2_needs_ram">Butuh ponsel dengan RAM 6 GB</string>
+    <string name="perf_accelerator">Akselerasi</string>
+    <string name="perf_accelerator_desc">Mana yang tercepat tergantung ponselnya. Coba satu opsi pada klip pendek dan bandingkan waktunya di Terbaru. Jika suatu opsi tidak berfungsi di ponsel ini, Murem memakai CPU sebagai gantinya.</string>
+    <string name="perf_acc_cpu">CPU (disarankan)</string>
+    <string name="perf_acc_cpu_desc">Berfungsi di semua ponsel</string>
+    <!-- Processing screen: system stats -->
+    <string name="stats_title">Sistem</string>
+    <string name="stats_show">Tampilkan statistik sistem</string>
+    <string name="stats_hide">Sembunyikan statistik sistem</string>
+    <string name="stats_cpu">CPU</string>
+    <string name="stats_memory">Memori</string>
+    <string name="stats_free">%1$s kosong</string>
+    <string name="stats_temperature">Panas</string>
+    <string name="stats_headroom">%1$s sebelum throttling</string>
+    <string name="stats_thermal_normal">Normal</string>
+    <string name="stats_thermal_warm">Hangat</string>
+    <string name="stats_thermal_hot">Panas</string>
+    <string name="stats_thermal_throttling">Throttling</string>
+    <string name="stats_gpu">GPU</string>
+    <string name="perf_acc_webgpu">GPU (WebGPU)</string>
+    <string name="perf_acc_webgpu_desc">Eksperimental. Menjalankan model di GPU melalui Vulkan. Sering kali tercepat, tetapi ponsel bisa tersendat selama berjalan, jadi paling cocok saat kamu tidak sedang memakai ponsel</string>
+    <string name="perf_acc_nnapi">Chip AI (NNAPI)</string>
+    <string name="perf_acc_nnapi_desc">Eksperimental. Memakai driver NPU, DSP, atau GPU ponsel dengan presisi setengah. Bisa lebih cepat atau jauh lebih lambat, tergantung ponselnya</string>
+    <string name="perf_acc_nnapi_needs_android">Butuh Android 8.1 atau yang lebih baru</string>
+    <string name="perf_acc_failed_here">Tidak berfungsi di ponsel ini terakhir kali, jadi Murem menyelesaikannya dengan CPU</string>
+    <string name="perf_acc_xnnpack">CPU teroptimasi (XNNPACK)</string>
+    <string name="perf_acc_xnnpack_desc">Eksperimental. Kode CPU berbeda yang lebih cepat di beberapa ponsel ARM</string>
+    <string name="perf_acc_webgpu_short">GPU</string>
+    <string name="perf_limit">Batas beban</string>
+    <string name="perf_limit_desc">Mencegah Murem memakai seluruh GPU agar ponsel tetap lebih lancar dan dingin. Dengan akselerasi GPU, layar juga mendapat giliran di antara langkah GPU. Agar ponsel lebih lancar lagi, gunakan model yang lebih ringan di Model di perangkat.</string>
+    <string name="perf_limit_full">Kecepatan penuh</string>
+    <string name="perf_limit_full_desc">Tercepat. Ponsel bisa tersendat selama pemrosesan</string>
+    <string name="perf_limit_pct">%1$d%%</string>
+    <string name="perf_limit_75_desc">Minimal 1,3× waktu</string>
+    <string name="perf_limit_50_desc">Minimal 2× waktu. Paling lancar</string>
+    <string name="perf_limit_short">Batas %1$d%%</string>
+    <string name="perf_acc_xnnpack_short">XNNPACK</string>
+    <string name="perf_acc_nnapi_short">NNAPI</string>
+
+    <!-- Settings: history & storage, server discovery, Termux -->
+    <string name="clear_history_title">Hapus riwayat?</string>
+    <string name="clear_history_text">Daftar video yang telah diproses akan dihapus dari Murem.</string>
+    <plurals name="exporting_items">
+        <item quantity="other">Mengekspor %d item…</item>
+    </plurals>
+    <string name="export_failed">Ekspor gagal: %1$s</string>
+    <string name="export_none">Tidak ada file yang bisa diekspor</string>
+    <string name="discover_searching">Mencari server…</string>
+    <string name="discover_found">Server ditemukan di %1$s</string>
+    <string name="discover_failed">Pencarian gagal</string>
+    <string name="discover_error">Kesalahan pencarian: %1$s</string>
+    <string name="termux_come_back">Kembali ke sini setelah Termux selesai.</string>
+
+    <!-- Settings: about -->
+    <string name="about_help">Bantuan</string>
+    <string name="about_components_title">Komponen open source</string>
+    <string name="about_components">Encoding MP3 memakai LAME (LGPL-2.0) melalui FFmpeg (GPL), keduanya disertakan oleh youtubedl-android (GPL-3.0). Pemisahan memakai ONNX Runtime (MIT) dan model UVR MDX-Net yang diunduh dari pembuatnya.</string>
+
+    <!-- Settings: accounts & cookies for on-device links -->
+    <string name="cookies_title">Akun &amp; cookie</string>
+    <plurals name="cookies_site_summary">
+        <item quantity="other">%1$d cookie · disimpan %2$s</item>
+    </plurals>
+    <string name="cookies_from_login">dari login</string>
+    <string name="cookies_from_import">diimpor</string>
+    <string name="cookies_login_again">Login lagi</string>
+    <string name="cookies_delete">Hapus</string>
+    <string name="cookies_not_internal_note">Cookie hanya dipakai untuk tautan di mode Internal.</string>
+    <string name="cookies_empty_title">Tidak ada login tersimpan</string>
+    <string name="cookies_empty_desc">Login atau impor cookie untuk mengunduh postingan yang memerlukan akun.</string>
+    <string name="cookies_delete_site_title">Hapus cookie untuk %1$s?</string>
+    <string name="cookies_delete_site_text">Untuk mengunduh lagi postingan yang memerlukan akun ini, login lagi atau impor cookie-nya.</string>
+    <string name="cookies_delete_all_title">Hapus semua cookie tersimpan?</string>
+    <string name="cookies_delete_all_text">Semua login tersimpan akan dihapus dari perangkat ini.</string>
+    <string name="cookies_import">Impor cookies.txt</string>
+    <string name="cookies_delete_all">Hapus semua</string>
+    <string name="cookies_send_for">Kirim cookie untuk %1$s</string>
+    <string name="cookies_change_failed">Tidak dapat mengubah cookie tersimpan. Coba lagi.</string>
+    <string name="cookies_cannot_open_login">Tidak dapat membuka halaman login untuk situs ini</string>
+    <string name="cookies_imported">Cookie diimpor</string>
+    <string name="cookies_removed">Cookie dihapus</string>
+    <string name="cookies_help">Beberapa postingan hanya bisa diunduh saat sedang login. Login di dalam Murem atau impor file cookies.txt (format Netscape) dari browser komputer. Cookie disimpan per situs dan tetap ada di perangkat ini. Hanya situs yang diaktifkan yang dikirim, dan hanya untuk tautan di mode Internal. Unduhan YouTube bisa berubah jika cookie YouTube aktif. Siapa pun yang memiliki cookie ini bisa memakai akunmu: jangan pernah membagikannya, dan hapus situs setelah selesai.</string>
+    <string name="cookies_login">Login dengan browser</string>
+    <string name="cookies_login_site_instagram">Instagram</string>
+    <string name="cookies_login_site_custom">Situs lain (URL https)</string>
+    <string name="cookies_login_url_hint">https://example.com/login</string>
+    <string name="cookies_login_notice_title">Login dengan browser</string>
+    <string name="cookies_login_notice">Kamu login di dalam Murem, bukan di aplikasi browser-mu. Cookie situs hanya disimpan di perangkat ini dan dipakai untuk tautan di perangkat. Kamu bisa menghapusnya di Pengaturan → Akun &amp; cookie.</string>
+    <string name="cookies_login_continue">Lanjutkan</string>
+    <string name="cookies_login_cancel">Batal</string>
+    <string name="cookies_login_title">Login, lalu ketuk Simpan</string>
+    <string name="cookies_login_save">Simpan cookie</string>
+    <string name="cookies_login_oauth_hint">Login dengan Google dan Facebook mungkin diblokir di browser tersemat. Login dengan nama pengguna dan kata sandi saja.</string>
+    <plurals name="cookies_login_saved">
+        <item quantity="other">%1$d cookie disimpan untuk %2$s</item>
+    </plurals>
+    <string name="cookies_login_none">Cookie tidak ditemukan. Login terlebih dahulu, lalu ketuk Simpan.</string>
+    <string name="paste">Tempel</string>
+    <string name="no_external_player">Tidak ada aplikasi untuk membuka file ini</string>
+
+    <!-- 4.1: licenses, problem reports, playback errors, job times -->
+    <string name="back">Kembali</string>
+    <string name="licenses_title">Lisensi open source</string>
+    <string name="licenses_desc">Library yang dipakai Murem dan lisensinya</string>
+    <string name="report_problem">Laporkan masalah</string>
+    <string name="report_problem_desc">Membuka issue GitHub yang sudah terisi. Kamu bisa memeriksanya sebelum mengirim.</string>
+    <string name="report_problem_short">Laporkan</string>
+    <string name="report_no_browser">Tidak ada browser untuk membuka GitHub</string>
+    <string name="crash_title">Murem tertutup secara tiba-tiba</string>
+    <string name="crash_text">Laporkan di GitHub agar bisa diperbaiki? Laporan berisi versi aplikasi, model ponselmu, versi Android, dan error-nya. Tidak ada tautan atau nama file yang disertakan, dan kamu bisa memeriksanya sebelum mengirim.</string>
+    <string name="not_now">Nanti saja</string>
+    <string name="playback_error_title">Tidak dapat memutar hasil ini</string>
+    <string name="playback_error_missing">File tidak ada atau tidak dapat dibaca. Mungkin sudah dihapus, atau server tidak lagi menyimpannya.</string>
+    <string name="playback_error_network">Server tidak dapat dihubungi. Periksa koneksi dan coba lagi.</string>
+    <string name="playback_error_format">File ini memakai format yang tidak dapat diputar di ponsel ini. Coba buka di aplikasi lain.</string>
+    <string name="playback_error_generic">Terjadi masalah saat memutar file ini.</string>
+    <string name="open_in_other_app">Buka di aplikasi lain</string>
+    <string name="started_at">Dimulai %1$s · %2$s</string>
+    <string name="started_ago">%1$s lalu</string>
+    <string name="started_just_now">baru saja</string>
+    <string name="duration_under_minute">kurang dari satu menit</string>
+    <string name="duration_under_minute_short">&lt;1 mnt</string>
+    <plurals name="duration_minutes">
+        <item quantity="other">%d mnt</item>
+    </plurals>
+    <plurals name="duration_hours">
+        <item quantity="other">%d jam</item>
+    </plurals>
+    <string name="duration_hours_minutes">%1$s %2$s</string>
+    <string name="info_started">Dimulai</string>
+    <string name="info_finished">Selesai</string>
+    <string name="info_took">Durasi</string>
+    <string name="server_job_gone">Server tidak lagi memiliki tugas ini. Hasil disimpan selama 7 hari.</string>
+    <plurals name="links_queued">
+        <item quantity="other">%1$d tautan dalam antrean</item>
+    </plurals>
+    <string name="cookies_login_not_logged_in">Sepertinya kamu belum login, jadi tidak ada yang disimpan. Login terlebih dahulu, lalu ketuk Simpan.</string>
+    <string name="cookies_login_save_failed">Tidak dapat menyimpan cookie. Kosongkan sebagian ruang penyimpanan dan coba lagi.</string>
+    <string name="cookies_invalid_too_large">File ini terlalu besar untuk cookies.txt (lebih dari 1 MB)</string>
+    <string name="cookies_invalid_empty">cookies.txt ini tidak berisi cookie</string>
+    <string name="cookies_invalid_format">Ini bukan file cookies.txt. Ekspor cookie dalam format Netscape.</string>
+    <string name="cookies_invalid_line">Ini bukan file cookies.txt yang valid (baris %1$d tidak dalam format Netscape)</string>
+    <string name="cookies_unreadable">Tidak dapat membaca file yang dipilih</string>
+
+    <!-- Home input card -->
+    <string name="home_link_placeholder">Tempel tautan video…</string>
+    <string name="home_file_title">Pilih file video atau audio</string>
+    <string name="home_file_formats">MP4, MKV, WebM, MP3, M4A…</string>
+    <string name="home_cta_hint_link">Tempel tautan untuk memulai</string>
+    <string name="home_cta_hint_file">Pilih file untuk memulai</string>
+    <string name="home_estimate_total">Sekitar %1$s di ponsel ini</string>
+    <string name="home_estimate_per_minute">Sekitar %1$s per menit audio di ponsel ini</string>
+    <string name="duration_seconds">%1$d dtk</string>
+    <string name="home_lighter_tip">Lambat di ponsel ini. Model yang lebih ringan sekitar %1$s× lebih cepat.</string>
+    <string name="home_lighter_use">Pakai model lebih ringan</string>
+    <string name="history_source_device">Di perangkat</string>
+    <string name="history_source_server">Server</string>
+    <string name="history_source_termux">Termux</string>
+</resources>

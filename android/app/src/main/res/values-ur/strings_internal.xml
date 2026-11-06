@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings: appearance, color palette -->
+    <string name="palette_title">رنگوں کا پیلیٹ</string>
+    <string name="palette_material_you_hint">Material You آپ کے وال پیپر کے رنگ استعمال کرتا ہے۔ پیلیٹ منتخب کرنے کے لیے اسے بند کریں۔</string>
+    <string name="palette_peach">آڑو</string>
+    <string name="palette_indigo">نیلگوں</string>
+    <string name="palette_teal">فیروزی</string>
+    <string name="palette_green">سبز</string>
+    <string name="palette_amber">کہربائی</string>
+    <string name="palette_rose">گلابی</string>
+    <string name="palette_purple">جامنی</string>
+    <string name="palette_slate">سلیٹی</string>
+
+    <!-- Settings: processing mode -->
+    <string name="processing_mode">پروسیسنگ موڈ</string>
+    <string name="mode_internal">اندرونی (ڈیوائس پر)</string>
+    <string name="mode_server">سرور</string>
+    <string name="internal_warning">ڈیوائس پر پروسیسنگ سست ہے (یہ ٹریک کی لمبائی سے زیادہ وقت لے سکتی ہے)، بہت زیادہ بیٹری اور تقریباً 1.5 GB RAM استعمال کرتی ہے۔ فون کو چارجنگ پر رکھیں۔</string>
+    <string name="internal_model_name">MDX-NET HQ3</string>
+    <string name="internal_model_downloaded">ڈاؤنلوڈ شدہ · %1$s</string>
+    <string name="internal_model_not_downloaded">ڈاؤنلوڈ نہیں ہوا (%1$s، پہلے استعمال پر ڈاؤنلوڈ ہوگا)</string>
+    <string name="internal_model_downloading">ڈاؤنلوڈ ہو رہا ہے %1$s / %2$s</string>
+    <string name="download_model">ڈاؤنلوڈ کریں</string>
+    <string name="delete_model">حذف کریں</string>
+    <string name="internal_model_in_use">ماڈل استعمال میں ہے۔ ڈاؤنلوڈ یا پروسیسنگ مکمل ہونے پر دوبارہ کوشش کریں۔</string>
+    <string name="model_notice_required">پہلے ترتیبات ← ڈیوائس ماڈلز کھولیں اور اس ماڈل کا نوٹس قبول کریں</string>
+    <string name="model_notice_needed">ڈاؤنلوڈ سے پہلے آپ کی منظوری درکار ہے</string>
+    <string name="model_notice_title">اس ماڈل کے بارے میں</string>
+    <string name="model_notice_kim">Kim Vocal 2 کو اس کے مصنف نے UVR کی عوامی ماڈل ریپوزٹری کے ذریعے شائع کیا ہے۔ اس کا کوئی لائسنس درج نہیں، اس لیے اس کے استعمال کی شرائط معلوم نہیں۔ Murem اسے صرف آپ کے کہنے پر وہاں سے ڈاؤنلوڈ کرتا ہے اور اسے دوبارہ تقسیم نہیں کرتا۔</string>
+    <string name="model_notice_download">ڈاؤنلوڈ کریں</string>
+    <string name="model_notice_cancel">منسوخ کریں</string>
+
+    <!-- Progress: separation ETA -->
+    <plurals name="about_n_min_left">
+        <item quantity="one">تقریباً %d منٹ باقی</item>
+        <item quantity="other">تقریباً %d منٹ باقی</item>
+    </plurals>
+    <string name="about_1_min_left">تقریباً 1 منٹ باقی</string>
+    <string name="less_than_minute_left">ایک منٹ سے کم باقی</string>
+
+    <!-- Output format (audio-only results) -->
+    <string name="output_format">فارمیٹ</string>
+    <string name="output_mp3_checking">جانچ ہو رہی ہے…</string>
+    <string name="output_mp3_unavailable">اس فون پر MP3 دستیاب نہیں، اس لیے نتائج M4A کے طور پر محفوظ ہوتے ہیں۔</string>
+    <string name="output_server_mp3_note">سرور اور Termux صرف آڈیو والے نتائج ہمیشہ MP3 میں محفوظ کرتے ہیں</string>
+
+    <!-- Home / Help -->
+    <string name="status_ready_on_device">ڈیوائس پر پروسیسنگ کے لیے تیار</string>
+    <string name="status_model_unavailable">ماڈل ڈاؤنلوڈ نہیں ہوا اور انٹرنیٹ کنکشن نہیں ہے</string>
+    <string name="internal_models_note">Termux یا سرور موڈ میں مزید ماڈلز دستیاب ہیں</string>
+    <string name="help_on_device">ڈیوائس پر پروسیسنگ</string>
+    <string name="help_on_device_desc">اندرونی موڈ سرور کے بغیر آپ کے فون پر موسیقی ہٹاتا ہے۔ یہ پہلے استعمال پر MDX-NET HQ3 ماڈل (64 MB) ڈاؤنلوڈ کرتا ہے، اور سست ہے اور بیٹری زیادہ کھاتا ہے، اس لیے فون کو چارجنگ پر رکھیں۔</string>
+
+    <!-- Errors -->
+    <string name="internal_bad_source">فائل پڑھی نہیں جا سکتی</string>
+    <string name="internal_no_space">اسٹوریج میں کافی جگہ نہیں (%1$d MB درکار)</string>
+    <string name="internal_model_download_failed">ماڈل ڈاؤنلوڈ ناکام: %1$s</string>
+    <string name="internal_model_failed_network">ماڈل ڈاؤنلوڈ ناکام ہو گیا۔ اپنا انٹرنیٹ کنکشن چیک کریں اور دوبارہ کوشش کریں۔</string>
+    <string name="internal_model_corrupt">ماڈل فائل خراب ہے۔ اگلی بار یہ دوبارہ ڈاؤنلوڈ ہوگی۔</string>
+    <string name="internal_model_mismatch">ماڈل اپنے میٹا ڈیٹا سے مطابقت نہیں رکھتا</string>
+    <string name="internal_out_of_memory">کافی خالی میموری نہیں۔ دوسری ایپس بند کریں اور دوبارہ کوشش کریں۔</string>
+    <string name="internal_processing_failed">ڈیوائس پر پروسیسنگ ناکام ہو گئی</string>
+    <string name="internal_no_audio">فائل میں کوئی آڈیو ٹریک نہیں</string>
+    <string name="internal_codec_unsupported">یہ آڈیو فارمیٹ اس فون پر سپورٹ نہیں ہوتا</string>
+    <string name="internal_video_codec_unsupported">یہ ویڈیو فارمیٹ (%1$s) اس فون پر پروسیس نہیں ہو سکتا۔ صرف آڈیو آن کریں یا سرور موڈ استعمال کریں۔</string>
+    <string name="internal_video_convert_failed">یہ ویڈیو (%1$s) ڈیوائس پر کاپی یا کنورٹ نہیں ہو سکی۔ صرف آڈیو آن کریں یا سرور موڈ استعمال کریں۔</string>
+    <string name="internal_encode_failed">نتیجہ انکوڈ نہیں ہو سکا</string>
+    <string name="mp3_unavailable_fallback">اس فون پر MP3 دستیاب نہیں، اس لیے نتیجہ M4A کے طور پر محفوظ کیا گیا</string>
+    <string name="internal_interrupted">پروسیسنگ بار بار رک گئی</string>
+    <string name="internal_job_not_found">ڈیوائس پر کام نہیں ملا</string>
+    <string name="internal_needs_foreground">ڈیوائس پر پروسیسنگ شروع ہوتے وقت Murem کا کھلا ہونا ضروری ہے۔ Murem کھولیں اور دوبارہ کوشش کریں۔</string>
+    <string name="internal_waiting_foreground">ڈیوائس پر پروسیسنگ جاری رکھنے کے لیے Murem کھولیں</string>
+    <string name="internal_device_unsupported">اس ڈیوائس میں ڈیوائس پر پروسیسنگ کے لیے کافی میموری نہیں۔ Termux یا سرور موڈ استعمال کریں۔</string>
+
+    <!-- Links (yt-dlp) -->
+    <string name="internal_url_invalid">یہ درست لنک نہیں ہے</string>
+    <string name="internal_url_live">لائیو اسٹریمز پروسیس نہیں ہو سکتیں۔ اسٹریم ختم ہونے پر دوبارہ کوشش کریں۔</string>
+    <string name="internal_url_unsupported_site">یہ سائٹ ڈیوائس پر سپورٹ نہیں ہوتی۔ سرور موڈ آزمائیں۔</string>
+    <string name="internal_url_unavailable">یہ ویڈیو دستیاب نہیں یا نجی ہے</string>
+    <string name="internal_url_blocked">سائٹ نے ڈاؤنلوڈ سے انکار کر دیا۔ ترتیبات میں yt-dlp اپڈیٹ کریں آزمائیں، یا سرور موڈ استعمال کریں۔</string>
+    <string name="internal_url_network">سائٹ تک رسائی نہیں ہو سکی۔ اپنا انٹرنیٹ کنکشن چیک کریں۔</string>
+    <string name="internal_url_download_failed">یہ لنک ڈیوائس پر ڈاؤنلوڈ نہیں ہو سکا۔ سرور موڈ آزمائیں۔</string>
+    <string name="internal_url_download_failed_detail">یہ لنک ڈیوائس پر ڈاؤنلوڈ نہیں ہو سکا (%1$s)۔ سرور موڈ آزمائیں۔</string>
+    <string name="internal_url_login_required">سائٹ نے یہ پوسٹ لاگ ان کے بغیر نہیں دی۔ ترتیبات ← yt-dlp اپڈیٹ کریں پر ٹیپ کر کے دوبارہ کوشش کریں، ترتیبات میں کوکیز درآمد کریں، یا سرور موڈ استعمال کریں۔</string>
+    <string name="internal_url_login_cookies_failed">اس پوسٹ کے لیے لاگ ان ضروری ہے اور درآمد شدہ کوکیز کام نہیں کر سکیں۔ ان کی میعاد ختم ہو چکی ہو سکتی ہے: انہیں دوبارہ برآمد کریں اور ترتیبات میں درآمد کریں۔</string>
+    <string name="internal_url_no_audio">اس ویڈیو میں کوئی آڈیو ٹریک نہیں، اس لیے ہٹانے کے لیے کوئی موسیقی نہیں۔</string>
+    <string name="internal_ytdlp_outdated_hint">yt-dlp %1$s پرانا ہے: ترتیبات ← yt-dlp اپڈیٹ کریں پر ٹیپ کر کے دوبارہ کوشش کریں۔</string>
+    <string name="internal_ytdlp_init_failed">لنک ڈاؤنلوڈر تیار نہیں ہو سکا۔ کچھ اسٹوریج خالی کریں اور دوبارہ کوشش کریں۔</string>
+
+    <!-- Settings: yt-dlp -->
+    <string name="ytdlp_title">yt-dlp اپڈیٹ کریں</string>
+    <string name="ytdlp_version">ورژن %1$s</string>
+    <string name="ytdlp_version_loading">ورژن لوڈ ہو رہا ہے…</string>
+    <string name="ytdlp_update">yt-dlp اپڈیٹ کریں</string>
+    <string name="ytdlp_updating">اپڈیٹ ہو رہا ہے…</string>
+    <string name="ytdlp_updated">%1$s پر اپڈیٹ ہو گیا</string>
+    <string name="ytdlp_up_to_date">پہلے سے تازہ ترین (%1$s)</string>
+    <string name="ytdlp_update_failed">اپڈیٹ ناکام۔ اپنا انٹرنیٹ کنکشن چیک کریں۔</string>
+    <string name="ytdlp_update_busy">موجودہ ڈاؤنلوڈ مکمل ہونے تک انتظار کریں</string>
+
+    <plurals name="ytdlp_age_days">
+        <item quantity="one">%d دن پرانا</item>
+        <item quantity="other">%d دن پرانا</item>
+    </plurals>
+    <string name="ytdlp_released_today">آج جاری ہوا</string>
+    <string name="ytdlp_never_auto">Murem کبھی خود سے yt-dlp اپڈیٹ نہیں کرتا۔ جب لنکس کام کرنا بند کر دیں تو اپڈیٹ پر ٹیپ کریں۔</string>
+    <string name="ytdlp_update_now">ابھی اپڈیٹ کریں</string>
+    <plurals name="ytdlp_banner_age">
+        <item quantity="one">بلٹ ان yt-dlp %d دن پرانا ہے۔ Instagram جیسی سائٹس کو نیا ورژن درکار ہو سکتا ہے۔</item>
+        <item quantity="other">بلٹ ان yt-dlp %d دن پرانا ہے۔ Instagram جیسی سائٹس کو نیا ورژن درکار ہو سکتا ہے۔</item>
+    </plurals>
+    <string name="banner_first_use_title">ڈیوائس پر پروسیسنگ</string>
+    <string name="banner_first_use">ڈیوائس پر: پہلا کام ماڈل (30–67 MB) ڈاؤنلوڈ کرتا ہے اور ٹریک سے زیادہ وقت لے سکتا ہے۔ فون کو چارجنگ پر رکھیں۔</string>
+    <string name="banner_outdated_title">yt-dlp پرانا ہو سکتا ہے</string>
+    <string name="banner_close">بند کریں</string>
+
+    <!-- Settings navigation -->
+    <string name="settings_group_processing">پروسیسنگ</string>
+    <string name="settings_group_output">آؤٹ پٹ</string>
+    <string name="settings_group_app">ایپ</string>
+    <string name="settings_row_models">ڈیوائس ماڈلز</string>
+    <string name="settings_row_performance">کارکردگی</string>
+    <string name="settings_row_update_ytdlp">yt-dlp اپڈیٹ کریں</string>
+    <string name="settings_row_output">آؤٹ پٹ</string>
+    <string name="settings_row_storage">تاریخ اور اسٹوریج</string>
+    <string name="settings_row_about">تعارف اور مدد</string>
+    <string name="settings_internal_only">اندرونی موڈ · %1$s</string>
+    <string name="settings_internal_only_note">یہ ترتیبات صرف اندرونی (ڈیوائس پر) موڈ میں استعمال ہوتی ہیں۔</string>
+    <string name="settings_mode_server">سرور · %1$s</string>
+    <plurals name="settings_models_summary">
+        <item quantity="one">%1$s منتخب · %2$d ڈاؤنلوڈ شدہ</item>
+        <item quantity="other">%1$s منتخب · %2$d ڈاؤنلوڈ شدہ</item>
+    </plurals>
+    <string name="settings_threads_auto">خودکار تھریڈز</string>
+    <plurals name="settings_threads_n">
+        <item quantity="one">%d تھریڈ</item>
+        <item quantity="other">%d تھریڈز</item>
+    </plurals>
+    <plurals name="settings_accounts_on">
+        <item quantity="one">%d سائٹ آن</item>
+        <item quantity="other">%d سائٹس آن</item>
+    </plurals>
+    <string name="settings_ytdlp_tap_to_check">جانچنے کے لیے ٹیپ کریں</string>
+    <string name="settings_bitrate_kbps">%1$s kbps</string>
+    <string name="settings_audio_only_on">صرف آڈیو آن</string>
+    <string name="settings_audio_only_off">صرف آڈیو آف</string>
+    <plurals name="settings_storage_summary">
+        <item quantity="one">%1$d آئٹم · %2$s</item>
+        <item quantity="other">%1$d آئٹمز · %2$s</item>
+    </plurals>
+    <string name="settings_about_summary">Murem %1$s</string>
+    <string name="dialog_cancel">منسوخ کریں</string>
+    <string name="dialog_delete">حذف کریں</string>
+    <string name="more_options">مزید اختیارات</string>
+
+    <!-- Settings: on-device models -->
+    <string name="model_name_voc_ft">MDX-NET Voc FT</string>
+    <string name="model_name_mdx3">MDX-NET 3_9662</string>
+    <string name="tag_best_vocals">بہترین آوازیں</string>
+    <string name="tag_fastest">تیز ترین</string>
+    <string name="tag_lead_vocal">مرکزی آواز</string>
+    <string name="tag_server_default">سرور ڈیفالٹ</string>
+    <string name="model_best_hq3">زیادہ تر گانوں میں موسیقی اچھی طرح ہٹاتا ہے (آواز SDR 8.8 dB)</string>
+    <string name="model_best_voc_ft">زیادہ تر گانوں میں صاف تر آوازیں (آواز SDR 10.2 dB)</string>
+    <string name="model_best_mdx3">آدھا ڈاؤنلوڈ اور تیز تر، آوازیں تقریباً اتنی ہی صاف (9.7 dB)</string>
+    <string name="model_best_kara2">صرف مرکزی آواز رکھتا ہے: پس منظر کی آوازیں موسیقی کے ساتھ ہٹ جاتی ہیں</string>
+    <string name="model_best_kim2">سرور کا ڈیفالٹ ماڈل، سب سے صاف آوازوں کے ساتھ (10.2 dB)</string>
+    <string name="model_state_downloaded">ڈاؤنلوڈ شدہ</string>
+    <string name="model_state_first_use">پہلے استعمال پر ڈاؤنلوڈ ہوگا</string>
+    <plurals name="model_speed_hint">
+        <item quantity="one">4 منٹ کے ٹریک کے لیے ≈ %d منٹ</item>
+        <item quantity="other">4 منٹ کے ٹریک کے لیے ≈ %d منٹ</item>
+    </plurals>
+    <string name="models_empty">کوئی ماڈل ڈاؤنلوڈ نہیں ہوا۔ منتخب ماڈل پہلے استعمال پر ڈاؤنلوڈ ہوگا۔</string>
+    <string name="model_delete_title">%1$s حذف کریں؟</string>
+    <string name="model_delete_text">اگلی بار استعمال کرنے پر یہ دوبارہ ڈاؤنلوڈ ہوگا۔</string>
+
+    <!-- Settings: output -->
+    <string name="output_format_note">صرف آڈیو والے نتائج پر لاگو ہوتا ہے۔ ویڈیوز ہمیشہ MP4 میں محفوظ ہوتی ہیں۔</string>
+    <string name="output_m4a">M4A (AAC)</string>
+    <string name="output_mp3">MP3</string>
+    <string name="output_audio_only_desc">ویڈیو کے بغیر صرف آوازوں کا آڈیو محفوظ کریں</string>
+
+    <!-- Settings: performance -->
+    <string name="perf_threads">تھریڈز</string>
+    <string name="perf_threads_auto">خودکار (%1$s)</string>
+    <string name="perf_threads_desc">زیادہ تھریڈز تیز ہو سکتے ہیں لیکن زیادہ بیٹری استعمال کرتے ہیں اور فون کو زیادہ گرم کرتے ہیں۔</string>
+    <string name="perf_quality">معیار</string>
+    <string name="settings_quality_fast">تیز</string>
+    <string name="settings_quality_balanced">متوازن</string>
+    <string name="settings_quality_best">بہترین</string>
+    <string name="perf_fast_time">تقریباً 0.83× وقت</string>
+    <string name="perf_balanced_time">معیاری وقت</string>
+    <string name="perf_best_time">تقریباً 1.5× وقت</string>
+    <string name="perf_quality_help">تیز حصوں کے کناروں پر تھوڑی زیادہ موسیقی چھوڑ سکتا ہے؛ بہترین زیادہ ہموار ہے لیکن سست ہے۔</string>
+    <string name="perf_batch">بیچ سائز</string>
+    <string name="perf_batch_desc">Murem ایک وقت میں گانے کے کتنے حصے الگ کرتا ہے۔ ایک وقت میں دو حصے تیز فون کا بہتر استعمال کر سکتے ہیں، لیکن اس کے لیے زیادہ میموری چاہیے۔</string>
+    <string name="perf_batch_1">1 (تجویز کردہ)</string>
+    <string name="perf_batch_2">2</string>
+    <string name="perf_batch_2_desc">تجرباتی۔ تقریباً 1 GB زیادہ میموری استعمال کرتا ہے؛ ضروری نہیں کہ تیز ہو۔</string>
+    <string name="perf_batch_2_needs_ram">6 GB RAM والا فون درکار ہے</string>
+    <string name="perf_accelerator">ایکسلریشن</string>
+    <string name="perf_accelerator_desc">کون سا سب سے تیز ہے یہ فون پر منحصر ہے۔ ایک مختصر کلپ پر آزمائیں اور حالیہ میں وقت کا موازنہ کریں۔ اگر کوئی آپشن اس فون پر کام نہ کرے تو Murem اس کی بجائے CPU استعمال کرتا ہے۔</string>
+    <string name="perf_acc_cpu">CPU (تجویز کردہ)</string>
+    <string name="perf_acc_cpu_desc">ہر فون پر کام کرتا ہے</string>
+    <!-- Processing screen: system stats -->
+    <string name="stats_title">سسٹم</string>
+    <string name="stats_show">سسٹم کے اعداد و شمار دکھائیں</string>
+    <string name="stats_hide">سسٹم کے اعداد و شمار چھپائیں</string>
+    <string name="stats_cpu">CPU</string>
+    <string name="stats_memory">میموری</string>
+    <string name="stats_free">%1$s خالی</string>
+    <string name="stats_temperature">حرارت</string>
+    <string name="stats_headroom">تھروٹلنگ تک %1$s</string>
+    <string name="stats_thermal_normal">معمول</string>
+    <string name="stats_thermal_warm">گرم</string>
+    <string name="stats_thermal_hot">بہت گرم</string>
+    <string name="stats_thermal_throttling">تھروٹلنگ</string>
+    <string name="stats_gpu">GPU</string>
+    <string name="perf_acc_webgpu">GPU (WebGPU)</string>
+    <string name="perf_acc_webgpu_desc">تجرباتی۔ ماڈل کو Vulkan کے ذریعے GPU پر چلاتا ہے۔ اکثر سب سے تیز، لیکن چلنے کے دوران فون اٹک سکتا ہے، اس لیے یہ تب بہترین ہے جب آپ ساتھ ساتھ فون استعمال نہ کر رہے ہوں</string>
+    <string name="perf_acc_nnapi">AI چپ (NNAPI)</string>
+    <string name="perf_acc_nnapi_desc">تجرباتی۔ فون کا NPU، DSP یا GPU ڈرائیور ہاف پریسیژن میں استعمال کرتا ہے۔ فون کے لحاظ سے تیز یا بہت سست ہو سکتا ہے</string>
+    <string name="perf_acc_nnapi_needs_android">Android 8.1 یا نیا درکار ہے</string>
+    <string name="perf_acc_failed_here">پچھلی بار اس فون پر کام نہیں کیا، اس لیے Murem نے CPU پر مکمل کیا</string>
+    <string name="perf_acc_xnnpack">آپٹیمائزڈ CPU (XNNPACK)</string>
+    <string name="perf_acc_xnnpack_desc">تجرباتی۔ مختلف CPU کوڈ جو کچھ ARM فونز پر تیز ہوتا ہے</string>
+    <string name="perf_acc_webgpu_short">GPU</string>
+    <string name="perf_limit">لوڈ کی حد</string>
+    <string name="perf_limit_desc">Murem کو پورا GPU استعمال کرنے سے روکتا ہے تاکہ فون زیادہ ہموار اور ٹھنڈا رہے۔ GPU ایکسلریشن کے ساتھ، اسکرین کو بھی GPU مراحل کے درمیان باری ملتی ہے۔ مزید ہموار فون کے لیے، ڈیوائس ماڈلز میں ہلکا ماڈل استعمال کریں۔</string>
+    <string name="perf_limit_full">پوری رفتار</string>
+    <string name="perf_limit_full_desc">تیز ترین؛ پروسیسنگ کے دوران فون اٹک سکتا ہے</string>
+    <string name="perf_limit_pct">%1$d%%</string>
+    <string name="perf_limit_75_desc">کم از کم 1.3× وقت</string>
+    <string name="perf_limit_50_desc">کم از کم 2× وقت؛ سب سے ہموار</string>
+    <string name="perf_limit_short">%1$d%% حد</string>
+    <string name="perf_acc_xnnpack_short">XNNPACK</string>
+    <string name="perf_acc_nnapi_short">NNAPI</string>
+
+    <!-- Settings: history & storage, server discovery, Termux -->
+    <string name="clear_history_title">تاریخ صاف کریں؟</string>
+    <string name="clear_history_text">پروسیس شدہ ویڈیوز کی فہرست Murem سے ہٹا دی جائے گی۔</string>
+    <plurals name="exporting_items">
+        <item quantity="one">%d آئٹم برآمد ہو رہا ہے…</item>
+        <item quantity="other">%d آئٹمز برآمد ہو رہے ہیں…</item>
+    </plurals>
+    <string name="export_failed">برآمد ناکام: %1$s</string>
+    <string name="export_none">برآمد کے لیے کوئی فائل دستیاب نہیں</string>
+    <string name="discover_searching">سرور تلاش ہو رہا ہے…</string>
+    <string name="discover_found">سرور ملا: %1$s</string>
+    <string name="discover_failed">تلاش ناکام</string>
+    <string name="discover_error">تلاش میں خرابی: %1$s</string>
+    <string name="termux_come_back">Termux مکمل ہونے پر یہاں واپس آئیں۔</string>
+
+    <!-- Settings: about -->
+    <string name="about_help">مدد</string>
+    <string name="about_components_title">اوپن سورس اجزاء</string>
+    <string name="about_components">MP3 انکوڈنگ FFmpeg (GPL) کے ذریعے LAME (LGPL-2.0) استعمال کرتی ہے، دونوں youtubedl-android (GPL-3.0) کے ساتھ آتے ہیں۔ علیحدگی ONNX Runtime (MIT) اور ان کے مصنفین سے ڈاؤنلوڈ کیے گئے UVR MDX-Net ماڈلز استعمال کرتی ہے۔</string>
+
+    <!-- Settings: accounts & cookies for on-device links -->
+    <string name="cookies_title">اکاؤنٹس اور کوکیز</string>
+    <plurals name="cookies_site_summary">
+        <item quantity="one">%1$d کوکی · محفوظ %2$s</item>
+        <item quantity="other">%1$d کوکیز · محفوظ %2$s</item>
+    </plurals>
+    <string name="cookies_from_login">لاگ ان سے</string>
+    <string name="cookies_from_import">درآمد شدہ</string>
+    <string name="cookies_login_again">دوبارہ لاگ ان کریں</string>
+    <string name="cookies_delete">حذف کریں</string>
+    <string name="cookies_not_internal_note">کوکیز صرف اندرونی موڈ میں لنکس کے لیے استعمال ہوتی ہیں۔</string>
+    <string name="cookies_empty_title">کوئی محفوظ لاگ ان نہیں</string>
+    <string name="cookies_empty_desc">اکاؤنٹ والی پوسٹس ڈاؤنلوڈ کرنے کے لیے لاگ ان کریں یا کوکیز درآمد کریں۔</string>
+    <string name="cookies_delete_site_title">%1$s کی کوکیز حذف کریں؟</string>
+    <string name="cookies_delete_site_text">اس اکاؤنٹ والی پوسٹس دوبارہ ڈاؤنلوڈ کرنے کے لیے دوبارہ لاگ ان کریں یا اس کی کوکیز درآمد کریں۔</string>
+    <string name="cookies_delete_all_title">تمام محفوظ کوکیز حذف کریں؟</string>
+    <string name="cookies_delete_all_text">ہر محفوظ لاگ ان اس ڈیوائس سے ہٹا دیا جائے گا۔</string>
+    <string name="cookies_import">cookies.txt درآمد کریں</string>
+    <string name="cookies_delete_all">سب حذف کریں</string>
+    <string name="cookies_send_for">%1$s کے لیے کوکیز بھیجیں</string>
+    <string name="cookies_change_failed">محفوظ کوکیز تبدیل نہیں ہو سکیں۔ دوبارہ کوشش کریں۔</string>
+    <string name="cookies_cannot_open_login">اس سائٹ کے لیے لاگ ان صفحہ نہیں کھل سکتا</string>
+    <string name="cookies_imported">کوکیز درآمد ہو گئیں</string>
+    <string name="cookies_removed">کوکیز ہٹا دی گئیں</string>
+    <string name="cookies_help">کچھ پوسٹس صرف لاگ ان ہونے پر ڈاؤنلوڈ ہو سکتی ہیں۔ Murem کے اندر لاگ ان کریں یا کمپیوٹر براؤزر سے cookies.txt فائل (Netscape فارمیٹ) درآمد کریں۔ کوکیز ہر سائٹ کے لیے الگ رکھی جاتی ہیں اور اسی ڈیوائس پر رہتی ہیں۔ صرف آن کی گئی سائٹس کی کوکیز بھیجی جاتی ہیں، اور صرف اندرونی موڈ کے لنکس کے ساتھ۔ YouTube کوکیز آن ہونے پر YouTube ڈاؤنلوڈز بدل سکتے ہیں۔ جس کے پاس یہ کوکیز ہوں وہ آپ کا اکاؤنٹ استعمال کر سکتا ہے: انہیں کبھی شیئر نہ کریں، اور کام ختم ہونے پر سائٹ حذف کر دیں۔</string>
+    <string name="cookies_login">براؤزر سے لاگ ان کریں</string>
+    <string name="cookies_login_site_instagram">Instagram</string>
+    <string name="cookies_login_site_custom">دوسری سائٹ (https URL)</string>
+    <string name="cookies_login_url_hint">https://example.com/login</string>
+    <string name="cookies_login_notice_title">براؤزر سے لاگ ان کریں</string>
+    <string name="cookies_login_notice">آپ اپنی براؤزر ایپ میں نہیں بلکہ Murem کے اندر لاگ ان کر رہے ہیں۔ سائٹ کی کوکیز صرف اس ڈیوائس پر محفوظ ہوتی ہیں اور ڈیوائس والے لنکس کے لیے استعمال ہوتی ہیں۔ ترتیبات ← اکاؤنٹس اور کوکیز میں حذف کریں انہیں ہٹا دیتا ہے۔</string>
+    <string name="cookies_login_continue">جاری رکھیں</string>
+    <string name="cookies_login_cancel">منسوخ کریں</string>
+    <string name="cookies_login_title">لاگ ان کریں، پھر محفوظ کریں پر ٹیپ کریں</string>
+    <string name="cookies_login_save">کوکیز محفوظ کریں</string>
+    <string name="cookies_login_oauth_hint">ایمبیڈڈ براؤزرز میں Google اور Facebook سائن ان بلاک ہو سکتا ہے۔ اس کی بجائے اپنے یوزر نیم اور پاس ورڈ سے لاگ ان کریں۔</string>
+    <plurals name="cookies_login_saved">
+        <item quantity="one">%2$s کے لیے %1$d کوکی محفوظ ہوئی</item>
+        <item quantity="other">%2$s کے لیے %1$d کوکیز محفوظ ہوئیں</item>
+    </plurals>
+    <string name="cookies_login_none">کوئی کوکیز نہیں ملیں۔ پہلے لاگ ان کریں، پھر محفوظ کریں پر ٹیپ کریں۔</string>
+    <string name="paste">پیسٹ کریں</string>
+    <string name="no_external_player">اس فائل کو کھولنے کے لیے کوئی ایپ نہیں ملی</string>
+
+    <!-- 4.1: licenses, problem reports, playback errors, job times -->
+    <string name="back">واپس</string>
+    <string name="licenses_title">اوپن سورس لائسنس</string>
+    <string name="licenses_desc">Murem کی استعمال کردہ لائبریریاں اور ان کے لائسنس</string>
+    <string name="report_problem">مسئلہ رپورٹ کریں</string>
+    <string name="report_problem_desc">پہلے سے بھرا ہوا GitHub ایشو کھولتا ہے۔ بھیجنے سے پہلے آپ اسے دیکھ لیتے ہیں۔</string>
+    <string name="report_problem_short">رپورٹ</string>
+    <string name="report_no_browser">GitHub کھولنے کے لیے کوئی براؤزر نہیں ملا</string>
+    <string name="crash_title">Murem غیر متوقع طور پر بند ہو گیا</string>
+    <string name="crash_text">اسے GitHub پر رپورٹ کریں تاکہ ٹھیک ہو سکے؟ رپورٹ میں ایپ ورژن، آپ کے فون کا ماڈل، Android ورژن اور خرابی شامل ہوتی ہے۔ کوئی لنک یا فائل کے نام شامل نہیں ہوتے، اور بھیجنے سے پہلے آپ اسے دیکھ لیتے ہیں۔</string>
+    <string name="not_now">ابھی نہیں</string>
+    <string name="playback_error_title">یہ نتیجہ نہیں چل سکتا</string>
+    <string name="playback_error_missing">فائل موجود نہیں یا پڑھی نہیں جا سکتی۔ شاید یہ حذف ہو گئی ہو، یا سرور پر اب موجود نہ ہو۔</string>
+    <string name="playback_error_network">سرور تک رسائی نہیں ہو سکی۔ کنکشن چیک کریں اور دوبارہ کوشش کریں۔</string>
+    <string name="playback_error_format">یہ فائل ایسے فارمیٹ میں ہے جو یہ فون نہیں چلا سکتا۔ اسے کسی اور ایپ میں کھولنے کی کوشش کریں۔</string>
+    <string name="playback_error_generic">یہ فائل چلاتے وقت کچھ غلط ہو گیا۔</string>
+    <string name="open_in_other_app">دوسری ایپ میں کھولیں</string>
+    <string name="started_at">شروع %1$s · %2$s</string>
+    <string name="started_ago">%1$s پہلے</string>
+    <string name="started_just_now">ابھی ابھی</string>
+    <string name="duration_under_minute">ایک منٹ سے کم</string>
+    <string name="duration_under_minute_short">&lt;1 منٹ</string>
+    <plurals name="duration_minutes">
+        <item quantity="one">%d منٹ</item>
+        <item quantity="other">%d منٹ</item>
+    </plurals>
+    <plurals name="duration_hours">
+        <item quantity="one">%d گھنٹہ</item>
+        <item quantity="other">%d گھنٹے</item>
+    </plurals>
+    <string name="duration_hours_minutes">%1$s %2$s</string>
+    <string name="info_started">شروع</string>
+    <string name="info_finished">مکمل</string>
+    <string name="info_took">وقت لگا</string>
+    <string name="server_job_gone">سرور پر اب یہ کام موجود نہیں۔ نتائج 7 دن تک رکھے جاتے ہیں۔</string>
+    <plurals name="links_queued">
+        <item quantity="one">%1$d لنک قطار میں شامل</item>
+        <item quantity="other">%1$d لنکس قطار میں شامل</item>
+    </plurals>
+    <string name="cookies_login_not_logged_in">لگتا ہے آپ ابھی لاگ ان نہیں ہوئے، اس لیے کچھ محفوظ نہیں ہوا۔ پہلے لاگ ان کریں، پھر محفوظ کریں پر ٹیپ کریں۔</string>
+    <string name="cookies_login_save_failed">کوکیز محفوظ نہیں ہو سکیں۔ کچھ اسٹوریج خالی کریں اور دوبارہ کوشش کریں۔</string>
+    <string name="cookies_invalid_too_large">یہ فائل cookies.txt کے لیے بہت بڑی ہے (1 MB سے زیادہ)</string>
+    <string name="cookies_invalid_empty">اس cookies.txt میں کوئی کوکی نہیں</string>
+    <string name="cookies_invalid_format">یہ cookies.txt فائل نہیں ہے۔ کوکیز کو Netscape فارمیٹ میں برآمد کریں۔</string>
+    <string name="cookies_invalid_line">یہ درست cookies.txt فائل نہیں ہے (لائن %1$d Netscape فارمیٹ میں نہیں)</string>
+    <string name="cookies_unreadable">منتخب فائل پڑھی نہیں جا سکی</string>
+
+    <!-- Home input card -->
+    <string name="home_link_placeholder">ویڈیو لنک پیسٹ کریں…</string>
+    <string name="home_file_title">ویڈیو یا آڈیو فائل منتخب کریں</string>
+    <string name="home_file_formats">MP4, MKV, WebM, MP3, M4A…</string>
+    <string name="home_cta_hint_link">شروع کرنے کے لیے لنک پیسٹ کریں</string>
+    <string name="home_cta_hint_file">شروع کرنے کے لیے فائل منتخب کریں</string>
+    <string name="home_estimate_total">اس فون پر تقریباً %1$s</string>
+    <string name="home_estimate_per_minute">اس فون پر آڈیو کے فی منٹ تقریباً %1$s</string>
+    <string name="duration_seconds">%1$d سیکنڈ</string>
+    <string name="home_lighter_tip">اس فون پر سست ہے۔ ہلکا ماڈل تقریباً %1$s× تیز ہے۔</string>
+    <string name="home_lighter_use">ہلکا ماڈل استعمال کریں</string>
+    <string name="history_source_device">ڈیوائس پر</string>
+    <string name="history_source_server">سرور</string>
+    <string name="history_source_termux">Termux</string>
+</resources>

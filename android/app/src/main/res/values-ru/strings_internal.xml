@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings: appearance, color palette -->
+    <string name="palette_title">Цветовая палитра</string>
+    <string name="palette_material_you_hint">Material You использует цвета ваших обоев. Отключите, чтобы выбрать палитру.</string>
+    <string name="palette_peach">Персиковый</string>
+    <string name="palette_indigo">Индиго</string>
+    <string name="palette_teal">Бирюзовый</string>
+    <string name="palette_green">Зелёный</string>
+    <string name="palette_amber">Янтарный</string>
+    <string name="palette_rose">Розовый</string>
+    <string name="palette_purple">Фиолетовый</string>
+    <string name="palette_slate">Графитовый</string>
+
+    <!-- Settings: processing mode -->
+    <string name="processing_mode">Режим обработки</string>
+    <string name="mode_internal">Встроенный (на устройстве)</string>
+    <string name="mode_server">Сервер</string>
+    <string name="internal_warning">Обработка на устройстве медленная (может длиться дольше самого трека), сильно расходует батарею и использует около 1,5 GB RAM. Держите телефон на зарядке.</string>
+    <string name="internal_model_name">MDX-NET HQ3</string>
+    <string name="internal_model_downloaded">Загружена · %1$s</string>
+    <string name="internal_model_not_downloaded">Не загружена (%1$s, загрузится при первом использовании)</string>
+    <string name="internal_model_downloading">Загрузка %1$s / %2$s</string>
+    <string name="download_model">Загрузить</string>
+    <string name="delete_model">Удалить</string>
+    <string name="internal_model_in_use">Модель используется. Повторите попытку, когда загрузка или обработка завершится.</string>
+    <string name="model_notice_required">Сначала откройте Настройки → Модели на устройстве и примите уведомление для этой модели</string>
+    <string name="model_notice_needed">Нужно ваше согласие перед загрузкой</string>
+    <string name="model_notice_title">Об этой модели</string>
+    <string name="model_notice_kim">Kim Vocal 2 опубликована автором в публичном репозитории моделей UVR. Лицензия для неё не указана, поэтому условия использования неизвестны. Murem загружает её оттуда только по вашему запросу и не распространяет её.</string>
+    <string name="model_notice_download">Загрузить</string>
+    <string name="model_notice_cancel">Отмена</string>
+
+    <!-- Progress: separation ETA -->
+    <plurals name="about_n_min_left">
+        <item quantity="one">осталось около %d мин</item>
+        <item quantity="few">осталось около %d мин</item>
+        <item quantity="many">осталось около %d мин</item>
+        <item quantity="other">осталось около %d мин</item>
+    </plurals>
+    <string name="about_1_min_left">осталось около 1 мин</string>
+    <string name="less_than_minute_left">осталось меньше минуты</string>
+
+    <!-- Output format (audio-only results) -->
+    <string name="output_format">Формат</string>
+    <string name="output_mp3_checking">Проверка…</string>
+    <string name="output_mp3_unavailable">MP3 недоступен на этом телефоне, поэтому результаты сохраняются в M4A.</string>
+    <string name="output_server_mp3_note">Сервер и Termux всегда сохраняют результаты «Только аудио» в MP3</string>
+
+    <!-- Home / Help -->
+    <string name="status_ready_on_device">Готово к обработке на устройстве</string>
+    <string name="status_model_unavailable">Модель не загружена, и нет подключения к интернету</string>
+    <string name="internal_models_note">Больше моделей доступно в режиме Termux или Сервер</string>
+    <string name="help_on_device">Обработка на устройстве</string>
+    <string name="help_on_device_desc">Встроенный режим убирает музыку прямо на телефоне, без сервера. При первом использовании он загружает модель MDX-NET HQ3 (64 MB). Он медленный и сильно расходует батарею, поэтому держите телефон на зарядке.</string>
+
+    <!-- Errors -->
+    <string name="internal_bad_source">Не удаётся прочитать файл</string>
+    <string name="internal_no_space">Недостаточно места (нужно %1$d MB)</string>
+    <string name="internal_model_download_failed">Не удалось загрузить модель: %1$s</string>
+    <string name="internal_model_failed_network">Не удалось загрузить модель. Проверьте подключение к интернету и попробуйте снова.</string>
+    <string name="internal_model_corrupt">Файл модели повреждён. В следующий раз он будет загружен заново.</string>
+    <string name="internal_model_mismatch">Модель не соответствует своим метаданным</string>
+    <string name="internal_out_of_memory">Недостаточно свободной памяти. Закройте другие приложения и попробуйте снова.</string>
+    <string name="internal_processing_failed">Ошибка обработки на устройстве</string>
+    <string name="internal_no_audio">В файле нет звуковой дорожки</string>
+    <string name="internal_codec_unsupported">Этот аудиоформат не поддерживается на этом телефоне</string>
+    <string name="internal_video_codec_unsupported">Этот видеоформат (%1$s) нельзя обработать на этом телефоне. Включите «Только аудио» или используйте режим Сервер.</string>
+    <string name="internal_video_convert_failed">Не удалось скопировать или преобразовать это видео (%1$s) на устройстве. Включите «Только аудио» или используйте режим Сервер.</string>
+    <string name="internal_encode_failed">Не удалось закодировать результат</string>
+    <string name="mp3_unavailable_fallback">MP3 недоступен на этом телефоне, поэтому результат сохранён в M4A</string>
+    <string name="internal_interrupted">Обработка несколько раз прерывалась</string>
+    <string name="internal_job_not_found">Задача на устройстве не найдена</string>
+    <string name="internal_needs_foreground">Для запуска обработки на устройстве Murem должен быть открыт. Откройте Murem и попробуйте снова.</string>
+    <string name="internal_waiting_foreground">Откройте Murem, чтобы продолжить обработку на устройстве</string>
+    <string name="internal_device_unsupported">На этом устройстве недостаточно памяти для обработки на устройстве. Используйте режим Termux или Сервер.</string>
+
+    <!-- Links (yt-dlp) -->
+    <string name="internal_url_invalid">Это недействительная ссылка</string>
+    <string name="internal_url_live">Прямые трансляции нельзя обработать. Попробуйте снова после окончания трансляции.</string>
+    <string name="internal_url_unsupported_site">Этот сайт не поддерживается на устройстве. Попробуйте режим Сервер.</string>
+    <string name="internal_url_unavailable">Это видео недоступно или приватное</string>
+    <string name="internal_url_blocked">Сайт отклонил загрузку. Попробуйте «Обновить yt-dlp» в настройках или используйте режим Сервер.</string>
+    <string name="internal_url_network">Не удалось связаться с сайтом. Проверьте подключение к интернету.</string>
+    <string name="internal_url_download_failed">Не удалось загрузить эту ссылку на устройстве. Попробуйте режим Сервер.</string>
+    <string name="internal_url_download_failed_detail">Не удалось загрузить эту ссылку на устройстве (%1$s). Попробуйте режим Сервер.</string>
+    <string name="internal_url_login_required">Сайт не отдал эту публикацию без входа в аккаунт. Нажмите Настройки → Обновить yt-dlp и попробуйте снова, импортируйте cookies в настройках или используйте режим Сервер.</string>
+    <string name="internal_url_login_cookies_failed">Эта публикация требует входа, а импортированные cookies не сработали. Возможно, срок их действия истёк: экспортируйте их заново и импортируйте в настройках.</string>
+    <string name="internal_url_no_audio">В этом видео нет звуковой дорожки, поэтому убирать нечего.</string>
+    <string name="internal_ytdlp_outdated_hint">yt-dlp %1$s устарел: нажмите Настройки → Обновить yt-dlp и попробуйте снова.</string>
+    <string name="internal_ytdlp_init_failed">Не удалось подготовить загрузчик ссылок. Освободите место и попробуйте снова.</string>
+
+    <!-- Settings: yt-dlp -->
+    <string name="ytdlp_title">Обновить yt-dlp</string>
+    <string name="ytdlp_version">Версия %1$s</string>
+    <string name="ytdlp_version_loading">Загрузка версии…</string>
+    <string name="ytdlp_update">Обновить yt-dlp</string>
+    <string name="ytdlp_updating">Обновление…</string>
+    <string name="ytdlp_updated">Обновлено до %1$s</string>
+    <string name="ytdlp_up_to_date">Уже последняя версия (%1$s)</string>
+    <string name="ytdlp_update_failed">Ошибка обновления. Проверьте подключение к интернету.</string>
+    <string name="ytdlp_update_busy">Дождитесь завершения текущей загрузки</string>
+
+    <plurals name="ytdlp_age_days">
+        <item quantity="one">выпущен %d день назад</item>
+        <item quantity="few">выпущен %d дня назад</item>
+        <item quantity="many">выпущен %d дней назад</item>
+        <item quantity="other">выпущен %d дня назад</item>
+    </plurals>
+    <string name="ytdlp_released_today">выпущен сегодня</string>
+    <string name="ytdlp_never_auto">Murem никогда не обновляет yt-dlp сам. Нажмите «Обновить», когда ссылки перестанут работать.</string>
+    <string name="ytdlp_update_now">Обновить сейчас</string>
+    <plurals name="ytdlp_banner_age">
+        <item quantity="one">Встроенному yt-dlp %d день. Сайтам вроде Instagram может понадобиться более новая версия.</item>
+        <item quantity="few">Встроенному yt-dlp %d дня. Сайтам вроде Instagram может понадобиться более новая версия.</item>
+        <item quantity="many">Встроенному yt-dlp %d дней. Сайтам вроде Instagram может понадобиться более новая версия.</item>
+        <item quantity="other">Встроенному yt-dlp %d дня. Сайтам вроде Instagram может понадобиться более новая версия.</item>
+    </plurals>
+    <string name="banner_first_use_title">Обработка на устройстве</string>
+    <string name="banner_first_use">На устройстве: первая задача загружает модель (30–67 MB) и может длиться дольше трека. Держите телефон на зарядке.</string>
+    <string name="banner_outdated_title">yt-dlp, возможно, устарел</string>
+    <string name="banner_close">Закрыть</string>
+
+    <!-- Settings navigation -->
+    <string name="settings_group_processing">Обработка</string>
+    <string name="settings_group_output">Вывод</string>
+    <string name="settings_group_app">Приложение</string>
+    <string name="settings_row_models">Модели на устройстве</string>
+    <string name="settings_row_performance">Производительность</string>
+    <string name="settings_row_update_ytdlp">Обновить yt-dlp</string>
+    <string name="settings_row_output">Вывод</string>
+    <string name="settings_row_storage">История и хранилище</string>
+    <string name="settings_row_about">О приложении и помощь</string>
+    <string name="settings_internal_only">Встроенный режим · %1$s</string>
+    <string name="settings_internal_only_note">Эти настройки используются только во встроенном режиме (на устройстве).</string>
+    <string name="settings_mode_server">Сервер · %1$s</string>
+    <plurals name="settings_models_summary">
+        <item quantity="one">Выбрана %1$s · %2$d загружена</item>
+        <item quantity="few">Выбрана %1$s · %2$d загружены</item>
+        <item quantity="many">Выбрана %1$s · %2$d загружено</item>
+        <item quantity="other">Выбрана %1$s · %2$d загружено</item>
+    </plurals>
+    <string name="settings_threads_auto">Авто потоки</string>
+    <plurals name="settings_threads_n">
+        <item quantity="one">%d поток</item>
+        <item quantity="few">%d потока</item>
+        <item quantity="many">%d потоков</item>
+        <item quantity="other">%d потока</item>
+    </plurals>
+    <plurals name="settings_accounts_on">
+        <item quantity="one">%d сайт включён</item>
+        <item quantity="few">%d сайта включено</item>
+        <item quantity="many">%d сайтов включено</item>
+        <item quantity="other">%d сайта включено</item>
+    </plurals>
+    <string name="settings_ytdlp_tap_to_check">Нажмите, чтобы проверить</string>
+    <string name="settings_bitrate_kbps">%1$s kbps</string>
+    <string name="settings_audio_only_on">Только аудио: вкл.</string>
+    <string name="settings_audio_only_off">Только аудио: выкл.</string>
+    <plurals name="settings_storage_summary">
+        <item quantity="one">%1$d элемент · %2$s</item>
+        <item quantity="few">%1$d элемента · %2$s</item>
+        <item quantity="many">%1$d элементов · %2$s</item>
+        <item quantity="other">%1$d элемента · %2$s</item>
+    </plurals>
+    <string name="settings_about_summary">Murem %1$s</string>
+    <string name="dialog_cancel">Отмена</string>
+    <string name="dialog_delete">Удалить</string>
+    <string name="more_options">Другие параметры</string>
+
+    <!-- Settings: on-device models -->
+    <string name="model_name_voc_ft">MDX-NET Voc FT</string>
+    <string name="model_name_mdx3">MDX-NET 3_9662</string>
+    <string name="tag_best_vocals">Лучший вокал</string>
+    <string name="tag_fastest">Самая быстрая</string>
+    <string name="tag_lead_vocal">Основной вокал</string>
+    <string name="tag_server_default">По умолчанию на сервере</string>
+    <string name="model_best_hq3">Хорошо убирает музыку в большинстве песен (SDR вокала 8,8 дБ)</string>
+    <string name="model_best_voc_ft">Более чистый вокал в большинстве песен (SDR вокала 10,2 дБ)</string>
+    <string name="model_best_mdx3">Вдвое меньше загрузка и быстрее, вокал почти такой же чистый (9,7 дБ)</string>
+    <string name="model_best_kara2">Оставляет только основной вокал: бэк-вокал удаляется вместе с музыкой</string>
+    <string name="model_best_kim2">Модель сервера по умолчанию, с самым чистым вокалом (10,2 дБ)</string>
+    <string name="model_state_downloaded">Загружена</string>
+    <string name="model_state_first_use">Загрузится при первом использовании</string>
+    <plurals name="model_speed_hint">
+        <item quantity="one">≈ %d мин на трек длиной 4 мин</item>
+        <item quantity="few">≈ %d мин на трек длиной 4 мин</item>
+        <item quantity="many">≈ %d мин на трек длиной 4 мин</item>
+        <item quantity="other">≈ %d мин на трек длиной 4 мин</item>
+    </plurals>
+    <string name="models_empty">Нет загруженных моделей. Выбранная модель загрузится при первом использовании.</string>
+    <string name="model_delete_title">Удалить %1$s?</string>
+    <string name="model_delete_text">Она загрузится снова при следующем использовании.</string>
+
+    <!-- Settings: output -->
+    <string name="output_format_note">Применяется к результатам «Только аудио». Видео всегда сохраняются в MP4.</string>
+    <string name="output_m4a">M4A (AAC)</string>
+    <string name="output_mp3">MP3</string>
+    <string name="output_audio_only_desc">Сохранять только аудио с голосом, без видео</string>
+
+    <!-- Settings: performance -->
+    <string name="perf_threads">Потоки</string>
+    <string name="perf_threads_auto">Авто (%1$s)</string>
+    <string name="perf_threads_desc">Больше потоков может ускорить работу, но расходует больше батареи и сильнее нагревает телефон.</string>
+    <string name="perf_quality">Качество</string>
+    <string name="settings_quality_fast">Быстро</string>
+    <string name="settings_quality_balanced">Сбалансировано</string>
+    <string name="settings_quality_best">Лучшее</string>
+    <string name="perf_fast_time">Около 0,83× времени</string>
+    <string name="perf_balanced_time">Обычное время</string>
+    <string name="perf_best_time">Около 1,5× времени</string>
+    <string name="perf_quality_help">«Быстро» может оставить чуть больше музыки на границах фрагментов; «Лучшее» звучит плавнее, но работает медленнее.</string>
+    <string name="perf_batch">Размер пакета</string>
+    <string name="perf_batch_desc">Сколько фрагментов песни Murem разделяет одновременно. Два сразу могут лучше использовать быстрый телефон, но требуют больше памяти.</string>
+    <string name="perf_batch_1">1 (рекомендуется)</string>
+    <string name="perf_batch_2">2</string>
+    <string name="perf_batch_2_desc">Экспериментально. Использует примерно на 1 GB больше памяти; может не ускорить работу.</string>
+    <string name="perf_batch_2_needs_ram">Нужен телефон с 6 GB RAM</string>
+    <string name="perf_accelerator">Ускорение</string>
+    <string name="perf_accelerator_desc">Какой вариант быстрее, зависит от телефона. Попробуйте его на коротком клипе и сравните время в разделе «Недавние». Если вариант не работает на этом телефоне, Murem использует CPU.</string>
+    <string name="perf_acc_cpu">CPU (рекомендуется)</string>
+    <string name="perf_acc_cpu_desc">Работает на любом телефоне</string>
+    <!-- Processing screen: system stats -->
+    <string name="stats_title">Система</string>
+    <string name="stats_show">Показать данные системы</string>
+    <string name="stats_hide">Скрыть данные системы</string>
+    <string name="stats_cpu">CPU</string>
+    <string name="stats_memory">Память</string>
+    <string name="stats_free">Свободно %1$s</string>
+    <string name="stats_temperature">Нагрев</string>
+    <string name="stats_headroom">%1$s до троттлинга</string>
+    <string name="stats_thermal_normal">Норма</string>
+    <string name="stats_thermal_warm">Тёплый</string>
+    <string name="stats_thermal_hot">Горячий</string>
+    <string name="stats_thermal_throttling">Троттлинг</string>
+    <string name="stats_gpu">GPU</string>
+    <string name="perf_acc_webgpu">GPU (WebGPU)</string>
+    <string name="perf_acc_webgpu_desc">Экспериментально. Запускает модель на GPU через Vulkan. Часто самый быстрый вариант, но телефон может подтормаживать во время работы, поэтому лучше использовать его, когда вы не пользуетесь телефоном</string>
+    <string name="perf_acc_nnapi">ИИ-чип (NNAPI)</string>
+    <string name="perf_acc_nnapi_desc">Экспериментально. Использует драйвер NPU, DSP или GPU телефона с половинной точностью. Может быть быстрее или намного медленнее, в зависимости от телефона</string>
+    <string name="perf_acc_nnapi_needs_android">Нужен Android 8.1 или новее</string>
+    <string name="perf_acc_failed_here">В прошлый раз не сработало на этом телефоне, поэтому Murem завершил обработку на CPU</string>
+    <string name="perf_acc_xnnpack">Оптимизированный CPU (XNNPACK)</string>
+    <string name="perf_acc_xnnpack_desc">Экспериментально. Другой код для CPU, который быстрее на некоторых телефонах с ARM</string>
+    <string name="perf_acc_webgpu_short">GPU</string>
+    <string name="perf_limit">Ограничение нагрузки</string>
+    <string name="perf_limit_desc">Не даёт Murem занимать весь GPU, чтобы телефон работал плавнее и меньше грелся. С ускорением на GPU экран тоже получает свою очередь между шагами GPU. Чтобы телефон работал ещё плавнее, выберите более лёгкую модель в разделе «Модели на устройстве».</string>
+    <string name="perf_limit_full">Полная скорость</string>
+    <string name="perf_limit_full_desc">Быстрее всего; телефон может подтормаживать во время обработки</string>
+    <string name="perf_limit_pct">%1$d%%</string>
+    <string name="perf_limit_75_desc">Не менее 1,3× времени</string>
+    <string name="perf_limit_50_desc">Не менее 2× времени; плавнее всего</string>
+    <string name="perf_limit_short">Лимит %1$d%%</string>
+    <string name="perf_acc_xnnpack_short">XNNPACK</string>
+    <string name="perf_acc_nnapi_short">NNAPI</string>
+
+    <!-- Settings: history & storage, server discovery, Termux -->
+    <string name="clear_history_title">Очистить историю?</string>
+    <string name="clear_history_text">Список обработанных видео будет удалён из Murem.</string>
+    <plurals name="exporting_items">
+        <item quantity="one">Экспорт %d элемента…</item>
+        <item quantity="few">Экспорт %d элементов…</item>
+        <item quantity="many">Экспорт %d элементов…</item>
+        <item quantity="other">Экспорт %d элемента…</item>
+    </plurals>
+    <string name="export_failed">Ошибка экспорта: %1$s</string>
+    <string name="export_none">Нет файлов для экспорта</string>
+    <string name="discover_searching">Поиск сервера…</string>
+    <string name="discover_found">Сервер найден: %1$s</string>
+    <string name="discover_failed">Поиск не удался</string>
+    <string name="discover_error">Ошибка поиска: %1$s</string>
+    <string name="termux_come_back">Вернитесь сюда, когда Termux завершит работу.</string>
+
+    <!-- Settings: about -->
+    <string name="about_help">Помощь</string>
+    <string name="about_components_title">Компоненты с открытым исходным кодом</string>
+    <string name="about_components">Кодирование MP3 использует LAME (LGPL-2.0) через FFmpeg (GPL), оба поставляются в составе youtubedl-android (GPL-3.0). Для разделения используются ONNX Runtime (MIT) и модели UVR MDX-Net, загружаемые у их авторов.</string>
+
+    <!-- Settings: accounts & cookies for on-device links -->
+    <string name="cookies_title">Аккаунты и cookies</string>
+    <plurals name="cookies_site_summary">
+        <item quantity="one">%1$d cookie · сохранено %2$s</item>
+        <item quantity="few">%1$d cookies · сохранено %2$s</item>
+        <item quantity="many">%1$d cookies · сохранено %2$s</item>
+        <item quantity="other">%1$d cookies · сохранено %2$s</item>
+    </plurals>
+    <string name="cookies_from_login">из входа</string>
+    <string name="cookies_from_import">импортированы</string>
+    <string name="cookies_login_again">Войти снова</string>
+    <string name="cookies_delete">Удалить</string>
+    <string name="cookies_not_internal_note">Cookies используются только для ссылок во встроенном режиме.</string>
+    <string name="cookies_empty_title">Нет сохранённых входов</string>
+    <string name="cookies_empty_desc">Войдите или импортируйте cookies, чтобы загружать публикации, для которых нужен аккаунт.</string>
+    <string name="cookies_delete_site_title">Удалить cookies для %1$s?</string>
+    <string name="cookies_delete_site_text">Чтобы снова загружать публикации, для которых нужен этот аккаунт, войдите снова или импортируйте его cookies.</string>
+    <string name="cookies_delete_all_title">Удалить все сохранённые cookies?</string>
+    <string name="cookies_delete_all_text">Все сохранённые входы будут удалены с этого устройства.</string>
+    <string name="cookies_import">Импорт cookies.txt</string>
+    <string name="cookies_delete_all">Удалить все</string>
+    <string name="cookies_send_for">Отправлять cookies для %1$s</string>
+    <string name="cookies_change_failed">Не удалось изменить сохранённые cookies. Попробуйте снова.</string>
+    <string name="cookies_cannot_open_login">Не удаётся открыть страницу входа для этого сайта</string>
+    <string name="cookies_imported">Cookies импортированы</string>
+    <string name="cookies_removed">Cookies удалены</string>
+    <string name="cookies_help">Некоторые публикации можно загрузить только после входа в аккаунт. Войдите внутри Murem или импортируйте файл cookies.txt (формат Netscape) из браузера на компьютере. Cookies хранятся отдельно для каждого сайта и остаются на этом устройстве. Отправляются только включённые сайты и только со ссылками во встроенном режиме. Загрузки с YouTube могут измениться, если cookies YouTube включены. Любой, у кого есть эти cookies, может пользоваться вашим аккаунтом: никогда не передавайте их и удаляйте сайт, когда закончите.</string>
+    <string name="cookies_login">Войти через браузер</string>
+    <string name="cookies_login_site_instagram">Instagram</string>
+    <string name="cookies_login_site_custom">Другой сайт (URL https)</string>
+    <string name="cookies_login_url_hint">https://example.com/login</string>
+    <string name="cookies_login_notice_title">Войти через браузер</string>
+    <string name="cookies_login_notice">Вы входите внутри Murem, а не в своём браузере. Cookies сайта хранятся только на этом устройстве и используются для ссылок на устройстве. Удалить их можно в Настройки → Аккаунты и cookies.</string>
+    <string name="cookies_login_continue">Продолжить</string>
+    <string name="cookies_login_cancel">Отмена</string>
+    <string name="cookies_login_title">Войдите, затем нажмите «Сохранить»</string>
+    <string name="cookies_login_save">Сохранить cookies</string>
+    <string name="cookies_login_oauth_hint">Вход через Google и Facebook может быть заблокирован во встроенных браузерах. Вместо этого войдите с именем пользователя и паролем.</string>
+    <plurals name="cookies_login_saved">
+        <item quantity="one">Сохранено cookies для %2$s: %1$d</item>
+        <item quantity="few">Сохранено cookies для %2$s: %1$d</item>
+        <item quantity="many">Сохранено cookies для %2$s: %1$d</item>
+        <item quantity="other">Сохранено cookies для %2$s: %1$d</item>
+    </plurals>
+    <string name="cookies_login_none">Cookies не найдены. Сначала войдите, затем нажмите «Сохранить».</string>
+    <string name="paste">Вставить</string>
+    <string name="no_external_player">Не найдено приложение для открытия этого файла</string>
+
+    <!-- 4.1: licenses, problem reports, playback errors, job times -->
+    <string name="back">Назад</string>
+    <string name="licenses_title">Лицензии открытого ПО</string>
+    <string name="licenses_desc">Библиотеки, используемые Murem, и их лицензии</string>
+    <string name="report_problem">Сообщить о проблеме</string>
+    <string name="report_problem_desc">Открывает заполненный issue на GitHub. Вы проверите его перед отправкой.</string>
+    <string name="report_problem_short">Сообщить</string>
+    <string name="report_no_browser">Не найден браузер для открытия GitHub</string>
+    <string name="crash_title">Murem неожиданно закрылся</string>
+    <string name="crash_text">Сообщить об этом на GitHub, чтобы ошибку исправили? Отчёт содержит версию приложения, модель телефона, версию Android и ошибку. Ссылки и имена файлов не включаются, и вы проверите отчёт перед отправкой.</string>
+    <string name="not_now">Не сейчас</string>
+    <string name="playback_error_title">Не удаётся воспроизвести результат</string>
+    <string name="playback_error_missing">Файл отсутствует или не читается. Возможно, он был удалён или его больше нет на сервере.</string>
+    <string name="playback_error_network">Не удалось связаться с сервером. Проверьте подключение и попробуйте снова.</string>
+    <string name="playback_error_format">Этот файл в формате, который телефон не может воспроизвести. Попробуйте открыть его в другом приложении.</string>
+    <string name="playback_error_generic">При воспроизведении файла что-то пошло не так.</string>
+    <string name="open_in_other_app">Открыть в другом приложении</string>
+    <string name="started_at">Начато %1$s · %2$s</string>
+    <string name="started_ago">%1$s назад</string>
+    <string name="started_just_now">только что</string>
+    <string name="duration_under_minute">меньше минуты</string>
+    <string name="duration_under_minute_short">&lt;1 мин</string>
+    <plurals name="duration_minutes">
+        <item quantity="one">%d мин</item>
+        <item quantity="few">%d мин</item>
+        <item quantity="many">%d мин</item>
+        <item quantity="other">%d мин</item>
+    </plurals>
+    <plurals name="duration_hours">
+        <item quantity="one">%d ч</item>
+        <item quantity="few">%d ч</item>
+        <item quantity="many">%d ч</item>
+        <item quantity="other">%d ч</item>
+    </plurals>
+    <string name="duration_hours_minutes">%1$s %2$s</string>
+    <string name="info_started">Начало</string>
+    <string name="info_finished">Завершено</string>
+    <string name="info_took">Длительность</string>
+    <string name="server_job_gone">Этой задачи больше нет на сервере. Результаты хранятся 7 дней.</string>
+    <plurals name="links_queued">
+        <item quantity="one">%1$d ссылка в очереди</item>
+        <item quantity="few">%1$d ссылки в очереди</item>
+        <item quantity="many">%1$d ссылок в очереди</item>
+        <item quantity="other">%1$d ссылки в очереди</item>
+    </plurals>
+    <string name="cookies_login_not_logged_in">Похоже, вы ещё не вошли, поэтому ничего не сохранено. Сначала войдите, затем нажмите «Сохранить».</string>
+    <string name="cookies_login_save_failed">Не удалось сохранить cookies. Освободите место и попробуйте снова.</string>
+    <string name="cookies_invalid_too_large">Файл слишком большой для cookies.txt (больше 1 MB)</string>
+    <string name="cookies_invalid_empty">В этом cookies.txt нет cookies</string>
+    <string name="cookies_invalid_format">Это не файл cookies.txt. Экспортируйте cookies в формате Netscape.</string>
+    <string name="cookies_invalid_line">Это недействительный файл cookies.txt (строка %1$d не в формате Netscape)</string>
+    <string name="cookies_unreadable">Не удалось прочитать выбранный файл</string>
+
+    <!-- Home input card -->
+    <string name="home_link_placeholder">Вставьте ссылку на видео…</string>
+    <string name="home_file_title">Выберите видео- или аудиофайл</string>
+    <string name="home_file_formats">MP4, MKV, WebM, MP3, M4A…</string>
+    <string name="home_cta_hint_link">Вставьте ссылку, чтобы начать</string>
+    <string name="home_cta_hint_file">Выберите файл, чтобы начать</string>
+    <string name="home_estimate_total">Около %1$s на этом телефоне</string>
+    <string name="home_estimate_per_minute">Около %1$s на минуту аудио на этом телефоне</string>
+    <string name="duration_seconds">%1$d с</string>
+    <string name="home_lighter_tip">На этом телефоне медленно. Более лёгкая модель примерно в %1$s× быстрее.</string>
+    <string name="home_lighter_use">Использовать более лёгкую модель</string>
+    <string name="history_source_device">На устройстве</string>
+    <string name="history_source_server">Сервер</string>
+    <string name="history_source_termux">Termux</string>
+</resources>

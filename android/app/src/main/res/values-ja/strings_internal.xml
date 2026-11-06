@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings: appearance, color palette -->
+    <string name="palette_title">カラーパレット</string>
+    <string name="palette_material_you_hint">Material You は壁紙の色を使用します。パレットを選ぶにはオフにしてください。</string>
+    <string name="palette_peach">ピーチ</string>
+    <string name="palette_indigo">インディゴ</string>
+    <string name="palette_teal">ティール</string>
+    <string name="palette_green">グリーン</string>
+    <string name="palette_amber">アンバー</string>
+    <string name="palette_rose">ローズ</string>
+    <string name="palette_purple">パープル</string>
+    <string name="palette_slate">スレート</string>
+
+    <!-- Settings: processing mode -->
+    <string name="processing_mode">処理モード</string>
+    <string name="mode_internal">内部 (デバイス上)</string>
+    <string name="mode_server">サーバー</string>
+    <string name="internal_warning">デバイス上での処理は遅く (曲の長さより時間がかかることがあります)、バッテリーを多く消費し、約 1.5 GB の RAM を使用します。スマホを充電したままにしてください。</string>
+    <string name="internal_model_name">MDX-NET HQ3</string>
+    <string name="internal_model_downloaded">ダウンロード済み · %1$s</string>
+    <string name="internal_model_not_downloaded">未ダウンロード (%1$s、初回使用時にダウンロード)</string>
+    <string name="internal_model_downloading">ダウンロード中 %1$s / %2$s</string>
+    <string name="download_model">ダウンロード</string>
+    <string name="delete_model">削除</string>
+    <string name="internal_model_in_use">モデルは使用中です。ダウンロードまたは処理が終わってから再試行してください。</string>
+    <string name="model_notice_required">先に 設定 → デバイス上のモデル を開き、このモデルの注意事項に同意してください</string>
+    <string name="model_notice_needed">ダウンロード前に確認が必要です</string>
+    <string name="model_notice_title">このモデルについて</string>
+    <string name="model_notice_kim">Kim Vocal 2 は作者が UVR の公開モデルリポジトリで公開しているものです。ライセンスが明記されていないため、利用条件は不明です。Murem はリクエストされたときにのみそこからダウンロードし、再配布はしません。</string>
+    <string name="model_notice_download">ダウンロード</string>
+    <string name="model_notice_cancel">キャンセル</string>
+
+    <!-- Progress: separation ETA -->
+    <plurals name="about_n_min_left">
+        <item quantity="other">残り約 %d 分</item>
+    </plurals>
+    <string name="about_1_min_left">残り約 1 分</string>
+    <string name="less_than_minute_left">残り 1 分未満</string>
+
+    <!-- Output format (audio-only results) -->
+    <string name="output_format">形式</string>
+    <string name="output_mp3_checking">確認中…</string>
+    <string name="output_mp3_unavailable">このスマホでは MP3 を利用できないため、結果は M4A で保存されます。</string>
+    <string name="output_server_mp3_note">サーバーと Termux では、音声のみの結果は常に MP3 で保存されます</string>
+
+    <!-- Home / Help -->
+    <string name="status_ready_on_device">デバイス上での処理の準備ができました</string>
+    <string name="status_model_unavailable">モデルが未ダウンロードで、インターネットに接続されていません</string>
+    <string name="internal_models_note">Termux またはサーバーモードでは、さらに多くのモデルを利用できます</string>
+    <string name="help_on_device">デバイス上での処理</string>
+    <string name="help_on_device_desc">内部モードでは、サーバーなしでスマホ上で音楽を除去します。初回使用時に MDX-NET HQ3 モデル (64 MB) をダウンロードします。処理は遅くバッテリーを多く消費するため、スマホを充電したままにしてください。</string>
+
+    <!-- Errors -->
+    <string name="internal_bad_source">ファイルを読み込めません</string>
+    <string name="internal_no_space">ストレージの空き容量が不足しています (%1$d MB 必要)</string>
+    <string name="internal_model_download_failed">モデルのダウンロードに失敗しました: %1$s</string>
+    <string name="internal_model_failed_network">モデルのダウンロードに失敗しました。インターネット接続を確認して再試行してください。</string>
+    <string name="internal_model_corrupt">モデルファイルが破損しています。次回再ダウンロードされます。</string>
+    <string name="internal_model_mismatch">モデルがメタデータと一致しません</string>
+    <string name="internal_out_of_memory">空きメモリが不足しています。他のアプリを閉じて再試行してください。</string>
+    <string name="internal_processing_failed">デバイス上での処理に失敗しました</string>
+    <string name="internal_no_audio">このファイルには音声トラックがありません</string>
+    <string name="internal_codec_unsupported">この音声形式はこのスマホではサポートされていません</string>
+    <string name="internal_video_codec_unsupported">この動画形式 (%1$s) はこのスマホでは処理できません。音声のみをオンにするか、サーバーモードを使用してください。</string>
+    <string name="internal_video_convert_failed">この動画 (%1$s) をデバイス上でコピーまたは変換できませんでした。音声のみをオンにするか、サーバーモードを使用してください。</string>
+    <string name="internal_encode_failed">結果をエンコードできませんでした</string>
+    <string name="mp3_unavailable_fallback">このスマホでは MP3 を利用できないため、結果は M4A で保存されました</string>
+    <string name="internal_interrupted">処理が繰り返し中断されました</string>
+    <string name="internal_job_not_found">デバイス上のジョブが見つかりません</string>
+    <string name="internal_needs_foreground">デバイス上での処理を開始するには Murem を開いている必要があります。Murem を開いて再試行してください。</string>
+    <string name="internal_waiting_foreground">デバイス上での処理を続けるには Murem を開いてください</string>
+    <string name="internal_device_unsupported">このデバイスにはデバイス上での処理に十分なメモリがありません。Termux またはサーバーモードを使用してください。</string>
+
+    <!-- Links (yt-dlp) -->
+    <string name="internal_url_invalid">有効なリンクではありません</string>
+    <string name="internal_url_live">ライブ配信は処理できません。配信終了後に再試行してください。</string>
+    <string name="internal_url_unsupported_site">このサイトはデバイス上ではサポートされていません。サーバーモードをお試しください。</string>
+    <string name="internal_url_unavailable">この動画は利用できないか、非公開です</string>
+    <string name="internal_url_blocked">サイトがダウンロードを拒否しました。設定で yt-dlp を更新するか、サーバーモードを使用してください。</string>
+    <string name="internal_url_network">サイトに接続できませんでした。インターネット接続を確認してください。</string>
+    <string name="internal_url_download_failed">このリンクをデバイス上でダウンロードできませんでした。サーバーモードをお試しください。</string>
+    <string name="internal_url_download_failed_detail">このリンクをデバイス上でダウンロードできませんでした (%1$s)。サーバーモードをお試しください。</string>
+    <string name="internal_url_login_required">このサイトはログインなしではこの投稿を共有しませんでした。設定 → yt-dlp を更新 をタップして再試行するか、設定で Cookie をインポートするか、サーバーモードを使用してください。</string>
+    <string name="internal_url_login_cookies_failed">この投稿にはログインが必要ですが、インポートした Cookie が機能しませんでした。期限切れの可能性があります: もう一度エクスポートして設定でインポートしてください。</string>
+    <string name="internal_url_no_audio">この動画には音声トラックがないため、除去する音楽がありません。</string>
+    <string name="internal_ytdlp_outdated_hint">yt-dlp %1$s は古くなっています: 設定 → yt-dlp を更新 をタップして再試行してください。</string>
+    <string name="internal_ytdlp_init_failed">リンクのダウンローダーを準備できませんでした。ストレージの空き容量を増やして再試行してください。</string>
+
+    <!-- Settings: yt-dlp -->
+    <string name="ytdlp_title">yt-dlp を更新</string>
+    <string name="ytdlp_version">バージョン %1$s</string>
+    <string name="ytdlp_version_loading">バージョンを読み込み中…</string>
+    <string name="ytdlp_update">yt-dlp を更新</string>
+    <string name="ytdlp_updating">更新中…</string>
+    <string name="ytdlp_updated">%1$s に更新しました</string>
+    <string name="ytdlp_up_to_date">すでに最新です (%1$s)</string>
+    <string name="ytdlp_update_failed">更新に失敗しました。インターネット接続を確認してください。</string>
+    <string name="ytdlp_update_busy">現在のダウンロードが終わるまでお待ちください</string>
+
+    <plurals name="ytdlp_age_days">
+        <item quantity="other">%d 日前</item>
+    </plurals>
+    <string name="ytdlp_released_today">本日リリース</string>
+    <string name="ytdlp_never_auto">Murem が yt-dlp を自動で更新することはありません。リンクが使えなくなったら更新をタップしてください。</string>
+    <string name="ytdlp_update_now">今すぐ更新</string>
+    <plurals name="ytdlp_banner_age">
+        <item quantity="other">内蔵の yt-dlp は %d 日前のものです。Instagram などのサイトでは新しいバージョンが必要な場合があります。</item>
+    </plurals>
+    <string name="banner_first_use_title">デバイス上での処理</string>
+    <string name="banner_first_use">デバイス上: 最初のジョブでモデル (30–67 MB) をダウンロードし、曲の長さより時間がかかることがあります。スマホを充電したままにしてください。</string>
+    <string name="banner_outdated_title">yt-dlp が古くなっている可能性があります</string>
+    <string name="banner_close">閉じる</string>
+
+    <!-- Settings navigation -->
+    <string name="settings_group_processing">処理</string>
+    <string name="settings_group_output">出力</string>
+    <string name="settings_group_app">アプリ</string>
+    <string name="settings_row_models">デバイス上のモデル</string>
+    <string name="settings_row_performance">パフォーマンス</string>
+    <string name="settings_row_update_ytdlp">yt-dlp を更新</string>
+    <string name="settings_row_output">出力</string>
+    <string name="settings_row_storage">履歴とストレージ</string>
+    <string name="settings_row_about">情報とヘルプ</string>
+    <string name="settings_internal_only">内部モード · %1$s</string>
+    <string name="settings_internal_only_note">これらの設定は内部 (デバイス上) モードでのみ使用されます。</string>
+    <string name="settings_mode_server">サーバー · %1$s</string>
+    <plurals name="settings_models_summary">
+        <item quantity="other">%1$s を選択中 · %2$d 件ダウンロード済み</item>
+    </plurals>
+    <string name="settings_threads_auto">自動スレッド</string>
+    <plurals name="settings_threads_n">
+        <item quantity="other">%d スレッド</item>
+    </plurals>
+    <plurals name="settings_accounts_on">
+        <item quantity="other">%d サイトがオン</item>
+    </plurals>
+    <string name="settings_ytdlp_tap_to_check">タップして確認</string>
+    <string name="settings_bitrate_kbps">%1$s kbps</string>
+    <string name="settings_audio_only_on">音声のみ: オン</string>
+    <string name="settings_audio_only_off">音声のみ: オフ</string>
+    <plurals name="settings_storage_summary">
+        <item quantity="other">%1$d 件 · %2$s</item>
+    </plurals>
+    <string name="settings_about_summary">Murem %1$s</string>
+    <string name="dialog_cancel">キャンセル</string>
+    <string name="dialog_delete">削除</string>
+    <string name="more_options">その他のオプション</string>
+
+    <!-- Settings: on-device models -->
+    <string name="model_name_voc_ft">MDX-NET Voc FT</string>
+    <string name="model_name_mdx3">MDX-NET 3_9662</string>
+    <string name="tag_best_vocals">ボーカル最高</string>
+    <string name="tag_fastest">最速</string>
+    <string name="tag_lead_vocal">リードボーカル</string>
+    <string name="tag_server_default">サーバーのデフォルト</string>
+    <string name="model_best_hq3">ほとんどの曲で音楽をしっかり除去 (ボーカル SDR 8.8 dB)</string>
+    <string name="model_best_voc_ft">ほとんどの曲でよりクリアなボーカル (ボーカル SDR 10.2 dB)</string>
+    <string name="model_best_mdx3">ダウンロードは半分で高速、ボーカルもほぼ同じくらいクリア (9.7 dB)</string>
+    <string name="model_best_kara2">リードボーカルのみを残します: バックボーカルは音楽と一緒に除去されます</string>
+    <string name="model_best_kim2">サーバーのデフォルトモデルで、最もクリアなボーカル (10.2 dB)</string>
+    <string name="model_state_downloaded">ダウンロード済み</string>
+    <string name="model_state_first_use">初回使用時にダウンロード</string>
+    <plurals name="model_speed_hint">
+        <item quantity="other">4 分の曲で約 %d 分</item>
+    </plurals>
+    <string name="models_empty">ダウンロード済みのモデルはありません。選択したモデルは初回使用時にダウンロードされます。</string>
+    <string name="model_delete_title">%1$s を削除しますか？</string>
+    <string name="model_delete_text">次回使用時に再ダウンロードされます。</string>
+
+    <!-- Settings: output -->
+    <string name="output_format_note">音声のみの結果に適用されます。動画は常に MP4 で保存されます。</string>
+    <string name="output_m4a">M4A (AAC)</string>
+    <string name="output_mp3">MP3</string>
+    <string name="output_audio_only_desc">動画なしでボーカルの音声のみを保存</string>
+
+    <!-- Settings: performance -->
+    <string name="perf_threads">スレッド</string>
+    <string name="perf_threads_auto">自動 (%1$s)</string>
+    <string name="perf_threads_desc">スレッドを増やすと速くなることがありますが、バッテリー消費が増え、スマホが熱くなります。</string>
+    <string name="perf_quality">品質</string>
+    <string name="settings_quality_fast">高速</string>
+    <string name="settings_quality_balanced">バランス</string>
+    <string name="settings_quality_best">最高</string>
+    <string name="perf_fast_time">所要時間 約 0.83 倍</string>
+    <string name="perf_balanced_time">標準の所要時間</string>
+    <string name="perf_best_time">所要時間 約 1.5 倍</string>
+    <string name="perf_quality_help">高速ではチャンクの境目に音楽が少し残ることがあります。最高はより滑らかですが遅くなります。</string>
+    <string name="perf_batch">バッチサイズ</string>
+    <string name="perf_batch_desc">Murem が一度に分離する曲の区切りの数です。2 つ同時にすると高速なスマホをより活用できますが、より多くのメモリが必要です。</string>
+    <string name="perf_batch_1">1 (推奨)</string>
+    <string name="perf_batch_2">2</string>
+    <string name="perf_batch_2_desc">試験運用版。メモリを約 1 GB 多く使用します。速くならない場合もあります。</string>
+    <string name="perf_batch_2_needs_ram">6 GB の RAM を搭載したスマホが必要です</string>
+    <string name="perf_accelerator">アクセラレーション</string>
+    <string name="perf_accelerator_desc">どれが最速かはスマホによって異なります。短いクリップで試し、最近で所要時間を比較してください。このスマホで動作しないオプションの場合、Murem は代わりに CPU を使用します。</string>
+    <string name="perf_acc_cpu">CPU (推奨)</string>
+    <string name="perf_acc_cpu_desc">すべてのスマホで動作します</string>
+    <!-- Processing screen: system stats -->
+    <string name="stats_title">システム</string>
+    <string name="stats_show">システム情報を表示</string>
+    <string name="stats_hide">システム情報を非表示</string>
+    <string name="stats_cpu">CPU</string>
+    <string name="stats_memory">メモリ</string>
+    <string name="stats_free">空き %1$s</string>
+    <string name="stats_temperature">温度</string>
+    <string name="stats_headroom">性能制限まで %1$s</string>
+    <string name="stats_thermal_normal">正常</string>
+    <string name="stats_thermal_warm">やや高温</string>
+    <string name="stats_thermal_hot">高温</string>
+    <string name="stats_thermal_throttling">性能制限中</string>
+    <string name="stats_gpu">GPU</string>
+    <string name="perf_acc_webgpu">GPU (WebGPU)</string>
+    <string name="perf_acc_webgpu_desc">試験運用版。Vulkan を通じて GPU でモデルを実行します。最速になることが多いですが、実行中はスマホの動作が重くなることがあるため、同時にスマホを使っていないときに最適です</string>
+    <string name="perf_acc_nnapi">AI チップ (NNAPI)</string>
+    <string name="perf_acc_nnapi_desc">試験運用版。スマホの NPU、DSP、または GPU ドライバーを半精度で使用します。スマホによって、速くなることも大幅に遅くなることもあります</string>
+    <string name="perf_acc_nnapi_needs_android">Android 8.1 以降が必要です</string>
+    <string name="perf_acc_failed_here">前回このスマホでは動作しなかったため、Murem は CPU で処理を完了しました</string>
+    <string name="perf_acc_xnnpack">最適化 CPU (XNNPACK)</string>
+    <string name="perf_acc_xnnpack_desc">試験運用版。一部の ARM スマホでより速い別の CPU コードです</string>
+    <string name="perf_acc_webgpu_short">GPU</string>
+    <string name="perf_limit">負荷制限</string>
+    <string name="perf_limit_desc">Murem が GPU 全体を使わないようにして、スマホを快適で涼しく保ちます。GPU アクセラレーションでは、GPU の処理の合間に画面の描画も行われます。さらに快適にするには、デバイス上のモデル でより軽いモデルを使用してください。</string>
+    <string name="perf_limit_full">フルスピード</string>
+    <string name="perf_limit_full_desc">最速。処理中はスマホの動作が重くなることがあります</string>
+    <string name="perf_limit_pct">%1$d%%</string>
+    <string name="perf_limit_75_desc">所要時間 1.3 倍以上</string>
+    <string name="perf_limit_50_desc">所要時間 2 倍以上。最も快適</string>
+    <string name="perf_limit_short">%1$d%% 制限</string>
+    <string name="perf_acc_xnnpack_short">XNNPACK</string>
+    <string name="perf_acc_nnapi_short">NNAPI</string>
+
+    <!-- Settings: history & storage, server discovery, Termux -->
+    <string name="clear_history_title">履歴を消去しますか？</string>
+    <string name="clear_history_text">処理済み動画のリストが Murem から削除されます。</string>
+    <plurals name="exporting_items">
+        <item quantity="other">%d 件をエクスポート中…</item>
+    </plurals>
+    <string name="export_failed">エクスポートに失敗しました: %1$s</string>
+    <string name="export_none">エクスポートできるファイルがありません</string>
+    <string name="discover_searching">サーバーを検索中…</string>
+    <string name="discover_found">%1$s でサーバーが見つかりました</string>
+    <string name="discover_failed">検出に失敗しました</string>
+    <string name="discover_error">検出エラー: %1$s</string>
+    <string name="termux_come_back">Termux が完了したらここに戻ってください。</string>
+
+    <!-- Settings: about -->
+    <string name="about_help">ヘルプ</string>
+    <string name="about_components_title">オープンソースコンポーネント</string>
+    <string name="about_components">MP3 エンコードには FFmpeg (GPL) 経由で LAME (LGPL-2.0) を使用しており、どちらも youtubedl-android (GPL-3.0) に同梱されています。分離には ONNX Runtime (MIT) と、作者から直接ダウンロードした UVR MDX-Net モデルを使用しています。</string>
+
+    <!-- Settings: accounts & cookies for on-device links -->
+    <string name="cookies_title">アカウントと Cookie</string>
+    <plurals name="cookies_site_summary">
+        <item quantity="other">Cookie %1$d 件 · %2$s に保存</item>
+    </plurals>
+    <string name="cookies_from_login">ログインから</string>
+    <string name="cookies_from_import">インポート</string>
+    <string name="cookies_login_again">再ログイン</string>
+    <string name="cookies_delete">削除</string>
+    <string name="cookies_not_internal_note">Cookie は内部モードのリンクでのみ使用されます。</string>
+    <string name="cookies_empty_title">保存されたログインはありません</string>
+    <string name="cookies_empty_desc">アカウントが必要な投稿をダウンロードするには、ログインするか Cookie をインポートしてください。</string>
+    <string name="cookies_delete_site_title">%1$s の Cookie を削除しますか？</string>
+    <string name="cookies_delete_site_text">このアカウントが必要な投稿を再びダウンロードするには、再ログインするか Cookie をインポートしてください。</string>
+    <string name="cookies_delete_all_title">保存したすべての Cookie を削除しますか？</string>
+    <string name="cookies_delete_all_text">保存されたすべてのログインがこのデバイスから削除されます。</string>
+    <string name="cookies_import">cookies.txt をインポート</string>
+    <string name="cookies_delete_all">すべて削除</string>
+    <string name="cookies_send_for">%1$s の Cookie を送信</string>
+    <string name="cookies_change_failed">保存した Cookie を変更できませんでした。再試行してください。</string>
+    <string name="cookies_cannot_open_login">このサイトのログインページを開けません</string>
+    <string name="cookies_imported">Cookie をインポートしました</string>
+    <string name="cookies_removed">Cookie を削除しました</string>
+    <string name="cookies_help">一部の投稿はログイン中のみダウンロードできます。Murem 内でログインするか、パソコンのブラウザから cookies.txt ファイル (Netscape 形式) をインポートしてください。Cookie はサイトごとに保存され、このデバイス上にのみ残ります。送信されるのはオンにしたサイトの Cookie だけで、内部モードのリンクでのみ使われます。YouTube の Cookie をオンにすると、YouTube のダウンロード結果が変わることがあります。これらの Cookie を持つ人は誰でもあなたのアカウントを使用できます: 絶対に共有せず、使い終わったらサイトを削除してください。</string>
+    <string name="cookies_login">ブラウザでログイン</string>
+    <string name="cookies_login_site_instagram">Instagram</string>
+    <string name="cookies_login_site_custom">その他のサイト (https URL)</string>
+    <string name="cookies_login_url_hint">https://example.com/login</string>
+    <string name="cookies_login_notice_title">ブラウザでログイン</string>
+    <string name="cookies_login_notice">ブラウザアプリではなく、Murem 内でログインしています。サイトの Cookie はこのデバイスにのみ保存され、デバイス上のリンクに使用されます。設定 → アカウントと Cookie で「削除」をタップすると消去できます。</string>
+    <string name="cookies_login_continue">続行</string>
+    <string name="cookies_login_cancel">キャンセル</string>
+    <string name="cookies_login_title">ログインしてから保存をタップ</string>
+    <string name="cookies_login_save">Cookie を保存</string>
+    <string name="cookies_login_oauth_hint">埋め込みブラウザでは Google や Facebook でのログインがブロックされる場合があります。代わりにユーザー名とパスワードでログインしてください。</string>
+    <plurals name="cookies_login_saved">
+        <item quantity="other">%2$s の Cookie を %1$d 件保存しました</item>
+    </plurals>
+    <string name="cookies_login_none">Cookie が見つかりません。先にログインしてから保存をタップしてください。</string>
+    <string name="paste">貼り付け</string>
+    <string name="no_external_player">このファイルを開けるアプリが見つかりません</string>
+
+    <!-- 4.1: licenses, problem reports, playback errors, job times -->
+    <string name="back">戻る</string>
+    <string name="licenses_title">オープンソースライセンス</string>
+    <string name="licenses_desc">Murem が使用しているライブラリとそのライセンス</string>
+    <string name="report_problem">問題を報告</string>
+    <string name="report_problem_desc">入力済みの GitHub Issue を開きます。送信前に内容を確認できます。</string>
+    <string name="report_problem_short">報告</string>
+    <string name="report_no_browser">GitHub を開くブラウザが見つかりません</string>
+    <string name="crash_title">Murem が予期せず終了しました</string>
+    <string name="crash_text">修正のために GitHub で報告しますか？報告にはアプリのバージョン、スマホの機種、Android のバージョン、エラーが含まれます。リンクやファイル名は含まれず、送信前に内容を確認できます。</string>
+    <string name="not_now">後で</string>
+    <string name="playback_error_title">この結果を再生できません</string>
+    <string name="playback_error_missing">ファイルが見つからないか、読み込めません。削除されたか、サーバーにもう存在しない可能性があります。</string>
+    <string name="playback_error_network">サーバーに接続できませんでした。接続を確認して再試行してください。</string>
+    <string name="playback_error_format">このファイルはこのスマホで再生できない形式です。別のアプリで開いてみてください。</string>
+    <string name="playback_error_generic">このファイルの再生中に問題が発生しました。</string>
+    <string name="open_in_other_app">別のアプリで開く</string>
+    <string name="started_at">開始 %1$s · %2$s</string>
+    <string name="started_ago">%1$s前</string>
+    <string name="started_just_now">たった今</string>
+    <string name="duration_under_minute">1 分未満</string>
+    <string name="duration_under_minute_short">&lt;1 分</string>
+    <plurals name="duration_minutes">
+        <item quantity="other">%d 分</item>
+    </plurals>
+    <plurals name="duration_hours">
+        <item quantity="other">%d 時間</item>
+    </plurals>
+    <string name="duration_hours_minutes">%1$s %2$s</string>
+    <string name="info_started">開始</string>
+    <string name="info_finished">終了</string>
+    <string name="info_took">所要時間</string>
+    <string name="server_job_gone">サーバーにこのジョブはもうありません。結果は 7 日間保存されます。</string>
+    <plurals name="links_queued">
+        <item quantity="other">%1$d 件のリンクをキューに追加しました</item>
+    </plurals>
+    <string name="cookies_login_not_logged_in">まだログインしていないようなので、何も保存されませんでした。先にログインしてから保存をタップしてください。</string>
+    <string name="cookies_login_save_failed">Cookie を保存できませんでした。ストレージの空き容量を増やして再試行してください。</string>
+    <string name="cookies_invalid_too_large">cookies.txt としてはファイルが大きすぎます (1 MB 超)</string>
+    <string name="cookies_invalid_empty">この cookies.txt には Cookie が含まれていません</string>
+    <string name="cookies_invalid_format">これは cookies.txt ファイルではありません。Cookie を Netscape 形式でエクスポートしてください。</string>
+    <string name="cookies_invalid_line">有効な cookies.txt ファイルではありません (%1$d 行目が Netscape 形式ではありません)</string>
+    <string name="cookies_unreadable">選択したファイルを読み込めませんでした</string>
+
+    <!-- Home input card -->
+    <string name="home_link_placeholder">動画のリンクを貼り付け…</string>
+    <string name="home_file_title">動画または音声ファイルを選択</string>
+    <string name="home_file_formats">MP4、MKV、WebM、MP3、M4A…</string>
+    <string name="home_cta_hint_link">リンクを貼り付けて開始</string>
+    <string name="home_cta_hint_file">ファイルを選んで開始</string>
+    <string name="home_estimate_total">このスマホで約 %1$s</string>
+    <string name="home_estimate_per_minute">このスマホで音声 1 分あたり約 %1$s</string>
+    <string name="duration_seconds">%1$d 秒</string>
+    <string name="home_lighter_tip">このスマホでは遅いです。軽いモデルなら約 %1$s 倍速くなります。</string>
+    <string name="home_lighter_use">軽いモデルを使用</string>
+    <string name="history_source_device">デバイス上</string>
+    <string name="history_source_server">サーバー</string>
+    <string name="history_source_termux">Termux</string>
+</resources>

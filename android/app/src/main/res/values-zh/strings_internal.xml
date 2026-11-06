@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings: appearance, color palette -->
+    <string name="palette_title">配色方案</string>
+    <string name="palette_material_you_hint">Material You 会使用壁纸中的颜色。关闭后可选择配色方案。</string>
+    <string name="palette_peach">桃色</string>
+    <string name="palette_indigo">靛蓝</string>
+    <string name="palette_teal">青色</string>
+    <string name="palette_green">绿色</string>
+    <string name="palette_amber">琥珀色</string>
+    <string name="palette_rose">玫瑰色</string>
+    <string name="palette_purple">紫色</string>
+    <string name="palette_slate">石板灰</string>
+
+    <!-- Settings: processing mode -->
+    <string name="processing_mode">处理模式</string>
+    <string name="mode_internal">内置（设备上）</string>
+    <string name="mode_server">服务器</string>
+    <string name="internal_warning">设备上处理速度较慢（可能比音轨本身还长），耗电量大，并占用约 1.5 GB 内存。请保持手机充电。</string>
+    <string name="internal_model_name">MDX-NET HQ3</string>
+    <string name="internal_model_downloaded">已下载 · %1$s</string>
+    <string name="internal_model_not_downloaded">未下载（%1$s，首次使用时下载）</string>
+    <string name="internal_model_downloading">正在下载 %1$s / %2$s</string>
+    <string name="download_model">下载</string>
+    <string name="delete_model">删除</string>
+    <string name="internal_model_in_use">模型正在使用中。请在下载或处理完成后重试。</string>
+    <string name="model_notice_required">请先打开设置 → 设备上的模型，并接受此模型的说明</string>
+    <string name="model_notice_needed">下载前需要你确认</string>
+    <string name="model_notice_title">关于此模型</string>
+    <string name="model_notice_kim">Kim Vocal 2 由其作者通过 UVR 的公开模型仓库发布。它没有注明许可证，因此使用条款未知。Murem 仅在你要求时从该处下载，且不会再分发。</string>
+    <string name="model_notice_download">下载</string>
+    <string name="model_notice_cancel">取消</string>
+
+    <!-- Progress: separation ETA -->
+    <plurals name="about_n_min_left">
+        <item quantity="other">剩余约 %d 分钟</item>
+    </plurals>
+    <string name="about_1_min_left">剩余约 1 分钟</string>
+    <string name="less_than_minute_left">剩余不到 1 分钟</string>
+
+    <!-- Output format (audio-only results) -->
+    <string name="output_format">格式</string>
+    <string name="output_mp3_checking">正在检查…</string>
+    <string name="output_mp3_unavailable">此手机不支持 MP3，因此结果将保存为 M4A。</string>
+    <string name="output_server_mp3_note">服务器和 Termux 始终将仅音频结果保存为 MP3</string>
+
+    <!-- Home / Help -->
+    <string name="status_ready_on_device">可在设备上处理</string>
+    <string name="status_model_unavailable">模型未下载，且没有网络连接</string>
+    <string name="internal_models_note">Termux 或服务器模式中有更多模型可用</string>
+    <string name="help_on_device">设备上处理</string>
+    <string name="help_on_device_desc">内置模式无需服务器，直接在手机上去除音乐。首次使用时会下载 MDX-NET HQ3 模型（64 MB）。处理较慢且耗电，请保持手机充电。</string>
+
+    <!-- Errors -->
+    <string name="internal_bad_source">无法读取文件</string>
+    <string name="internal_no_space">存储空间不足（需要 %1$d MB）</string>
+    <string name="internal_model_download_failed">模型下载失败：%1$s</string>
+    <string name="internal_model_failed_network">模型下载失败。请检查网络连接后重试。</string>
+    <string name="internal_model_corrupt">模型文件已损坏，下次将重新下载。</string>
+    <string name="internal_model_mismatch">模型与其元数据不匹配</string>
+    <string name="internal_out_of_memory">可用内存不足。请关闭其他应用后重试。</string>
+    <string name="internal_processing_failed">设备上处理失败</string>
+    <string name="internal_no_audio">该文件没有音轨</string>
+    <string name="internal_codec_unsupported">此手机不支持该音频格式</string>
+    <string name="internal_video_codec_unsupported">此手机无法处理该视频格式（%1$s）。请开启仅音频或使用服务器模式。</string>
+    <string name="internal_video_convert_failed">无法在设备上复制或转换此视频（%1$s）。请开启仅音频或使用服务器模式。</string>
+    <string name="internal_encode_failed">无法编码结果</string>
+    <string name="mp3_unavailable_fallback">此手机不支持 MP3，因此结果已保存为 M4A</string>
+    <string name="internal_interrupted">处理多次被中断</string>
+    <string name="internal_job_not_found">未找到设备上的任务</string>
+    <string name="internal_needs_foreground">设备上处理开始时需要 Murem 处于打开状态。请打开 Murem 后重试。</string>
+    <string name="internal_waiting_foreground">打开 Murem 以继续设备上处理</string>
+    <string name="internal_device_unsupported">此设备内存不足，无法在设备上处理。请使用 Termux 或服务器模式。</string>
+
+    <!-- Links (yt-dlp) -->
+    <string name="internal_url_invalid">这不是有效的链接</string>
+    <string name="internal_url_live">无法处理直播。请在直播结束后重试。</string>
+    <string name="internal_url_unsupported_site">设备上不支持此网站。请尝试服务器模式。</string>
+    <string name="internal_url_unavailable">此视频不可用或为私密视频</string>
+    <string name="internal_url_blocked">网站拒绝了下载。请尝试在设置中更新 yt-dlp，或使用服务器模式。</string>
+    <string name="internal_url_network">无法连接到该网站。请检查网络连接。</string>
+    <string name="internal_url_download_failed">无法在设备上下载此链接。请尝试服务器模式。</string>
+    <string name="internal_url_download_failed_detail">无法在设备上下载此链接（%1$s）。请尝试服务器模式。</string>
+    <string name="internal_url_login_required">网站未在登录前提供此内容。请点击设置 → 更新 yt-dlp 后重试，在设置中导入 cookies，或使用服务器模式。</string>
+    <string name="internal_url_login_cookies_failed">此内容需要登录，但导入的 cookies 无效。它们可能已过期：请重新导出并在设置中导入。</string>
+    <string name="internal_url_no_audio">此视频没有音轨，因此没有可去除的音乐。</string>
+    <string name="internal_ytdlp_outdated_hint">yt-dlp %1$s 已过时：请点击设置 → 更新 yt-dlp 后重试。</string>
+    <string name="internal_ytdlp_init_failed">无法准备链接下载器。请释放一些存储空间后重试。</string>
+
+    <!-- Settings: yt-dlp -->
+    <string name="ytdlp_title">更新 yt-dlp</string>
+    <string name="ytdlp_version">版本 %1$s</string>
+    <string name="ytdlp_version_loading">正在加载版本…</string>
+    <string name="ytdlp_update">更新 yt-dlp</string>
+    <string name="ytdlp_updating">正在更新…</string>
+    <string name="ytdlp_updated">已更新到 %1$s</string>
+    <string name="ytdlp_up_to_date">已是最新版本（%1$s）</string>
+    <string name="ytdlp_update_failed">更新失败。请检查网络连接。</string>
+    <string name="ytdlp_update_busy">请等待当前下载完成</string>
+
+    <plurals name="ytdlp_age_days">
+        <item quantity="other">已发布 %d 天</item>
+    </plurals>
+    <string name="ytdlp_released_today">今天发布</string>
+    <string name="ytdlp_never_auto">Murem 从不自动更新 yt-dlp。链接无法使用时请点击更新。</string>
+    <string name="ytdlp_update_now">立即更新</string>
+    <plurals name="ytdlp_banner_age">
+        <item quantity="other">内置的 yt-dlp 已发布 %d 天。Instagram 等网站可能需要更新的版本。</item>
+    </plurals>
+    <string name="banner_first_use_title">设备上处理</string>
+    <string name="banner_first_use">设备上处理：首次任务会下载模型（30–67 MB），耗时可能比音轨更长。请保持手机充电。</string>
+    <string name="banner_outdated_title">yt-dlp 可能已过时</string>
+    <string name="banner_close">关闭</string>
+
+    <!-- Settings navigation -->
+    <string name="settings_group_processing">处理</string>
+    <string name="settings_group_output">输出</string>
+    <string name="settings_group_app">应用</string>
+    <string name="settings_row_models">设备上的模型</string>
+    <string name="settings_row_performance">性能</string>
+    <string name="settings_row_update_ytdlp">更新 yt-dlp</string>
+    <string name="settings_row_output">输出</string>
+    <string name="settings_row_storage">历史记录和存储</string>
+    <string name="settings_row_about">关于和帮助</string>
+    <string name="settings_internal_only">内置模式 · %1$s</string>
+    <string name="settings_internal_only_note">这些设置仅在内置（设备上）模式下使用。</string>
+    <string name="settings_mode_server">服务器 · %1$s</string>
+    <plurals name="settings_models_summary">
+        <item quantity="other">已选 %1$s · 已下载 %2$d 个</item>
+    </plurals>
+    <string name="settings_threads_auto">自动线程数</string>
+    <plurals name="settings_threads_n">
+        <item quantity="other">%d 个线程</item>
+    </plurals>
+    <plurals name="settings_accounts_on">
+        <item quantity="other">已开启 %d 个网站</item>
+    </plurals>
+    <string name="settings_ytdlp_tap_to_check">点击检查</string>
+    <string name="settings_bitrate_kbps">%1$s kbps</string>
+    <string name="settings_audio_only_on">仅音频：开</string>
+    <string name="settings_audio_only_off">仅音频：关</string>
+    <plurals name="settings_storage_summary">
+        <item quantity="other">%1$d 项 · %2$s</item>
+    </plurals>
+    <string name="settings_about_summary">Murem %1$s</string>
+    <string name="dialog_cancel">取消</string>
+    <string name="dialog_delete">删除</string>
+    <string name="more_options">更多选项</string>
+
+    <!-- Settings: on-device models -->
+    <string name="model_name_voc_ft">MDX-NET Voc FT</string>
+    <string name="model_name_mdx3">MDX-NET 3_9662</string>
+    <string name="tag_best_vocals">人声最佳</string>
+    <string name="tag_fastest">最快</string>
+    <string name="tag_lead_vocal">主唱</string>
+    <string name="tag_server_default">服务器默认</string>
+    <string name="model_best_hq3">在大多数歌曲上能很好地去除音乐（人声 SDR 8.8 dB）</string>
+    <string name="model_best_voc_ft">在大多数歌曲上人声更干净（人声 SDR 10.2 dB）</string>
+    <string name="model_best_mdx3">下载体积减半且更快，人声几乎同样干净（9.7 dB）</string>
+    <string name="model_best_kara2">只保留主唱：和声会随音乐一起去除</string>
+    <string name="model_best_kim2">服务器的默认模型，人声最干净（10.2 dB）</string>
+    <string name="model_state_downloaded">已下载</string>
+    <string name="model_state_first_use">首次使用时下载</string>
+    <plurals name="model_speed_hint">
+        <item quantity="other">4 分钟音轨约需 %d 分钟</item>
+    </plurals>
+    <string name="models_empty">尚未下载模型。所选模型将在首次使用时下载。</string>
+    <string name="model_delete_title">删除 %1$s？</string>
+    <string name="model_delete_text">下次使用时会重新下载。</string>
+
+    <!-- Settings: output -->
+    <string name="output_format_note">适用于仅音频结果。视频始终保存为 MP4。</string>
+    <string name="output_m4a">M4A (AAC)</string>
+    <string name="output_mp3">MP3</string>
+    <string name="output_audio_only_desc">仅保存人声音频，不含视频</string>
+
+    <!-- Settings: performance -->
+    <string name="perf_threads">线程</string>
+    <string name="perf_threads_auto">自动（%1$s）</string>
+    <string name="perf_threads_desc">更多线程可能更快，但会更耗电，手机也会更热。</string>
+    <string name="perf_quality">质量</string>
+    <string name="settings_quality_fast">快速</string>
+    <string name="settings_quality_balanced">均衡</string>
+    <string name="settings_quality_best">最佳</string>
+    <string name="perf_fast_time">约 0.83 倍时间</string>
+    <string name="perf_balanced_time">标准时间</string>
+    <string name="perf_best_time">约 1.5 倍时间</string>
+    <string name="perf_quality_help">快速可能在分段边缘留下稍多音乐；最佳更平滑但更慢。</string>
+    <string name="perf_batch">批大小</string>
+    <string name="perf_batch_desc">Murem 一次分离歌曲的几个片段。一次处理两个可以更好地利用性能强的手机，但需要更多内存。</string>
+    <string name="perf_batch_1">1（推荐）</string>
+    <string name="perf_batch_2">2</string>
+    <string name="perf_batch_2_desc">实验性。多占用约 1 GB 内存，不一定更快。</string>
+    <string name="perf_batch_2_needs_ram">需要 6 GB 内存的手机</string>
+    <string name="perf_accelerator">加速</string>
+    <string name="perf_accelerator_desc">哪种最快取决于手机。可先用短片段试一下，再在最近中比较用时。如果某个选项在此手机上无法使用，Murem 会改用 CPU。</string>
+    <string name="perf_acc_cpu">CPU（推荐）</string>
+    <string name="perf_acc_cpu_desc">适用于所有手机</string>
+    <!-- Processing screen: system stats -->
+    <string name="stats_title">系统</string>
+    <string name="stats_show">显示系统状态</string>
+    <string name="stats_hide">隐藏系统状态</string>
+    <string name="stats_cpu">CPU</string>
+    <string name="stats_memory">内存</string>
+    <string name="stats_free">可用 %1$s</string>
+    <string name="stats_temperature">温度</string>
+    <string name="stats_headroom">距降频 %1$s</string>
+    <string name="stats_thermal_normal">正常</string>
+    <string name="stats_thermal_warm">温热</string>
+    <string name="stats_thermal_hot">过热</string>
+    <string name="stats_thermal_throttling">降频中</string>
+    <string name="stats_gpu">GPU</string>
+    <string name="perf_acc_webgpu">GPU (WebGPU)</string>
+    <string name="perf_acc_webgpu_desc">实验性。通过 Vulkan 在 GPU 上运行模型。通常最快，但运行时手机可能卡顿，最适合在不同时使用手机时使用</string>
+    <string name="perf_acc_nnapi">AI 芯片 (NNAPI)</string>
+    <string name="perf_acc_nnapi_desc">实验性。以半精度使用手机的 NPU、DSP 或 GPU 驱动。视手机而定，可能更快，也可能慢很多</string>
+    <string name="perf_acc_nnapi_needs_android">需要 Android 8.1 或更高版本</string>
+    <string name="perf_acc_failed_here">上次在此手机上无法使用，因此 Murem 改用 CPU 完成</string>
+    <string name="perf_acc_xnnpack">优化 CPU (XNNPACK)</string>
+    <string name="perf_acc_xnnpack_desc">实验性。另一套 CPU 代码，在部分 ARM 手机上更快</string>
+    <string name="perf_acc_webgpu_short">GPU</string>
+    <string name="perf_limit">负载限制</string>
+    <string name="perf_limit_desc">防止 Murem 占满 GPU，让手机更流畅、更凉爽。使用 GPU 加速时，屏幕也能在 GPU 步骤之间获得运行机会。若想让手机更流畅，请在设备上的模型中选择更轻量的模型。</string>
+    <string name="perf_limit_full">全速</string>
+    <string name="perf_limit_full_desc">最快；处理时手机可能卡顿</string>
+    <string name="perf_limit_pct">%1$d%%</string>
+    <string name="perf_limit_75_desc">至少 1.3 倍时间</string>
+    <string name="perf_limit_50_desc">至少 2 倍时间；最流畅</string>
+    <string name="perf_limit_short">限制 %1$d%%</string>
+    <string name="perf_acc_xnnpack_short">XNNPACK</string>
+    <string name="perf_acc_nnapi_short">NNAPI</string>
+
+    <!-- Settings: history & storage, server discovery, Termux -->
+    <string name="clear_history_title">清除历史记录？</string>
+    <string name="clear_history_text">已处理视频的列表将从 Murem 中移除。</string>
+    <plurals name="exporting_items">
+        <item quantity="other">正在导出 %d 项…</item>
+    </plurals>
+    <string name="export_failed">导出失败：%1$s</string>
+    <string name="export_none">没有可导出的文件</string>
+    <string name="discover_searching">正在搜索服务器…</string>
+    <string name="discover_found">已找到服务器：%1$s</string>
+    <string name="discover_failed">发现失败</string>
+    <string name="discover_error">发现出错：%1$s</string>
+    <string name="termux_come_back">Termux 完成后请回到这里。</string>
+
+    <!-- Settings: about -->
+    <string name="about_help">帮助</string>
+    <string name="about_components_title">开源组件</string>
+    <string name="about_components">MP3 编码通过 FFmpeg (GPL) 使用 LAME (LGPL-2.0)，两者均由 youtubedl-android (GPL-3.0) 提供。分离使用 ONNX Runtime (MIT) 以及从其作者处下载的 UVR MDX-Net 模型。</string>
+
+    <!-- Settings: accounts & cookies for on-device links -->
+    <string name="cookies_title">账号和 cookies</string>
+    <plurals name="cookies_site_summary">
+        <item quantity="other">%1$d 个 cookie · 保存于 %2$s</item>
+    </plurals>
+    <string name="cookies_from_login">来自登录</string>
+    <string name="cookies_from_import">已导入</string>
+    <string name="cookies_login_again">重新登录</string>
+    <string name="cookies_delete">删除</string>
+    <string name="cookies_not_internal_note">cookies 仅用于内置模式中的链接。</string>
+    <string name="cookies_empty_title">没有已保存的登录</string>
+    <string name="cookies_empty_desc">登录或导入 cookies，以下载需要账号的内容。</string>
+    <string name="cookies_delete_site_title">删除 %1$s 的 cookies？</string>
+    <string name="cookies_delete_site_text">如需再次下载需要此账号的内容，请重新登录或导入其 cookies。</string>
+    <string name="cookies_delete_all_title">删除所有已保存的 cookies？</string>
+    <string name="cookies_delete_all_text">所有已保存的登录都将从此设备中移除。</string>
+    <string name="cookies_import">导入 cookies.txt</string>
+    <string name="cookies_delete_all">全部删除</string>
+    <string name="cookies_send_for">为 %1$s 发送 cookies</string>
+    <string name="cookies_change_failed">无法更改已保存的 cookies。请重试。</string>
+    <string name="cookies_cannot_open_login">无法打开此网站的登录页面</string>
+    <string name="cookies_imported">cookies 已导入</string>
+    <string name="cookies_removed">cookies 已移除</string>
+    <string name="cookies_help">有些内容只有在登录后才能下载。请在 Murem 内登录，或从电脑浏览器导入 cookies.txt 文件（Netscape 格式）。cookies 按网站分别保存，且只保留在此设备上。只会发送已开启网站的 cookies，且仅用于内置模式中的链接。开启 YouTube cookies 后，YouTube 下载可能会有所变化。任何拿到这些 cookies 的人都能使用你的账号：切勿分享，用完后请删除该网站。</string>
+    <string name="cookies_login">使用浏览器登录</string>
+    <string name="cookies_login_site_instagram">Instagram</string>
+    <string name="cookies_login_site_custom">其他网站（https 链接）</string>
+    <string name="cookies_login_url_hint">https://example.com/login</string>
+    <string name="cookies_login_notice_title">使用浏览器登录</string>
+    <string name="cookies_login_notice">你是在 Murem 内登录，而不是在浏览器应用中。网站的 cookies 仅保存在此设备上，并用于设备上处理的链接。可在设置 → 账号和 cookies 中点击删除来移除。</string>
+    <string name="cookies_login_continue">继续</string>
+    <string name="cookies_login_cancel">取消</string>
+    <string name="cookies_login_title">登录后点击保存</string>
+    <string name="cookies_login_save">保存 cookies</string>
+    <string name="cookies_login_oauth_hint">内嵌浏览器可能会阻止 Google 和 Facebook 登录。请改用用户名和密码登录。</string>
+    <plurals name="cookies_login_saved">
+        <item quantity="other">已为 %2$s 保存 %1$d 个 cookie</item>
+    </plurals>
+    <string name="cookies_login_none">未找到 cookies。请先登录，然后点击保存。</string>
+    <string name="paste">粘贴</string>
+    <string name="no_external_player">未找到可打开此文件的应用</string>
+
+    <!-- 4.1: licenses, problem reports, playback errors, job times -->
+    <string name="back">返回</string>
+    <string name="licenses_title">开源许可</string>
+    <string name="licenses_desc">Murem 使用的库及其许可</string>
+    <string name="report_problem">报告问题</string>
+    <string name="report_problem_desc">打开一个预填好的 GitHub issue。发送前你可以先检查。</string>
+    <string name="report_problem_short">报告</string>
+    <string name="report_no_browser">未找到可打开 GitHub 的浏览器</string>
+    <string name="crash_title">Murem 意外关闭</string>
+    <string name="crash_text">要在 GitHub 上报告以便修复吗？报告包含应用版本、手机型号、Android 版本和错误信息。不包含任何链接或文件名，发送前你可以先检查。</string>
+    <string name="not_now">以后再说</string>
+    <string name="playback_error_title">无法播放此结果</string>
+    <string name="playback_error_missing">文件不存在或无法读取。它可能已被删除，或服务器上已不再保留。</string>
+    <string name="playback_error_network">无法连接到服务器。请检查网络后重试。</string>
+    <string name="playback_error_format">此文件的格式无法在此手机上播放。请尝试用其他应用打开。</string>
+    <string name="playback_error_generic">播放此文件时出错。</string>
+    <string name="open_in_other_app">用其他应用打开</string>
+    <string name="started_at">开始于 %1$s · %2$s</string>
+    <string name="started_ago">%1$s前</string>
+    <string name="started_just_now">刚刚</string>
+    <string name="duration_under_minute">不到 1 分钟</string>
+    <string name="duration_under_minute_short">&lt;1 分钟</string>
+    <plurals name="duration_minutes">
+        <item quantity="other">%d 分钟</item>
+    </plurals>
+    <plurals name="duration_hours">
+        <item quantity="other">%d 小时</item>
+    </plurals>
+    <string name="duration_hours_minutes">%1$s %2$s</string>
+    <string name="info_started">开始</string>
+    <string name="info_finished">完成</string>
+    <string name="info_took">用时</string>
+    <string name="server_job_gone">服务器上已没有此任务。结果会保留 7 天。</string>
+    <plurals name="links_queued">
+        <item quantity="other">已将 %1$d 个链接加入队列</item>
+    </plurals>
+    <string name="cookies_login_not_logged_in">你似乎还没有登录，因此未保存任何内容。请先登录，然后点击保存。</string>
+    <string name="cookies_login_save_failed">无法保存 cookies。请释放一些存储空间后重试。</string>
+    <string name="cookies_invalid_too_large">此文件太大，不像是 cookies.txt（超过 1 MB）</string>
+    <string name="cookies_invalid_empty">此 cookies.txt 中没有 cookie</string>
+    <string name="cookies_invalid_format">这不是 cookies.txt 文件。请以 Netscape 格式导出 cookies。</string>
+    <string name="cookies_invalid_line">这不是有效的 cookies.txt 文件（第 %1$d 行不是 Netscape 格式）</string>
+    <string name="cookies_unreadable">无法读取所选文件</string>
+
+    <!-- Home input card -->
+    <string name="home_link_placeholder">粘贴视频链接…</string>
+    <string name="home_file_title">选择视频或音频文件</string>
+    <string name="home_file_formats">MP4、MKV、WebM、MP3、M4A…</string>
+    <string name="home_cta_hint_link">粘贴链接即可开始</string>
+    <string name="home_cta_hint_file">选择文件即可开始</string>
+    <string name="home_estimate_total">在此手机上约需 %1$s</string>
+    <string name="home_estimate_per_minute">在此手机上每分钟音频约需 %1$s</string>
+    <string name="duration_seconds">%1$d 秒</string>
+    <string name="home_lighter_tip">在此手机上较慢。更轻量的模型约快 %1$s 倍。</string>
+    <string name="home_lighter_use">使用更轻量的模型</string>
+    <string name="history_source_device">设备上</string>
+    <string name="history_source_server">服务器</string>
+    <string name="history_source_termux">Termux</string>
+</resources>
