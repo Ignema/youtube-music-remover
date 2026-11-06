@@ -21,6 +21,7 @@ Output:
 • MP4 with the original video, or audio only as MP3 or M4A
 • Bitrate 128k / 192k / 320k
 • Performance settings for on-device jobs: threads, quality or speed, batch size, and a time estimate while processing
+• Optional GPU acceleration with a load limit, and live GPU, CPU, memory and heat graphs while processing
 
 Sites that need a login:
 • Log in inside Murem with the built-in browser, or import a cookies.txt file

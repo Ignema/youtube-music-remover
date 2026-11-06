@@ -1,0 +1,6 @@
+Murem 4.2.0
+• Optional GPU acceleration for on-device processing (Settings → Performance), several times faster on some phones. CPU stays the default
+• Load limit to keep the phone smoother while the GPU works
+• Live GPU, CPU, memory and heat graphs while processing
+• If an accelerator fails on your phone, Murem finishes the job on CPU
+• New installs start in on-device mode
