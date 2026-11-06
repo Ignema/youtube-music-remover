@@ -163,7 +163,7 @@ data class PerformancePrefs(
     val quality: String = "balanced",
     val batch: Int = 1,
     val accelerator: String = "cpu",
-    val lighter: Boolean = false,
+    val limit: Int = 100,
 )
 
 /**
@@ -351,7 +351,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             modelStates = modelManager.state.value,
             performance = PerformancePrefs(
                 settingsStore.perfThreads, settingsStore.perfQuality, settingsStore.perfBatch, settingsStore.perfAccelerator,
-                settingsStore.perfLighter,
+                settingsStore.perfLimit,
             ),
         )
         loadModelSpeed()
@@ -547,7 +547,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val threads = PerformanceSettings.threads(perf.threads, Runtime.getRuntime().availableProcessors())
         val accelerator = Accelerator.resolve(perf.accelerator, Build.VERSION.SDK_INT)
         val speed = _ui.value.internalModels.associate { spec ->
-            val key = PerformanceSettings.speedKey(spec.name, threads, perf.batch, accelerator, perf.lighter)
+            val key = PerformanceSettings.speedKey(spec.name, threads, perf.batch, accelerator, perf.limit)
             spec.name to prefs.getLong(key, -1L).takeIf { it > 0 }
         }
         _ui.value = _ui.value.copy(modelSpeed = speed)
@@ -571,9 +571,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         loadModelSpeed()
     }
 
-    fun setPerfLighter(value: Boolean) {
-        settingsStore.perfLighter = value
-        _ui.value = _ui.value.copy(performance = _ui.value.performance.copy(lighter = settingsStore.perfLighter))
+    fun setPerfLimit(value: Int) {
+        settingsStore.perfLimit = value
+        _ui.value = _ui.value.copy(performance = _ui.value.performance.copy(limit = settingsStore.perfLimit))
         loadModelSpeed()
     }
 

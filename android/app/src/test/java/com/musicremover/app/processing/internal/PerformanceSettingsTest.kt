@@ -122,6 +122,10 @@ class PerformanceSettingsTest {
         assertEquals("perf_ms:m.onnx:4:1", PerformanceSettings.speedKey("m.onnx", 4, 1, Accelerator.CPU))
         assertEquals("perf_ms:m.onnx:4:1:nnapi", PerformanceSettings.speedKey("m.onnx", 4, 1, Accelerator.NNAPI))
         assertEquals("perf_ms:m.onnx:4:1:xnnpack", PerformanceSettings.speedKey("m.onnx", 4, 1, Accelerator.XNNPACK))
+        assertEquals("perf_ms:m.onnx:4:1:webgpu:l50", PerformanceSettings.speedKey("m.onnx", 4, 1, Accelerator.WEBGPU, 50))
+        assertEquals("perf_ms:m.onnx:4:1", PerformanceSettings.speedKey("m.onnx", 4, 1, Accelerator.CPU, 100))
+        assertEquals(100, PerformanceSettings.limit(33))
+        assertEquals(75, PerformanceSettings.limit(75))
     }
 
     @Test

@@ -17,9 +17,6 @@ class StatParsersTest {
     fun rssAndIo() {
         assertEquals(523_416L, StatParsers.rssKb("Name:\tx\nVmPeak:\t 1 kB\nVmRSS:\t  523416 kB\nThreads: 9\n"))
         assertNull(StatParsers.rssKb("Name: x\n"))
-        val io = "rchar: 10\nwchar: 20\nsyscr: 1\nsyscw: 2\nread_bytes: 4096\nwrite_bytes: 8192\ncancelled_write_bytes: 0\n"
-        assertEquals(4096L to 8192L, StatParsers.ioBytes(io))
-        assertNull(StatParsers.ioBytes("rchar: 10\n"))
     }
 
     @Test
@@ -32,9 +29,11 @@ class StatParsersTest {
     }
 
     @Test
-    fun pausesAreHalfTheRunAndCapped() {
-        assertEquals(1000L, PacedModel.pauseMs(2000L, 0.5))
-        assertEquals(0L, PacedModel.pauseMs(-5L, 0.5))
-        assertEquals(PacedModel.MAX_PAUSE_MS, PacedModel.pauseMs(60_000L, 0.5))
+    fun pausesHoldTheLoadAtTheLimit() {
+        assertEquals(0L, PacedModel.pauseMs(2000L, 100))
+        assertEquals(2000L, PacedModel.pauseMs(2000L, 50))
+        assertEquals(666L, PacedModel.pauseMs(2000L, 75))
+        assertEquals(0L, PacedModel.pauseMs(-5L, 50))
+        assertEquals(PacedModel.MAX_PAUSE_MS, PacedModel.pauseMs(60_000L, 50))
     }
 }

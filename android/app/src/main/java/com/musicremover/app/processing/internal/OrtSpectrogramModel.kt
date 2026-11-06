@@ -29,6 +29,8 @@ class OrtSpectrogramModel(
     threads: Int = minOf(4, Runtime.getRuntime().availableProcessors()),
     override val batch: Int = 1,
     accelerator: Accelerator = Accelerator.CPU,
+    /** Load limit (100 = full speed); below 100 the GPU gets finer-grained submission. Pacing is PacedModel's job. */
+    private val limitPct: Int = 100,
 ) : SpectrogramModel {
     private val env: OrtEnvironment = OrtEnvironment.getEnvironment()
     private val session: OrtSession
@@ -113,6 +115,12 @@ class OrtSpectrogramModel(
                 }
                 Accelerator.WEBGPU -> {
                     opts.setIntraOpNumThreads(threads)
+                    if (limitPct < 100) {
+                        // Submit each GPU step on its own, so the screen's frames get the GPU between
+                        // steps instead of waiting behind a long queue (range 1-4096, ORT webgpu options)
+                        opts.addConfigEntry("ep.webgpuexecutionprovider.maxNumPendingDispatches", "1")
+                        opts.addConfigEntry("ep.webgpuexecutionprovider.powerPreference", "low-power")
+                    }
                     opts.addWebGPU(emptyMap())
                 }
             }

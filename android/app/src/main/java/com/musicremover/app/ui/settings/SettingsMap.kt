@@ -44,7 +44,7 @@ object SettingsMap {
         SettingsStore.KEY_PERF_QUALITY to SettingsRoutes.PERFORMANCE,
         SettingsStore.KEY_PERF_BATCH to SettingsRoutes.PERFORMANCE,
         SettingsStore.KEY_PERF_ACCELERATOR to SettingsRoutes.PERFORMANCE,
-        SettingsStore.KEY_PERF_LIGHTER to SettingsRoutes.PERFORMANCE,
+        SettingsStore.KEY_PERF_LIMIT to SettingsRoutes.PERFORMANCE,
         SettingsStore.KEY_INTERNAL_MODEL to SettingsRoutes.MODELS,
     )
 

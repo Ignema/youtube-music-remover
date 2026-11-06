@@ -201,8 +201,8 @@ private fun performanceSummary(ui: MainUiState): String {
         Accelerator.NNAPI -> stringResource(R.string.perf_acc_nnapi_short)
         Accelerator.WEBGPU -> stringResource(R.string.perf_acc_webgpu_short)
     }
-    val lighter = if (p.lighter) stringResource(R.string.perf_lighter_short) else null
-    return listOfNotNull(threads, quality, acc, lighter).joinToString(" · ")
+    val limit = if (p.limit < PerformanceSettings.LIMIT_FULL) stringResource(R.string.perf_limit_short, p.limit) else null
+    return listOfNotNull(threads, quality, acc, limit).joinToString(" · ")
 }
 
 @Composable

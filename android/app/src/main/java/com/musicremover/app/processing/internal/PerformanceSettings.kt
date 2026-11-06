@@ -122,10 +122,17 @@ object PerformanceSettings {
         threads: Int,
         batch: Int,
         accelerator: Accelerator = Accelerator.CPU,
-        lighter: Boolean = false,
+        limitPct: Int = LIMIT_FULL,
     ): String = "perf_ms:$model:$threads:$batch" +
         (if (accelerator == Accelerator.CPU) "" else ":${accelerator.pref}") +
-        (if (lighter) ":light" else "")
+        (if (limitPct >= LIMIT_FULL) "" else ":l$limitPct")
+
+    /** Load limit choices (%); [LIMIT_FULL] = no limit. */
+    const val LIMIT_FULL = 100
+    val LIMITS = listOf(LIMIT_FULL, 75, 50)
+
+    /** Unknown values are no limit. */
+    fun limit(pref: Int): Int = if (pref in LIMITS) pref else LIMIT_FULL
 
     /** Exponential moving average; the first measurement is taken as is. */
     fun ema(previous: Long?, sample: Long): Long =

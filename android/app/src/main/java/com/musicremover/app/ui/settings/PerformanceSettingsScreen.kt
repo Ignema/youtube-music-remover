@@ -14,13 +14,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -163,19 +161,23 @@ fun PerformanceSettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         Spacer(Modifier.height(8.dp))
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .toggleable(value = perf.lighter, role = Role.Switch, onValueChange = vm::setPerfLighter)
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.perf_lighter), style = MaterialTheme.typography.bodyLarge)
-                SettingsNote(stringResource(R.string.perf_lighter_desc))
-            }
-            Spacer(Modifier.width(12.dp))
-            Switch(checked = perf.lighter, onCheckedChange = null)
+        Spacer(Modifier.height(8.dp))
+        SectionLabel(stringResource(R.string.perf_limit))
+        Spacer(Modifier.height(4.dp))
+        SettingsNote(stringResource(R.string.perf_limit_desc))
+        Spacer(Modifier.height(8.dp))
+        listOf(
+            Triple(PerformanceSettings.LIMIT_FULL, stringResource(R.string.perf_limit_full), stringResource(R.string.perf_limit_full_desc)),
+            Triple(75, stringResource(R.string.perf_limit_pct, 75), stringResource(R.string.perf_limit_75_desc)),
+            Triple(50, stringResource(R.string.perf_limit_pct, 50), stringResource(R.string.perf_limit_50_desc)),
+        ).forEach { (value, label, note) ->
+            ChoiceRow(
+                label = label,
+                note = note,
+                selected = perf.limit == value,
+                enabled = true,
+                onClick = { vm.setPerfLimit(value) },
+            )
         }
     }
 }

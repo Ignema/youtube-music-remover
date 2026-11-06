@@ -205,21 +205,19 @@
     <string name="perf_acc_cpu">CPU (recommended)</string>
     <string name="perf_acc_cpu_desc">Works on every phone</string>
     <!-- Processing screen: system stats -->
+    <string name="stats_title">System</string>
     <string name="stats_show">Show system stats</string>
     <string name="stats_hide">Hide system stats</string>
-    <string name="stats_cpu">CPU (Murem)</string>
-    <string name="stats_memory">Memory (Murem)</string>
-    <string name="stats_free">%1$s free on the phone</string>
-    <string name="stats_disk">Disk (read / write)</string>
-    <string name="stats_disk_value">%1$s / %2$s</string>
-    <string name="stats_temperature">Temperature</string>
-    <string name="stats_headroom">%1$s of the throttle limit</string>
+    <string name="stats_cpu">CPU</string>
+    <string name="stats_memory">Memory</string>
+    <string name="stats_free">%1$s free</string>
+    <string name="stats_temperature">Heat</string>
+    <string name="stats_headroom">%1$s to throttling</string>
     <string name="stats_thermal_normal">Normal</string>
     <string name="stats_thermal_warm">Warm</string>
     <string name="stats_thermal_hot">Hot</string>
     <string name="stats_thermal_throttling">Throttling</string>
     <string name="stats_gpu">GPU</string>
-    <string name="stats_note">Android only lets apps see their own CPU and disk use. GPU load is shown only where the phone allows it.</string>
     <string name="internal_accelerator_failed">Acceleration failed on this phone. Set Settings → Performance → Acceleration to CPU and try again.</string>
     <string name="perf_acc_webgpu">GPU (WebGPU)</string>
     <string name="perf_acc_webgpu_desc">Experimental. Runs the model on the GPU through Vulkan. Often the fastest, but not tested on every phone</string>
@@ -229,9 +227,14 @@
     <string name="perf_acc_xnnpack">Optimized CPU (XNNPACK)</string>
     <string name="perf_acc_xnnpack_desc">Experimental. Different CPU code that is quicker on some ARM phones</string>
     <string name="perf_acc_webgpu_short">GPU</string>
-    <string name="perf_lighter">Keep the phone responsive</string>
-    <string name="perf_lighter_desc">Pauses after each chunk so the screen gets the GPU back and the phone stays cooler. Takes about 1.5× the time. The phone can still lag while a chunk runs.</string>
-    <string name="perf_lighter_short">Responsive</string>
+    <string name="perf_limit">Load limit</string>
+    <string name="perf_limit_desc">Keeps Murem from using the whole GPU so the phone stays smooth and cooler. With GPU acceleration, the screen also gets its turn between GPU steps.</string>
+    <string name="perf_limit_full">Full speed</string>
+    <string name="perf_limit_full_desc">Fastest; the phone may lag while processing</string>
+    <string name="perf_limit_pct">%1$d%%</string>
+    <string name="perf_limit_75_desc">At least 1.3× the time</string>
+    <string name="perf_limit_50_desc">At least 2× the time; smoothest</string>
+    <string name="perf_limit_short">%1$d%% limit</string>
     <string name="perf_acc_xnnpack_short">XNNPACK</string>
     <string name="perf_acc_nnapi_short">NNAPI</string>
 

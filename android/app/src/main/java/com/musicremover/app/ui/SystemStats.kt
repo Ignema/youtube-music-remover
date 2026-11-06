@@ -8,23 +8,34 @@ import android.os.SystemClock
 import android.system.Os
 import android.system.OsConstants
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.DeveloperBoard
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.Memory
+import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material.icons.outlined.Thermostat
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,13 +45,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -61,9 +77,6 @@ data class StatSample(
     val appMb: Float?,
     /** Memory the system reports as available (MB). */
     val freeMb: Float,
-    /** Murem's disk reads / writes since the last sample (KB/s). */
-    val readKbs: Float?,
-    val writeKbs: Float?,
     /** Thermal headroom: 1.0 = the system starts throttling (Android 11+). */
     val thermal: Float?,
     /** PowerManager.THERMAL_STATUS_* (Android 10+). */
@@ -89,18 +102,6 @@ object StatParsers {
         status.lineSequence().firstOrNull { it.startsWith("VmRSS:") }
             ?.removePrefix("VmRSS:")?.trim()?.substringBefore(' ')?.toLongOrNull()
 
-    /** (read_bytes, write_bytes) from /proc/self/io. */
-    fun ioBytes(io: String): Pair<Long, Long>? {
-        val map = io.lineSequence().mapNotNull { line ->
-            val k = line.substringBefore(':', "").trim()
-            val v = line.substringAfter(':', "").trim().toLongOrNull()
-            if (k.isEmpty() || v == null) null else k to v
-        }.toMap()
-        val r = map["read_bytes"] ?: return null
-        val w = map["write_bytes"] ?: return null
-        return r to w
-    }
-
     /**
      * GPU busy % from a driver file: a single number ("37" or "37 %"), or Adreno's
      * gpubusy pair "busy total" (busy / total).
@@ -123,11 +124,10 @@ class SystemStatsReader(context: Context) {
     private val clkTck = runCatching { Os.sysconf(OsConstants._SC_CLK_TCK) }.getOrDefault(100L).coerceAtLeast(1L)
     private var lastAt = 0L
     private var lastTicks: Long? = null
-    private var lastIo: Pair<Long, Long>? = null
     private var lastThermalAt = 0L
     private var lastThermal: Float? = null
 
-    /** The first GPU file that read as a number; null after it fails once (SELinux usually blocks them). */
+    /** The first GPU file that read as a number; null after it fails once (SELinux blocks them on many phones). */
     private var gpuFile: File? = GPU_FILES.map(::File).firstOrNull { f -> readGpu(f) != null }
 
     fun sample(): StatSample {
@@ -141,12 +141,6 @@ class SystemStatsReader(context: Context) {
             ((ticks - prev).toFloat() / clkTck / dt / cores * 100f).coerceIn(0f, 100f)
         } else null
         lastTicks = ticks
-
-        val io = read("/proc/self/io")?.let(StatParsers::ioBytes)
-        val (rKbs, wKbs) = if (!first && io != null) lastIo?.let { prev ->
-            ((io.first - prev.first).coerceAtLeast(0) / 1024f / dt) to ((io.second - prev.second).coerceAtLeast(0) / 1024f / dt)
-        } ?: (null to null) else (null to null)
-        lastIo = io
 
         val mi = ActivityManager.MemoryInfo().also { am.getMemoryInfo(it) }
 
@@ -163,8 +157,6 @@ class SystemStatsReader(context: Context) {
             cpuPct = cpu,
             appMb = read("/proc/self/status")?.let(StatParsers::rssKb)?.let { it / 1024f },
             freeMb = mi.availMem / 1_048_576f,
-            readKbs = rKbs,
-            writeKbs = wKbs,
             thermal = lastThermal,
             thermalStatus = status,
             gpuPct = gpu,
@@ -178,7 +170,7 @@ class SystemStatsReader(context: Context) {
     companion object {
         private const val THERMAL_EVERY_MS = 2_000L
 
-        /** Adreno (Snapdragon), Mali / Xclipse (Samsung Exynos) and generic devfreq locations. */
+        /** Adreno (Snapdragon), Mali / Xclipse (Samsung Exynos) and generic locations. */
         val GPU_FILES = listOf(
             "/sys/class/kgsl/kgsl-3d0/gpu_busy_percentage",
             "/sys/class/kgsl/kgsl-3d0/gpubusy",
@@ -191,15 +183,26 @@ class SystemStatsReader(context: Context) {
 private const val HISTORY = 60
 private const val SAMPLE_MS = 1_000L
 
-/** Live graphs of Murem's CPU, memory and disk use plus the phone's temperature (and GPU where readable). */
+/** One tile's data: what it shows and its graph (values 0..[max]). */
+private data class Tile(
+    val icon: ImageVector,
+    val label: String,
+    val value: String,
+    val sub: String?,
+    val values: List<Float?>,
+    val max: Float,
+    val color: Color,
+)
+
+/** Live graphs of the GPU (where readable), Murem's CPU and memory, and the phone's temperature. */
 @Composable
 fun SystemStatsCard(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    var shown by rememberSaveable { mutableStateOf(true) }
+    var expanded by rememberSaveable { mutableStateOf(true) }
     var history by remember { mutableStateOf(emptyList<StatSample>()) }
 
-    LaunchedEffect(shown) {
-        if (!shown) return@LaunchedEffect
+    // Samples keep running while collapsed so the graphs are full when it opens again
+    LaunchedEffect(Unit) {
         val reader = SystemStatsReader(context.applicationContext)
         while (isActive) {
             val s = withContext(Dispatchers.IO) { reader.sample() }
@@ -208,131 +211,202 @@ fun SystemStatsCard(modifier: Modifier = Modifier) {
         }
     }
 
-    Column(modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        TextButton(onClick = { shown = !shown }) {
+    val tiles = tiles(history)
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        val expandLabel = stringResource(if (expanded) R.string.stats_hide else R.string.stats_show)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(role = Role.Button, onClickLabel = expandLabel) { expanded = !expanded }
+                .padding(start = 16.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            LiveDot()
+            Spacer(Modifier.width(8.dp))
             Text(
-                stringResource(if (shown) R.string.stats_hide else R.string.stats_show),
-                style = MaterialTheme.typography.labelMedium,
+                stringResource(R.string.stats_title),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
             )
-            Icon(if (shown) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null)
+            Spacer(Modifier.width(12.dp))
+            // Collapsed: the current values on one line
+            Text(
+                if (expanded) "" else tiles.joinToString("  ·  ") { "${it.label} ${it.value}" },
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            Icon(
+                if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                contentDescription = expandLabel,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
-        AnimatedVisibility(visible = shown) {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)),
-                modifier = Modifier.fillMaxWidth(),
+        AnimatedVisibility(visible = expanded) {
+            Column(
+                Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                StatsGrid(history)
+                tiles.chunked(2).forEach { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        row.forEach { StatTile(it, Modifier.weight(1f)) }
+                        if (row.size == 1) Spacer(Modifier.weight(1f))
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun StatsGrid(history: List<StatSample>) {
+private fun tiles(history: List<StatSample>): List<Tile> {
     val last = history.lastOrNull()
     val primary = MaterialTheme.colorScheme.primary
     val tertiary = MaterialTheme.colorScheme.tertiary
-    val tiles = buildList<@Composable (Modifier) -> Unit> {
-        add { m ->
-            StatTile(
-                label = stringResource(R.string.stats_cpu),
-                value = last?.cpuPct?.let { pct(it) } ?: DASH,
-                series = listOf(history.map { it.cpuPct } to primary),
-                max = 100f,
-                modifier = m,
-            )
-        }
-        add { m ->
-            val mb = history.mapNotNull { it.appMb }
-            StatTile(
-                label = stringResource(R.string.stats_memory),
-                value = last?.appMb?.let { mb(it) } ?: DASH,
-                sub = last?.let { stringResource(R.string.stats_free, mb(it.freeMb)) },
-                series = listOf(history.map { it.appMb } to primary),
-                max = (mb.maxOrNull() ?: 1f) * 1.2f,
-                modifier = m,
-            )
-        }
-        add { m ->
-            val peak = history.flatMap { listOfNotNull(it.readKbs, it.writeKbs) }.maxOrNull() ?: 1f
-            StatTile(
-                label = stringResource(R.string.stats_disk),
-                value = last?.let { stringResource(R.string.stats_disk_value, rate(it.readKbs), rate(it.writeKbs)) } ?: DASH,
-                series = listOf(history.map { it.readKbs } to primary, history.map { it.writeKbs } to tertiary),
-                max = peak.coerceAtLeast(64f) * 1.2f,
-                modifier = m,
-            )
-        }
-        if (history.any { it.thermal != null || it.thermalStatus != null }) add { m ->
-            StatTile(
-                label = stringResource(R.string.stats_temperature),
-                value = stringResource(thermalLabel(last?.thermalStatus)),
-                sub = last?.thermal?.let { stringResource(R.string.stats_headroom, pct(it * 100f)) },
-                series = listOf(history.map { it.thermal?.times(100f) } to thermalColor(last?.thermalStatus)),
-                max = 100f,
-                modifier = m,
-            )
-        }
-        if (history.any { it.gpuPct != null }) add { m ->
-            StatTile(
-                label = stringResource(R.string.stats_gpu),
-                value = last?.gpuPct?.let { pct(it) } ?: DASH,
-                series = listOf(history.map { it.gpuPct } to primary),
-                max = 100f,
-                modifier = m,
-            )
-        }
-    }
-    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        tiles.chunked(2).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                row.forEach { tile -> tile(Modifier.weight(1f)) }
-                if (row.size == 1) androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
-            }
-        }
-        Text(
-            stringResource(R.string.stats_note),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.outline,
+    return buildList {
+        if (history.any { it.gpuPct != null }) add(
+            Tile(
+                Icons.Outlined.DeveloperBoard, stringResource(R.string.stats_gpu),
+                last?.gpuPct?.let(::pct) ?: DASH, null,
+                history.map { it.gpuPct }, 100f, tertiary,
+            ),
+        )
+        add(
+            Tile(
+                Icons.Outlined.Memory, stringResource(R.string.stats_cpu),
+                last?.cpuPct?.let(::pct) ?: DASH, null,
+                history.map { it.cpuPct }, 100f, primary,
+            ),
+        )
+        val mbs = history.mapNotNull { it.appMb }
+        add(
+            Tile(
+                Icons.Outlined.Storage, stringResource(R.string.stats_memory),
+                last?.appMb?.let(::mb) ?: DASH,
+                last?.let { stringResource(R.string.stats_free, mb(it.freeMb)) },
+                history.map { it.appMb }, (mbs.maxOrNull() ?: 1f) * 1.25f, primary,
+            ),
+        )
+        if (history.any { it.thermal != null || it.thermalStatus != null }) add(
+            Tile(
+                Icons.Outlined.Thermostat, stringResource(R.string.stats_temperature),
+                stringResource(thermalLabel(last?.thermalStatus)),
+                last?.thermal?.let { stringResource(R.string.stats_headroom, pct(it * 100f)) },
+                history.map { it.thermal?.times(100f) }, 100f, thermalColor(last?.thermalStatus),
+            ),
         )
     }
 }
 
 @Composable
-private fun StatTile(
-    label: String,
-    value: String,
-    series: List<Pair<List<Float?>, Color>>,
-    max: Float,
-    modifier: Modifier = Modifier,
-    sub: String? = null,
-) {
-    Column(modifier.semantics(mergeDescendants = true) { contentDescription = "$label $value" }) {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        sub?.let {
-            Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline, maxLines = 1)
+private fun StatTile(tile: Tile, modifier: Modifier = Modifier) {
+    Column(
+        modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .padding(12.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = listOfNotNull(tile.label, tile.value, tile.sub).joinToString(", ")
+            },
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(tile.icon, null, tint = tile.color, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(
+                tile.label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
-        val grid = MaterialTheme.colorScheme.outlineVariant
-        Canvas(Modifier.fillMaxWidth().height(36.dp).padding(top = 4.dp)) {
-            drawLine(grid, Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1f)
-            val step = size.width / (HISTORY - 1)
-            series.forEach { (values, color) ->
-                val path = Path()
-                var started = false
-                val offset = HISTORY - values.size
-                values.forEachIndexed { i, v ->
-                    if (v == null) { started = false; return@forEachIndexed }
-                    val x = (offset + i) * step
-                    val y = size.height * (1f - (v / max).coerceIn(0f, 1f))
-                    if (started) path.lineTo(x, y) else path.moveTo(x, y)
-                    started = true
-                }
-                drawPath(path, color, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
+        Spacer(Modifier.height(4.dp))
+        Text(
+            tile.value,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+        )
+        // Same height with or without a second line, so the graphs line up across a row
+        Text(
+            tile.sub ?: "",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.outline,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Spacer(Modifier.height(6.dp))
+        Sparkline(tile.values, tile.max, tile.color, Modifier.fillMaxWidth().height(40.dp))
+    }
+}
+
+/** Line with a soft fill under it and a dot on the newest value; newest sample at the right edge. */
+@Composable
+private fun Sparkline(values: List<Float?>, max: Float, color: Color, modifier: Modifier) {
+    val baseline = MaterialTheme.colorScheme.outlineVariant
+    Canvas(modifier) {
+        val step = size.width / (HISTORY - 1)
+        val offset = HISTORY - values.size
+        fun y(v: Float) = size.height * (1f - (v / max).coerceIn(0f, 1f))
+        drawLine(baseline, Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1.dp.toPx())
+
+        // Segments between missing samples
+        val segments = mutableListOf<List<Offset>>()
+        var current = mutableListOf<Offset>()
+        values.forEachIndexed { i, v ->
+            if (v == null) {
+                if (current.isNotEmpty()) segments += current
+                current = mutableListOf()
+            } else {
+                current += Offset((offset + i) * step, y(v))
             }
         }
+        if (current.isNotEmpty()) segments += current
+
+        val fill = Brush.verticalGradient(listOf(color.copy(alpha = 0.30f), color.copy(alpha = 0f)))
+        segments.forEach { pts ->
+            if (pts.size >= 2) {
+                val area = Path().apply {
+                    moveTo(pts.first().x, size.height)
+                    pts.forEach { lineTo(it.x, it.y) }
+                    lineTo(pts.last().x, size.height)
+                    close()
+                }
+                drawPath(area, fill)
+                val line = Path().apply {
+                    moveTo(pts.first().x, pts.first().y)
+                    pts.drop(1).forEach { lineTo(it.x, it.y) }
+                }
+                drawPath(line, color, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+            }
+        }
+        segments.lastOrNull()?.lastOrNull()?.let { drawCircle(color, radius = 3.dp.toPx(), center = it) }
     }
+}
+
+/** A small dot that fades in and out, so the card reads as live. */
+@Composable
+private fun LiveDot() {
+    var on by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        while (isActive) {
+            delay(SAMPLE_MS)
+            on = !on
+        }
+    }
+    val alpha by animateFloatAsState(if (on) 1f else 0.35f, label = "liveDot")
+    Box(
+        Modifier
+            .size(8.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = alpha)),
+    )
 }
 
 private const val DASH = "–"
@@ -342,12 +416,6 @@ private fun pct(v: Float) = String.format(Locale.getDefault(), "%.0f%%", v)
 private fun mb(v: Float) =
     if (v >= 1024f) String.format(Locale.getDefault(), "%.1f GB", v / 1024f)
     else String.format(Locale.getDefault(), "%.0f MB", v)
-
-private fun rate(kbs: Float?): String = when {
-    kbs == null -> DASH
-    kbs >= 1024f -> String.format(Locale.getDefault(), "%.1f MB/s", kbs / 1024f)
-    else -> String.format(Locale.getDefault(), "%.0f KB/s", kbs)
-}
 
 private fun thermalLabel(status: Int?): Int = when (status) {
     null, PowerManager.THERMAL_STATUS_NONE -> R.string.stats_thermal_normal
