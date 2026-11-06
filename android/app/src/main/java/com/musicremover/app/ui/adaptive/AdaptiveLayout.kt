@@ -47,9 +47,13 @@ object AdaptiveLayout {
         WidthClass.EXPANDED -> HomePaneMode.TWO_PANE
     }
 
-    /** Small pinned bar only on a short window that is not compact-width (a landscape phone). */
+    /**
+     * Small pinned bar on any short window (a landscape phone, split screen, a pop-up window).
+     * Material3 1.3.1's LargeTopAppBar crashes ("Size(w x -h) is out of range") when it is collapsed
+     * in a window shorter than the bar's expanded height plus the insets, so a short window never gets it.
+     */
     fun topBarStyle(w: WidthClass, h: HeightClass): TopBarStyle =
-        if (w != WidthClass.COMPACT && h == HeightClass.COMPACT) TopBarStyle.SMALL else TopBarStyle.LARGE
+        if (h == HeightClass.COMPACT) TopBarStyle.SMALL else TopBarStyle.LARGE
 
     /** Compact keeps today's Scaffold/TopAppBar inset defaults. */
     fun useCutoutInsets(w: WidthClass): Boolean = w != WidthClass.COMPACT

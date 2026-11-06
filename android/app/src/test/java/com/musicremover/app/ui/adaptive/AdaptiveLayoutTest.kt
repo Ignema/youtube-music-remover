@@ -99,10 +99,11 @@ class AdaptiveLayoutTest {
     @Test
     fun topBarStyleAllPairs() {
         for (w in WidthClass.entries) for (h in HeightClass.entries) {
-            val expected = if (w != c && h == HeightClass.COMPACT) TopBarStyle.SMALL else TopBarStyle.LARGE
+            val expected = if (h == HeightClass.COMPACT) TopBarStyle.SMALL else TopBarStyle.LARGE
             assertEquals("$w x $h", expected, AdaptiveLayout.topBarStyle(w, h))
         }
-        assertEquals(TopBarStyle.LARGE, AdaptiveLayout.topBarStyle(c, HeightClass.COMPACT))
+        // A short compact-width window (pop-up or split screen) too: the large bar crashes there
+        assertEquals(TopBarStyle.SMALL, AdaptiveLayout.topBarStyle(c, HeightClass.COMPACT))
         assertEquals(TopBarStyle.SMALL, AdaptiveLayout.topBarStyle(m, HeightClass.COMPACT))
         assertEquals(TopBarStyle.SMALL, AdaptiveLayout.topBarStyle(e, HeightClass.COMPACT))
     }

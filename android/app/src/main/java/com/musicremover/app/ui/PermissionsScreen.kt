@@ -43,7 +43,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -65,7 +64,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.musicremover.app.R
 import com.musicremover.app.ui.adaptive.AdaptiveLayout
+import com.musicremover.app.ui.adaptive.AdaptiveTopBar
 import com.musicremover.app.ui.adaptive.LocalWindowLayout
+import com.musicremover.app.ui.adaptive.TopBarStyle
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -75,6 +76,7 @@ import androidx.lifecycle.LifecycleEventObserver
 fun PermissionsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val smallBar = TopAppBarDefaults.pinnedScrollBehavior()
 
     // Re-check permissions when returning from system settings
     var refreshKey by remember { mutableStateOf(0) }
@@ -99,16 +101,20 @@ fun PermissionsScreen(onBack: () -> Unit) {
     ) { refreshKey++ }
 
     val windowLayout = LocalWindowLayout.current
+    val bar = AdaptiveLayout.topBarStyle(windowLayout.width, windowLayout.height)
     val max = AdaptiveLayout.docMaxDp(windowLayout.width)
     // Off compact, keep content and the back arrow out of a display cutout; compact keeps the defaults
     val cutoutInsets = AdaptiveLayout.useCutoutInsets(windowLayout.width)
 
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier.nestedScroll((if (bar == TopBarStyle.LARGE) scrollBehavior else smallBar).nestedScrollConnection),
         contentWindowInsets = if (cutoutInsets) WindowInsets.systemBars.union(WindowInsets.displayCutout)
         else ScaffoldDefaults.contentWindowInsets,
         topBar = {
-            LargeTopAppBar(
+            AdaptiveTopBar(
+                style = bar,
+                large = scrollBehavior,
+                small = smallBar,
                 title = { Text(stringResource(R.string.permissions)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -119,11 +125,6 @@ fun PermissionsScreen(onBack: () -> Unit) {
                     WindowInsets.systemBars.union(WindowInsets.displayCutout)
                         .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top)
                 } else TopAppBarDefaults.windowInsets,
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                ),
             )
         },
     ) { padding ->
