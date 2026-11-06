@@ -1,0 +1,10 @@
+# Keep blank issues on: the app's "Report a problem" opens issues/new with the title and body
+# filled in, and turning blank issues off would send those reports to the chooser instead.
+blank_issues_enabled: true
+contact_links:
+  - name: Report from the app (recommended)
+    url: https://github.com/Ignema/youtube-music-remover#android-app
+    about: "In Murem, open Settings → About & help → Report a problem. It fills in your app version, phone and the error for you."
+  - name: Check the latest version first
+    url: https://github.com/Ignema/youtube-music-remover/releases/latest
+    about: Many problems are already fixed in the newest release.
