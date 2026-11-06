@@ -215,6 +215,12 @@ class SettingsStore(context: Context) {
     }
 }
 
-/** Initial processing mode for users upgrading from the URL-only setting. */
-fun migrateProcessingMode(serverUrl: String?): String =
-    if (serverUrl == "http://127.0.0.1:8000") "termux" else "server"
+/**
+ * Initial processing mode. A fresh install (no server URL stored) starts on-device; users upgrading
+ * from the URL-only setting keep what they used.
+ */
+fun migrateProcessingMode(serverUrl: String?): String = when (serverUrl) {
+    null -> "internal"
+    "http://127.0.0.1:8000" -> "termux"
+    else -> "server"
+}

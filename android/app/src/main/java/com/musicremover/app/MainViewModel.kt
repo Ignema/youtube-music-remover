@@ -268,7 +268,7 @@ data class MainUiState(
     val language: String = "",
     val widgetTheme: String = "orange",
     // Processing mode: "internal", "termux" or "server"
-    val processingMode: String = BackendProvider.MODE_SERVER,
+    val processingMode: String = BackendProvider.MODE_INTERNAL,
     // On-device models (catalog order) and their download state
     val internalModels: List<ModelSpec> = emptyList(),
     val modelStates: Map<String, ModelState> = emptyMap(),

@@ -36,7 +36,8 @@ class ResetStateTest {
         history = listOf(HistoryItem(filename = "a", url = "", model = "m", jobId = "j")),
         serverUrl = "http://10.0.0.2:8000",
         termuxInstalled = true,
-        processingMode = BackendProvider.MODE_INTERNAL,
+        // Not the default (internal), so the test shows the mode is carried over
+        processingMode = BackendProvider.MODE_TERMUX,
         internalUnsupportedReason = "reason",
         internalModels = listOf(spec),
         modelStates = mapOf(ModelCatalog.HQ3 to ModelState.Ready(1L)),
