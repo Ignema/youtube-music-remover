@@ -219,7 +219,7 @@
     <string name="stats_thermal_throttling">Throttling</string>
     <string name="stats_gpu">GPU</string>
     <string name="perf_acc_webgpu">GPU (WebGPU)</string>
-    <string name="perf_acc_webgpu_desc">Experimental. Runs the model on the GPU through Vulkan. Often the fastest, but not tested on every phone</string>
+    <string name="perf_acc_webgpu_desc">Experimental. Runs the model on the GPU through Vulkan. Often the fastest, but the phone can lag while it runs, so it is best when you are not using the phone at the same time</string>
     <string name="perf_acc_nnapi">AI chip (NNAPI)</string>
     <string name="perf_acc_nnapi_desc">Experimental. Uses the phone\'s NPU, DSP or GPU driver in half precision. Can be faster or much slower, depending on the phone</string>
     <string name="perf_acc_nnapi_needs_android">Needs Android 8.1 or newer</string>
@@ -228,7 +228,7 @@
     <string name="perf_acc_xnnpack_desc">Experimental. Different CPU code that is quicker on some ARM phones</string>
     <string name="perf_acc_webgpu_short">GPU</string>
     <string name="perf_limit">Load limit</string>
-    <string name="perf_limit_desc">Keeps Murem from using the whole GPU so the phone stays smooth and cooler. With GPU acceleration, the screen also gets its turn between GPU steps.</string>
+    <string name="perf_limit_desc">Keeps Murem from using the whole GPU so the phone stays smoother and cooler. With GPU acceleration, the screen also gets its turn between GPU steps. For an even smoother phone, use a lighter model in On-device models.</string>
     <string name="perf_limit_full">Full speed</string>
     <string name="perf_limit_full_desc">Fastest; the phone may lag while processing</string>
     <string name="perf_limit_pct">%1$d%%</string>
