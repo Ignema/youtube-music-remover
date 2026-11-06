@@ -196,6 +196,7 @@
     <string name="perf_best_time">About 1.5× the time</string>
     <string name="perf_quality_help">Fast can leave slightly more music at chunk edges; Best is smoother but slower.</string>
     <string name="perf_batch">Batch size</string>
+    <string name="perf_batch_desc">How many pieces of the song Murem separates at once. Two at a time can make better use of a fast phone, but it needs more memory.</string>
     <string name="perf_batch_1">1 (recommended)</string>
     <string name="perf_batch_2">2</string>
     <string name="perf_batch_2_desc">Experimental. Uses about 1 GB more memory; may not be faster.</string>

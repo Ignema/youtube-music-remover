@@ -114,6 +114,8 @@ fun PerformanceSettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
         Spacer(Modifier.height(16.dp))
 
         SectionLabel(stringResource(R.string.perf_batch))
+        Spacer(Modifier.height(4.dp))
+        SettingsNote(stringResource(R.string.perf_batch_desc))
         Spacer(Modifier.height(8.dp))
         val batch2Ok = totalMem >= PerformanceSettings.BATCH2_MIN_TOTAL_MEM
         ChoiceRow(
