@@ -31,12 +31,14 @@ class OrtSpectrogramModel(
     accelerator: Accelerator = Accelerator.CPU,
     /** Load limit (100 = full speed); below 100 the GPU gets finer-grained submission. Pacing is PacedModel's job. */
     private val limitPct: Int = 100,
-) : SpectrogramModel {
+    /** Reuse these input/output buffers (a CPU replacement for a failed accelerator keeps the chunk in place). */
+    buffers: Pair<FloatBuffer, FloatBuffer>? = null,
+) : AcceleratedModel {
     private val env: OrtEnvironment = OrtEnvironment.getEnvironment()
     private val session: OrtSession
 
     /** The execution provider the session was created with (CPU after a fallback). */
-    val usedAccelerator: Accelerator
+    override val usedAccelerator: Accelerator
     private val runOptions: OrtSession.RunOptions
     private val inputTensor: OnnxTensor
     private val outTensor: OnnxTensor
@@ -49,8 +51,9 @@ class OrtSpectrogramModel(
     init {
         require(batch >= 1) { "batch must be positive" }
         val size = batch * 4 * dimF * dimT
-        input = allocTensorBuffer(size)
-        output = allocTensorBuffer(size)
+        input = buffers?.first ?: allocTensorBuffer(size)
+        output = buffers?.second ?: allocTensorBuffer(size)
+        require(input.capacity() == size && output.capacity() == size) { "buffer size does not match the model" }
         requireTensorBuffer(input)
         requireTensorBuffer(output)
 

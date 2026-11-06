@@ -186,6 +186,7 @@ class SettingsStore(context: Context) {
         val NON_USER_KEYS: Map<String, String> = mapOf(
             "${NOTICE_PREFIX}*" to "license acceptance, set by the notice dialog (prefs settings, written by ModelManager)",
             "perf_ms:*" to "measured speed for the ETA (prefs app)",
+            "accel_failed:*" to "accelerator that failed on this phone, shown in Performance (prefs app)",
             "internal_first_use_seen" to "banner state (prefs app)",
             "ytdlp_banner_dismissed_day" to "banner state (prefs app)",
             "setup_done" to "first-run permissions flow (prefs app)",

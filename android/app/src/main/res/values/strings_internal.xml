@@ -218,12 +218,12 @@
     <string name="stats_thermal_hot">Hot</string>
     <string name="stats_thermal_throttling">Throttling</string>
     <string name="stats_gpu">GPU</string>
-    <string name="internal_accelerator_failed">Acceleration failed on this phone. Set Settings → Performance → Acceleration to CPU and try again.</string>
     <string name="perf_acc_webgpu">GPU (WebGPU)</string>
     <string name="perf_acc_webgpu_desc">Experimental. Runs the model on the GPU through Vulkan. Often the fastest, but not tested on every phone</string>
     <string name="perf_acc_nnapi">AI chip (NNAPI)</string>
     <string name="perf_acc_nnapi_desc">Experimental. Uses the phone\'s NPU, DSP or GPU driver in half precision. Can be faster or much slower, depending on the phone</string>
     <string name="perf_acc_nnapi_needs_android">Needs Android 8.1 or newer</string>
+    <string name="perf_acc_failed_here">Did not work on this phone last time, so Murem finished on CPU</string>
     <string name="perf_acc_xnnpack">Optimized CPU (XNNPACK)</string>
     <string name="perf_acc_xnnpack_desc">Experimental. Different CPU code that is quicker on some ARM phones</string>
     <string name="perf_acc_webgpu_short">GPU</string>

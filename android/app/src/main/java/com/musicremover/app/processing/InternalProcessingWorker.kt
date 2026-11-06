@@ -19,7 +19,10 @@ import com.musicremover.app.data.NotificationHelper
 import com.musicremover.app.data.ResultCache
 import com.musicremover.app.data.VideoInfo
 import com.musicremover.app.processing.internal.Accelerator
+import com.musicremover.app.processing.internal.AcceleratorHealth
 import com.musicremover.app.processing.internal.AudioDecoder
+import com.musicremover.app.processing.internal.FallbackModel
+import com.musicremover.app.processing.internal.SpectrogramModel
 import com.musicremover.app.processing.internal.EtaEstimator
 import com.musicremover.app.processing.internal.InternalCapability
 import com.musicremover.app.processing.internal.InternalJobException
@@ -171,7 +174,7 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
 
         // 2. Fresh work dir
         val workDir = File(InternalBackend.workRoot(ctx), jobId)
-        var model: OrtSpectrogramModel? = null
+        var model: SpectrogramModel? = null
         var tmp: File? = null
         var committed = false
         try {
@@ -284,7 +287,8 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
 
             // 5. Separate (20-90)
             report("separating", 20)
-            val ort = try {
+            val appPrefs = ctx.getSharedPreferences(APP_PREFS, Context.MODE_PRIVATE)
+            val first = try {
                 OrtSpectrogramModel(modelFile, spec.dimF, spec.dimT, cfg.threads, cfg.batch, acceleratorPref, limitPct)
             } catch (e: OrtException) {
                 Log.e(TAG, "$jobId: cannot load model", e)
@@ -294,13 +298,23 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
                 Log.e(TAG, "$jobId: model does not match its metadata", e)
                 throw jobError(R.string.internal_model_mismatch, e)
             }
+            Log.i(TAG, "$jobId: accelerator ${first.usedAccelerator.pref} (asked ${acceleratorPref.pref}) limit=$limitPct%")
+            // Remembered for Settings → Performance, so the user knows the choice did not work here
+            if (acceleratorPref != Accelerator.CPU && first.usedAccelerator == Accelerator.CPU) {
+                AcceleratorHealth.markFailed(appPrefs, acceleratorPref)
+            }
+            val ort = FallbackModel(
+                primary = first,
+                makeCpu = { buffers ->
+                    OrtSpectrogramModel(modelFile, spec.dimF, spec.dimT, cfg.threads, cfg.batch, Accelerator.CPU, buffers = buffers)
+                },
+                onFallback = { AcceleratorHealth.markFailed(appPrefs, acceleratorPref) },
+            )
             model = ort
-            Log.i(TAG, "$jobId: accelerator ${ort.usedAccelerator.pref} (asked ${acceleratorPref.pref}) limit=$limitPct%")
             val params = MdxParams(spec.nFft, spec.dimF, spec.dimT, spec.hop, spec.compensate.toFloat(), cfg.overlap)
             val inputScale = if (decoded.peak > 0.9f) 0.9f / decoded.peak else 1f
             val vocalsFile = File(workDir, "vocals.f32")
             val speedKey = PerformanceSettings.speedKey(modelName, cfg.threads, cfg.batch, ort.usedAccelerator, limitPct)
-            val appPrefs = ctx.getSharedPreferences(APP_PREFS, Context.MODE_PRIVATE)
             val priorMs = appPrefs.getLong(speedKey, -1L).takeIf { it > 0 }
             var chunks = 0
             var demixMs = 0L
@@ -333,21 +347,21 @@ class InternalProcessingWorker(context: Context, params: WorkerParameters) : Cor
             } catch (e: CancellationException) {
                 throw e
             } catch (e: OrtException) {
+                // An accelerator failure already moved to CPU in FallbackModel; this is a CPU failure
                 Log.e(TAG, "$jobId: ORT run failed (${ort.usedAccelerator.pref})", e)
                 val oom = e.message?.contains("alloc", ignoreCase = true) == true
-                throw jobError(
-                    when {
-                        ort.usedAccelerator != Accelerator.CPU -> R.string.internal_accelerator_failed
-                        oom -> R.string.internal_out_of_memory
-                        else -> R.string.internal_processing_failed
-                    },
-                    e,
-                )
+                throw jobError(if (oom) R.string.internal_out_of_memory else R.string.internal_processing_failed, e)
             } catch (e: IOException) {
                 Log.w(TAG, "$jobId: write failed during separation", e)
                 throw InternalJobException(ctx.getString(R.string.internal_no_space, neededMb(decoded.durationUs, bitrate)), e)
             }
-            if (chunks > 0) {
+            if (ort.fellBack) {
+                // Mixed timings (accelerator then CPU) would spoil both speed hints
+                Log.i(TAG, "$jobId: separated $chunks chunks in $demixMs ms after falling back to CPU")
+            } else if (chunks > 0) {
+                if (acceleratorPref != Accelerator.CPU && ort.usedAccelerator == acceleratorPref) {
+                    AcceleratorHealth.markWorked(appPrefs, acceleratorPref)
+                }
                 val msPerChunk = demixMs / chunks
                 val ema = PerformanceSettings.ema(priorMs, msPerChunk)
                 appPrefs.edit().putLong(speedKey, ema).apply()

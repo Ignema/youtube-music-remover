@@ -39,6 +39,16 @@ class ErrorReportTest {
             ErrorReport.title(ErrorReport.Kind.Crash, "java.lang.IllegalStateException: boom\n\tat a.b(C.kt:1)"))
         assertEquals("[Bug] Processing failed: Out of memory", ErrorReport.title(ErrorReport.Kind.JobFailed, "Out of memory"))
         assertEquals("", ErrorReport.title(ErrorReport.Kind.Manual, null))
+        // A long message keeps its first sentence instead of stopping mid-word
+        assertEquals(
+            "[Bug] Processing failed: Acceleration failed on this phone.",
+            ErrorReport.title(
+                ErrorReport.Kind.JobFailed,
+                "Acceleration failed on this phone. Set Settings → Performance → Acceleration to CPU and try again.",
+            ),
+        )
+        val long = ErrorReport.shorten("word ".repeat(30).trim())
+        assertTrue(long.length <= 80 && long.endsWith("…") && !long.contains("wor…"))
     }
 
     @Test

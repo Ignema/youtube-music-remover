@@ -31,6 +31,7 @@ import com.musicremover.app.processing.ProcessingBackend
 import com.musicremover.app.processing.RemoteServerBackend
 import com.musicremover.app.processing.internal.CookieStore
 import com.musicremover.app.processing.internal.Accelerator
+import com.musicremover.app.processing.internal.AcceleratorHealth
 import com.musicremover.app.processing.internal.CookiesTxt
 import com.musicremover.app.processing.internal.LoginSites
 import com.musicremover.app.processing.internal.ModelCatalog
@@ -570,6 +571,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _ui.value = _ui.value.copy(performance = _ui.value.performance.copy(batch = settingsStore.perfBatch))
         loadModelSpeed()
     }
+
+    /** Accelerators that failed on this phone and fell back to CPU (read when Performance opens). */
+    fun failedAccelerators(): Set<Accelerator> = AcceleratorHealth.failed(prefs)
 
     fun setPerfLimit(value: Int) {
         settingsStore.perfLimit = value

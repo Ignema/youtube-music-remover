@@ -141,6 +141,7 @@ fun PerformanceSettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
         Spacer(Modifier.height(8.dp))
         val nnapiOk = Build.VERSION.SDK_INT >= Accelerator.NNAPI_MIN_SDK
         val shownAcc = Accelerator.resolve(perf.accelerator, Build.VERSION.SDK_INT)
+        val failed = remember { vm.failedAccelerators() }
         listOf(
             Triple(Accelerator.CPU, R.string.perf_acc_cpu, R.string.perf_acc_cpu_desc),
             Triple(Accelerator.WEBGPU, R.string.perf_acc_webgpu, R.string.perf_acc_webgpu_desc),
@@ -150,7 +151,11 @@ fun PerformanceSettingsScreen(vm: MainViewModel, onBack: () -> Unit) {
             val enabled = acc != Accelerator.NNAPI || nnapiOk
             ChoiceRow(
                 label = stringResource(label),
-                note = stringResource(if (enabled) desc else R.string.perf_acc_nnapi_needs_android),
+                note = when {
+                    !enabled -> stringResource(R.string.perf_acc_nnapi_needs_android)
+                    acc in failed -> stringResource(R.string.perf_acc_failed_here)
+                    else -> stringResource(desc)
+                },
                 selected = shownAcc == acc,
                 enabled = enabled,
                 onClick = { vm.setPerfAccelerator(acc.pref) },

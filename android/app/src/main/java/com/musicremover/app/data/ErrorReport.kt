@@ -53,7 +53,7 @@ object ErrorReport {
 
     /** Issue title. Pure. */
     fun title(kind: Kind, detail: String?): String {
-        val first = detail?.let { sanitize(it) }?.lineSequence()?.firstOrNull { it.isNotBlank() }?.trim()?.take(80)
+        val first = detail?.let { sanitize(it) }?.lineSequence()?.firstOrNull { it.isNotBlank() }?.trim()?.let(::shorten)
         return when (kind) {
             Kind.Crash -> "[Crash] " + (first ?: "App crashed")
             Kind.JobFailed -> "[Bug] Processing failed" + (first?.let { ": $it" } ?: "")
@@ -61,6 +61,17 @@ object ErrorReport {
             Kind.Manual -> ""
         }
     }
+
+    /** At most [MAX_TITLE] chars: the first sentence if it fits, else cut at a word with "…". Pure. */
+    fun shorten(line: String): String {
+        if (line.length <= MAX_TITLE) return line
+        val sentence = line.indexOf(". ").takeIf { it in 1 until MAX_TITLE }
+        if (sentence != null) return line.substring(0, sentence + 1)
+        val cut = line.lastIndexOf(' ', MAX_TITLE - 1).takeIf { it > MAX_TITLE / 2 } ?: (MAX_TITLE - 1)
+        return line.substring(0, cut).trimEnd() + "…"
+    }
+
+    private const val MAX_TITLE = 80
 
     /** Issue body (Markdown). Pure. */
     fun body(kind: Kind, info: Info, detail: String?): String = buildString {
@@ -108,9 +119,18 @@ object ErrorReport {
 
     private fun enc(s: String) = URLEncoder.encode(s, "UTF-8").replace("+", "%20")
 
-    fun currentInfo(mode: String?, model: String?) = Info(
+    /** BuildConfig has the base code; the installed APK has the per-ABI one (e.g. 62 for arm64). */
+    @Suppress("DEPRECATION")
+    private fun installedVersionCode(context: Context): Int = try {
+        val info = context.packageManager.getPackageInfo(context.packageName, 0)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.longVersionCode.toInt() else info.versionCode
+    } catch (_: Exception) {
+        BuildConfig.VERSION_CODE
+    }
+
+    fun currentInfo(context: Context, mode: String?, model: String?) = Info(
         appVersion = BuildConfig.VERSION_NAME,
-        versionCode = BuildConfig.VERSION_CODE,
+        versionCode = installedVersionCode(context),
         mode = mode,
         model = model,
         device = listOf(Build.MANUFACTURER, Build.MODEL).filter { it.isNotBlank() }.joinToString(" "),
@@ -121,7 +141,7 @@ object ErrorReport {
 
     /** Opens the pre-filled issue in the browser. */
     fun open(context: Context, kind: Kind, detail: String?, mode: String?, model: String?) {
-        val url = issueUrl(kind, currentInfo(mode, model), detail)
+        val url = issueUrl(kind, currentInfo(context, mode, model), detail)
         try {
             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         } catch (e: Exception) {
