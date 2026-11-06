@@ -1,0 +1,5 @@
+Murem 4.3.0
+• Shows how long a job will take before you start, based on your phone's speed
+• On slow phones, suggests a lighter model with one tap
+• All newer screens are now translated into the app's 15 languages
+• Arabic now uses Modern Standard Arabic throughout
