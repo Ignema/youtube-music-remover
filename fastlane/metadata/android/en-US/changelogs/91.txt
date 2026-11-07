@@ -1,0 +1,2 @@
+Murem 4.3.1
+• Fixes a crash in small windows (pop-up view or split screen) after scrolling
